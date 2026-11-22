@@ -28,7 +28,9 @@
 
 이 저장소는 GitHub Pages로 바로 배포되어 있습니다.
 
-**https://lukezax71-cyber.github.io/golf-swing-analyzer/**
+**https://lukezax71-cyber.github.io/Goose-the-duck/**
+
+(저장소 이름을 바꾸면 주소의 마지막 부분도 함께 바뀝니다.)
 
 아이폰 Safari에서 위 주소를 열고
 **공유 → 홈 화면에 추가**. 그다음부터는 아이콘 한 번으로 전체 화면 앱처럼 실행됩니다.
