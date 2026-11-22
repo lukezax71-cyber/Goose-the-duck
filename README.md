@@ -13,10 +13,10 @@
 | `index.html` | 앱 전체(HTML + CSS + JS 인라인, 단일 파일). 이 파일 하나로 동작합니다. |
 | `manifest.webmanifest` | 홈 화면 추가(PWA)용 매니페스트 |
 | `icon-180.png` · `icon-192.png` · `icon-512.png` | 홈 화면 아이콘 |
-| `src/` | 개발용 원본 (style.css, core.js, demo.js, app.js, index_template) |
-| `tools/` | 빌드·검증 스크립트 (아래 5절) |
+| `.nojekyll` | GitHub Pages가 파일을 그대로 서빙하도록 하는 표시 파일 |
 
-`index.html`은 `src/`를 합쳐 만든 결과물입니다. `src/`를 고쳤다면 `python3 tools/build.py`로 다시 만드세요.
+`index.html`은 스타일·스크립트를 모두 담은 단일 파일이라, 이 저장소만으로 앱이 그대로 동작합니다.
+개발용 원본(`src/`)과 빌드·검증 스크립트(`tools/`)는 배포본에 포함하지 않았습니다.
 
 ---
 
@@ -26,18 +26,11 @@
 `index.html`, `manifest.webmanifest`, 아이콘 3개를 **같은 폴더**에 두고 HTTPS 정적 호스팅에 올립니다.
 가장 간단한 것은 GitHub Pages입니다.
 
-```
-# 예: GitHub Pages (공개 저장소)
-git init
-git add index.html manifest.webmanifest icon-180.png icon-192.png icon-512.png .nojekyll
-git commit -m "golf swing analyzer"
-git branch -M main
-git remote add origin https://github.com/<계정>/golf-swing-analyzer.git
-git push -u origin main
-# GitHub → Settings → Pages → Branch: main / root → Save
-```
+이 저장소는 GitHub Pages로 바로 배포되어 있습니다.
 
-주소가 `https://<계정>.github.io/golf-swing-analyzer/` 로 나오면, 아이폰 Safari에서 열고
+**https://lukezax71-cyber.github.io/golf-swing-analyzer/**
+
+아이폰 Safari에서 위 주소를 열고
 **공유 → 홈 화면에 추가**. 그다음부터는 아이콘 한 번으로 전체 화면 앱처럼 실행됩니다.
 
 > PWA(홈 화면 추가, 오프라인 캐시)는 **HTTPS에서만** 동작합니다. `file://`로 열면 앱은 돌지만
@@ -99,7 +92,10 @@ Wi-Fi에서 처음 한 번 열어 두면 이후에는 캐시로 빠르게 뜹니
 
 ---
 
-## 5. 개발/검증 도구
+## 5. 개발/검증 도구 (원본 작업 폴더 기준)
+
+아래 스크립트는 배포본에는 포함하지 않았습니다. `index.html`을 고칠 때는 원본 작업 폴더에서
+`src/`를 수정한 뒤 빌드하는 편이 안전합니다.
 
 ```
 python3 tools/build.py       # src/* → index.html 합치기
