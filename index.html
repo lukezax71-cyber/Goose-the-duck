@@ -3234,7 +3234,7 @@ var GolfPros = (function () {
       html += '<div class="cmp-row ' + cls + '"><span class="lab">' + row.label + '</span>' +
         '<span class="mine">' + fmtCmp(a, row.unit) + '</span>' +
         '<span class="pro">' + fmtCmp(b, row.unit) + '</span>' +
-        '<span class="dif">' + (d >= 0 ? '+' : '−') + fmtCmp(ad, row.unit) + '</span></div>';
+        '<span class="dif">' + (ad < 0.05 ? '0' : (d >= 0 ? '+' : '−') + fmtCmp(ad, row.unit)) + '</span></div>';
     }
     el.cmpRange && (el.cmpRange.disabled = false);
     el.cmpTable.innerHTML = html;
