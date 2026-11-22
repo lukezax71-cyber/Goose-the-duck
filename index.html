@@ -116,6 +116,7 @@ body {
 .btn.mini { flex: none; min-height: 38px; font-size: 12px; padding: 0 12px; border-radius: 10px; background: #131f33; }
 .btn.ghost { background: transparent; color: var(--muted); }
 .btn[disabled] { opacity: .45; }
+.btn[hidden] { display: none; }
 
 /* ---------- trim ---------- */
 .trim { margin-top: 12px; padding: 10px; border: 1px dashed var(--line2); border-radius: 12px; background: #0b1321; }
@@ -325,12 +326,15 @@ footer { text-align: center; font-size: 10.5px; color: #4b5a74; padding: 6px 0 1
 .cmp-scrub input[type=range] { flex: 1; }
 .cmp-table { display: grid; gap: 4px; margin-top: 6px; }
 .cmp-row {
-  display: grid; grid-template-columns: 1fr auto auto auto; gap: 6px; align-items: baseline;
+  display: grid; grid-template-columns: 1fr 70px 70px 60px; gap: 6px; align-items: baseline;
   padding: 6px 8px; border-radius: 9px; background: #0b1421; font-size: 11px;
 }
+.cmp-row > span { text-align: right; }
+.cmp-row > span.lab { text-align: left; }
 .cmp-row.head { background: none; color: var(--dim); font-size: 10px; padding: 0 8px 2px; }
 .cmp-row .lab { color: var(--muted); }
 .cmp-row .mine, .cmp-row .pro { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--text); }
+.cmp-row.head .mine, .cmp-row.head .pro, .cmp-row.head .dif { color: var(--dim); font-weight: 700; }
 .cmp-row .dif { font-variant-numeric: tabular-nums; font-weight: 800; min-width: 52px; text-align: right; }
 .cmp-row.good .dif { color: var(--good); }
 .cmp-row.warn .dif { color: var(--warn); }
