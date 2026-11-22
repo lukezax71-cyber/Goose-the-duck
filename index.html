@@ -1094,7 +1094,7 @@ var GolfCore = (function () {
       planeTip = '백스윙과 다운스윙의 팔 라인이 ' + Math.abs(r1(planeDiff)) + '° 차이로 안정적입니다. 같은 통로로 내려오고 있습니다.';
     }
     checks.push({
-      id: 'plane', label: '스윙 플레인 일관성',
+      id: 'plane', short: '플레인', label: '스윙 플레인 일관성',
       value: Math.abs(r1(pathDev)) + '% 이탈',
       score: planeScore, tip: planeTip,
       hint: '탑→임팩트 직선 대비 손 경로 · 팔 라인 탑 ' + Math.round(backPlane) + '° → 다운스윙 ' + Math.round(downPlane) + '°'
@@ -1115,7 +1115,7 @@ var GolfCore = (function () {
       spineTip = '어드레스 ' + Math.round(spineBendA) + '° → 임팩트 ' + Math.round(spineBendI) + '°로 스파인 각도가 잘 유지됐습니다.';
     }
     checks.push({
-      id: 'spine', label: '스파인 각도 유지',
+      id: 'spine', short: '스파인', label: '스파인 각도 유지',
       value: (spineChangeI >= 0 ? '+' : '') + r1(spineChangeI) + '°',
       score: spineScore, tip: spineTip,
       hint: '어드레스 ' + Math.round(spineBendA) + '° · 탑 ' + Math.round(spineBendT) + '° · 임팩트 ' + Math.round(spineBendI) + '°'
@@ -1133,7 +1133,7 @@ var GolfCore = (function () {
       headTip = '머리 이동이 ' + r1(headDrift) + 'cm로 매우 안정적입니다. 축이 잘 유지되고 있습니다.';
     }
     checks.push({
-      id: 'head', label: '머리 안정성',
+      id: 'head', short: '머리', label: '머리 안정성',
       value: r1(headDrift) + 'cm',
       score: headScore, tip: headTip,
       hint: '탑 ' + r1(headTop.cm) + 'cm · 임팩트 ' + r1(headImp.cm) + 'cm'
@@ -1154,7 +1154,7 @@ var GolfCore = (function () {
       turnTip = '어깨 ' + Math.round(shTurn) + '° · 골반 ' + Math.round(hipTurn) + '° · X-factor ' + Math.round(xf) + '°로 좋은 분리입니다(투어 평균 42~45°).';
     }
     checks.push({
-      id: 'xf', label: '바디턴 · 백스윙 회전',
+      id: 'xf', short: '바디턴', label: '바디턴 · 백스윙 회전',
       value: Math.round(shTurn) + '° / ' + Math.round(hipTurn) + '°',
       score: turnScore, tip: turnTip,
       hint: '어깨 ' + Math.round(shTurn) + '°(권장 80~105) · 골반 ' + Math.round(hipTurn) + '°(40~55) · X-factor ' + Math.round(xf) + '°(38~58) · 스트레치 +' + r1(xfStretch) + '°'
@@ -1171,7 +1171,7 @@ var GolfCore = (function () {
       clearTip = '임팩트에서 골반이 ' + Math.round(clearImpact) + '° 열려 적정 범위(30~40°)에 있습니다. 하체가 공 앞을 비켜 줘 팔이 지나갈 길이 생겼습니다.';
     }
     checks.push({
-      id: 'clear', label: '임팩트 골반 클리어런스',
+      id: 'clear', short: '골반 클리어', label: '임팩트 골반 클리어런스',
       value: Math.round(clearImpact) + '°',
       score: clearScore, tip: clearTip,
       hint: '어드레스 기준 골반 열림 · 권장 30~40° · 임팩트 어깨 ' + Math.round(shImpact) + '°'
@@ -1188,7 +1188,7 @@ var GolfCore = (function () {
       swayTip = '백스윙 골반 이동 ' + Math.abs(r1(sway)) + 'cm, 임팩트 볼 방향 이동 ' + Math.abs(r1(thrust)) + 'cm로 안정적입니다.';
     }
     checks.push({
-      id: 'sway', label: view === 'face' ? '골반 스웨이 (좌우)' : '골반 이동 (스웨이·스러스트)',
+      id: 'sway', short: '골반 이동', label: view === 'face' ? '골반 스웨이 (좌우)' : '골반 이동 (스웨이·스러스트)',
       value: Math.abs(r1(sway)) + 'cm',
       score: swayScore, tip: swayTip,
       hint: '백스윙 ' + (sway >= 0 ? '리드쪽 ' : '트레일쪽 ') + Math.abs(r1(sway)) + 'cm · 임팩트 볼 방향 ' + (thrust >= 0 ? '+' : '') + r1(thrust) + 'cm'
@@ -1205,7 +1205,7 @@ var GolfCore = (function () {
       postTip = '임팩트 이후에도 상체가 ' + r1(spineChangeF) + '° 변화로 버티고, 머리 이동 ' + r1(headFollow.cm) + 'cm로 안정적입니다.';
     }
     checks.push({
-      id: 'posture', label: '임팩트 후 상체 유지',
+      id: 'posture', short: '상체 유지', label: '임팩트 후 상체 유지',
       value: (spineChangeF >= 0 ? '+' : '') + r1(spineChangeF) + '°',
       score: postScore, tip: postTip,
       hint: '척추 ' + Math.round(spineBendI) + '°(임팩트) → ' + Math.round(spineBendF) + '°(팔로우) · 머리 이동 임팩트 ' + r1(headImp.cm) + 'cm / 팔로우 ' + r1(headFollow.cm) + 'cm'
@@ -1227,7 +1227,7 @@ var GolfCore = (function () {
       lowerTip = '팔로우스루에서 골반이 리드쪽으로 ' + r1(lowerCm) + 'cm 이동하고 ' + Math.round(hipFollowTurn) + '° 열려 리드 다리 위에 잘 안착했습니다.';
     }
     checks.push({
-      id: 'lowerBody', label: '임팩트 후 하체 안착',
+      id: 'lowerBody', short: '하체 안착', label: '임팩트 후 하체 안착',
       value: (lowerCm >= 0 ? '리드쪽 ' : '트레일쪽 ') + r1(Math.abs(lowerCm)) + 'cm',
       score: lowerScore, tip: lowerTip,
       hint: '골반 좌우 이동 ' + (lowerCm >= 0 ? '+' : '') + r1(lowerCm) + 'cm · 골반 열림 ' + Math.round(hipFollowTurn) + '° · 체중 ' + Math.round(wF * 100) + '%'
@@ -1246,7 +1246,7 @@ var GolfCore = (function () {
       armTip = '임팩트 리드팔 ' + Math.round(leadElbow) + '°, 팔로우 ' + Math.round(leadElbowFollow) + '°로 잘 펴졌습니다.';
     }
     checks.push({
-      id: 'arm', label: '리드암 (임팩트·팔로우)',
+      id: 'arm', short: '리드암', label: '리드암 (임팩트·팔로우)',
       value: Math.round(leadElbow) + '° → ' + Math.round(leadElbowFollow) + '°',
       score: armScore, tip: armTip,
       hint: '임팩트 권장 158~180° · 팔로우 150° 이상(치킨윙 방지) · 탑 ' + Math.round(leadElbowTop) + '°'
@@ -1267,7 +1267,7 @@ var GolfCore = (function () {
       trailTip = '트레일팔꿈치 탑 ' + Math.round(trailElbowTop) + '° · 임팩트 ' + Math.round(trailElbowImpact) + '° · 팔로우 ' + Math.round(trailElbowFollow) + '°로 무난합니다.';
     }
     checks.push({
-      id: 'trailArm', label: '트레일암 (탑·릴리스)',
+      id: 'trailArm', short: '트레일암', label: '트레일암 (탑·릴리스)',
       value: Math.round(trailElbowTop) + '° → ' + Math.round(trailElbowFollow) + '°',
       score: trailScore, tip: trailTip,
       hint: '탑 70~110° · 임팩트 135~175° · 팔로우 150° 이상 · 탑 뒤로 벌어짐 ' + Math.round(Math.max(0, trailBackTop)) + '%'
@@ -1285,7 +1285,7 @@ var GolfCore = (function () {
       weightTip = '임팩트 체중이 ' + Math.round(wI * 100) + '%로 리드발 쪽으로 잘 이동했습니다.';
     }
     checks.push({
-      id: 'weight', label: '임팩트 체중 이동',
+      id: 'weight', short: '체중 이동', label: '임팩트 체중 이동',
       value: Math.round(wI * 100) + '%',
       score: wScore, tip: weightTip,
       hint: '어드레스 ' + Math.round(wA * 100) + '% → 임팩트 ' + Math.round(wI * 100) + '% → 피니시 ' + Math.round(wF * 100) + '%'
@@ -1298,7 +1298,7 @@ var GolfCore = (function () {
       ? '임팩트 이후 손이 목표 쪽으로 ' + Math.abs(r1(extFwd)) + 'cm밖에 나아가지 못했습니다. 팔로우스루에서 클럽을 목표 방향으로 길게 뻗어 보내세요(임팩트 백 1m 앞에 티를 꽂고 그쪽으로 스윙).'
       : '임팩트 이후 손이 목표 쪽으로 ' + r1(extFwd) + 'cm 이어져 팔로우스루가 잘 뻗었습니다.';
     checks.push({
-      id: 'ext', label: '팔로우스루 확장',
+      id: 'ext', short: '팔로우 확장', label: '팔로우스루 확장',
       value: r1(extFwd) + 'cm',
       score: extScore, tip: extTip,
       hint: '임팩트→팔로우 손 이동 · 리드팔꿈치 ' + Math.round(leadElbowFollow) + '°'
@@ -1324,7 +1324,7 @@ var GolfCore = (function () {
       finTip = '피니시 척추 ' + Math.round(finBend) + '°, 골반-리드발 ' + r1(finHip) + 'cm, 체중 ' + Math.round(wF * 100) + '%로 균형이 좋습니다.';
     }
     checks.push({
-      id: 'finish', label: '피니시 각도·밸런스',
+      id: 'finish', short: '피니시', label: '피니시 각도·밸런스',
       value: Math.round(finBend) + '° · ' + r1(finHip) + 'cm',
       score: finScore, tip: finTip,
       hint: '척추 굴곡 ' + Math.round(finBend) + '°(권장 0~18, 역C 주의) · 측굴 ' + Math.abs(r1(finSide)) + '° · 골반-리드발 ' + r1(finHip) + 'cm · 양손 ' + (finHandUp >= 0 ? '어깨 위 ' : '어깨 아래 ') + Math.abs(r1(finHandUp)) + 'cm'
@@ -2358,7 +2358,7 @@ var GolfPros = (function () {
     for (var i = 0; i < m.checks.length; i++) {
       var c = m.checks[i];
       var col = c.status === 'good' ? 'var(--good)' : (c.status === 'warn' ? 'var(--warn)' : 'var(--bad)');
-      html += '<div class="bar"><span class="bt2">' + c.label + '</span>' +
+      html += '<div class="bar"><span class="bt2">' + (c.short || c.label) + '</span>' +
         '<span class="bg"><i style="width:' + c.score + '%;background:' + col + '"></i></span>' +
         '<b>' + c.score + '</b></div>';
     }
