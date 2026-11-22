@@ -310,13 +310,12 @@ footer { text-align: center; font-size: 10.5px; color: #4b5a74; padding: 6px 0 1
 .compare { padding-bottom: 14px; }
 .cmp-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .cmp-head h2 { margin: 0; }
-.cmp-pick { display: flex; gap: 6px; align-items: center; margin-left: auto; }
+.cmp-pick { display: flex; gap: 6px; align-items: center; margin-left: auto; flex: 1 1 230px; min-width: 0; justify-content: flex-end; }
 .cmp-pick select {
   appearance: none; -webkit-appearance: none; background: #0b1421; color: var(--text);
   border: 1px solid var(--line2); border-radius: 9px; padding: 7px 26px 7px 9px; font-size: 11.5px;
-  max-width: 190px; text-overflow: ellipsis;
+  width: 100%; min-width: 0; max-width: 340px; text-overflow: ellipsis;
 }
-@media (min-width: 620px) { .cmp-pick select { max-width: 340px; } }
 .cmp-note { margin: 8px 2px 0; font-size: 11px; line-height: 1.6; color: var(--dim); }
 .cmp-sub { margin: 5px 2px 0; font-size: 10.5px; line-height: 1.55; color: var(--dim); }
 .cmp-grid { display: grid; grid-template-columns: 1fr; gap: 8px; margin-top: 10px; }
