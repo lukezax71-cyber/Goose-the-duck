@@ -205,6 +205,10 @@ input[type=range]:disabled { opacity: .45; }
 }
 .ovs input { accent-color: var(--accent); width: 14px; height: 14px; margin: 0; }
 .ovs label.on { color: #d9fff5; border-color: #2b6d5e; background: #0f1f1c; }
+.ovlegend { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 7px 6px 0; font-size: 10.5px; color: var(--dim); }
+.ovlegend span { display: inline-flex; align-items: center; gap: 5px; }
+.ovlegend i { display: inline-block; width: 16px; height: 0; border-top: 2px dashed #34d399; }
+.ovlegend i.dev { border-top: 2.5px solid #f97316; }
 
 .tools { display: flex; gap: 8px; margin-top: 10px; padding: 0 3px; }
 .tools .btn { flex: 1; }
@@ -284,6 +288,60 @@ footer { text-align: center; font-size: 10.5px; color: #4b5a74; padding: 6px 0 1
 .mtitle { margin: 0; font-size: 13px; font-weight: 800; }
 .mcard img { width: 100%; border-radius: 10px; display: block; background: #000; }
 .mhint { margin: 0; font-size: 11px; line-height: 1.5; color: var(--muted); }
+
+/* ---------- 프로 비교 ---------- */
+.compare { padding-bottom: 14px; }
+.cmp-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.cmp-head h2 { margin: 0; }
+.cmp-pick { display: flex; gap: 6px; align-items: center; margin-left: auto; }
+.cmp-pick select {
+  appearance: none; -webkit-appearance: none; background: #0b1421; color: var(--text);
+  border: 1px solid var(--line2); border-radius: 9px; padding: 7px 26px 7px 9px; font-size: 11.5px;
+  max-width: 190px; text-overflow: ellipsis;
+}
+.cmp-note { margin: 8px 2px 0; font-size: 11px; line-height: 1.6; color: var(--dim); }
+.cmp-grid { display: grid; grid-template-columns: 1fr; gap: 8px; margin-top: 10px; }
+@media (min-width: 620px) { .cmp-grid { grid-template-columns: 1fr 1fr; } }
+.cmp-pane {
+  position: relative; border-radius: 12px; overflow: hidden;
+  border: 1px solid #12202f; background: #04070d;
+}
+.cmp-pane canvas { display: block; width: 100%; height: auto; }
+.cmp-tag {
+  position: absolute; left: 8px; top: 8px; z-index: 2;
+  font-size: 10px; font-weight: 800; padding: 3px 7px; border-radius: 7px;
+  background: rgba(6, 16, 26, .82); color: #9fe9d4; border: 1px solid #1c4a44;
+  max-width: 82%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.cmp-phases { display: flex; gap: 5px; overflow-x: auto; margin-top: 10px; padding-bottom: 3px; scrollbar-width: none; }
+.cmp-phases::-webkit-scrollbar { display: none; }
+.cmp-phases button {
+  appearance: none; flex: none; border: 1px solid var(--line2); background: #0b1421; color: var(--muted);
+  border-radius: 9px; padding: 6px 10px; font-size: 11px; font-weight: 700; cursor: pointer;
+}
+.cmp-phases button.on { color: #06231c; background: var(--accent); border-color: var(--accent); }
+.cmp-scrub { display: flex; align-items: center; gap: 9px; margin-top: 8px; }
+.cmp-scrub .play { width: 36px; height: 36px; font-size: 13px; }
+.cmp-scrub input[type=range] { flex: 1; }
+.cmp-table { display: grid; gap: 4px; margin-top: 6px; }
+.cmp-row {
+  display: grid; grid-template-columns: 1fr auto auto auto; gap: 6px; align-items: baseline;
+  padding: 6px 8px; border-radius: 9px; background: #0b1421; font-size: 11px;
+}
+.cmp-row.head { background: none; color: var(--dim); font-size: 10px; padding: 0 8px 2px; }
+.cmp-row .lab { color: var(--muted); }
+.cmp-row .mine, .cmp-row .pro { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--text); }
+.cmp-row .dif { font-variant-numeric: tabular-nums; font-weight: 800; min-width: 52px; text-align: right; }
+.cmp-row.good .dif { color: var(--good); }
+.cmp-row.warn .dif { color: var(--warn); }
+.cmp-row.bad .dif { color: var(--bad); }
+.cmp-save { margin-top: 12px; display: grid; gap: 7px; }
+.cmp-save input {
+  width: 100%; background: #0b1421; border: 1px solid var(--line2); border-radius: 9px;
+  color: var(--text); padding: 9px 10px; font-size: 12px;
+}
+.cmp-save .btn { width: 100%; }
+.cmp-hint { margin: 0; font-size: 10.5px; line-height: 1.55; color: var(--dim); }
 </style>
 </head>
 <body>
@@ -356,17 +414,57 @@ footer { text-align: center; font-size: 10.5px; color: #4b5a74; padding: 6px 0 1
         <label class="on"><input type="checkbox" data-ov="skeleton" checked><span>스켈레톤</span></label>
         <label class="on"><input type="checkbox" data-ov="reference" checked><span>기준선</span></label>
         <label class="on"><input type="checkbox" data-ov="correction" checked><span>교정선</span></label>
-        <label class="on"><input type="checkbox" data-ov="labels" checked><span>수치</span></label>
+        <label><input type="checkbox" data-ov="labels"><span>수치 표시</span></label>
       </div>
+      <p class="ovlegend"><span><i></i>올바른 궤도·각도 기준선</span><span><i class="dev"></i>기준에서 벗어난 부분</span></p>
 
       <div class="tools">
         <button class="btn mini" id="exportBtn" type="button">스냅샷 저장</button>
         <button class="btn mini" id="markerToggle" type="button">구간 미세 조정</button>
+        <button class="btn mini" id="proBtn" type="button">프로 비교</button>
       </div>
 
       <div class="markers" id="markers" hidden>
         <p>현재 프레임 <b id="markerCur">–</b> 을(를) 지정할 구간:</p>
         <div class="mrow" id="markerBtns"></div>
+      </div>
+    </section>
+
+    <section class="card compare" id="cmpCard" hidden>
+      <div class="cmp-head">
+        <h2>프로 비교</h2>
+        <div class="cmp-pick">
+          <select id="proSelect" aria-label="비교 기준 스윙"></select>
+          <button class="btn mini ghost" id="proDel" type="button" hidden>삭제</button>
+        </div>
+      </div>
+      <p class="cmp-note" id="proNote">기준 스윙을 불러오는 중…</p>
+
+      <div class="cmp-grid">
+        <div class="cmp-pane">
+          <span class="cmp-tag">내 스윙</span>
+          <canvas id="cmpA" width="480" height="640"></canvas>
+        </div>
+        <div class="cmp-pane">
+          <span class="cmp-tag" id="cmpBTag">기준 스윙</span>
+          <canvas id="cmpB" width="480" height="640"></canvas>
+        </div>
+      </div>
+
+      <div class="cmp-phases" id="cmpPhases"></div>
+      <div class="cmp-scrub">
+        <button class="play" id="cmpPlay" type="button" aria-label="비교 재생">▶</button>
+        <input id="cmpRange" type="range" min="0" max="100" value="0" aria-label="구간 진행">
+        <span class="fnum" id="cmpLabel">–</span>
+      </div>
+
+      <h3>수치 비교</h3>
+      <div class="cmp-table" id="cmpTable"></div>
+
+      <div class="cmp-save">
+        <input id="proName" type="text" maxlength="24" placeholder="저장할 이름 (예: 이예원 드라이버)">
+        <button class="btn mini" id="proSaveBtn" type="button">이 영상을 비교 기준으로 저장</button>
+        <p class="cmp-hint" id="proSaveHint">프로 스윙 영상을 분석한 뒤 저장하면, 다음부터 내 스윙과 나란히 비교할 수 있습니다. 저장은 이 브라우저(기기)에만 됩니다.</p>
       </div>
     </section>
 
@@ -750,6 +848,33 @@ var GolfCore = (function () {
     function forward(v) { return dot3(v, Fw); }
     function vertical(v) { return dot3(v, UP); }
 
+    /* ---- 0) 바디턴(3D 회전) 헬퍼: + = 목표 쪽으로 열림 ----
+       world landmark 는 y가 아래로 증가하고 Fw 는 목표 반대(뒤) 방향이므로,
+       어드레스 대비 회전량의 부호를 뒤집어 '열림(+)'으로 맞춘다. */
+    function rawYaw(d, part) {
+      var v = part === 'sh' ? sub3(d.w3.lSh, d.w3.rSh) : sub3(d.w3.lHip, d.w3.rHip);
+      var h = horiz3(v);
+      return Math.atan2(forward(h), lateral(h)) * 180 / Math.PI;
+    }
+    var yawAddr = has3 ? { sh: rawYaw(A, 'sh'), hip: rawYaw(A, 'hip') } : null;
+    function yawOpen(d, part) {
+      if (!has3 || !d || !d.w3 || !yawAddr) return null;
+      var rel = rawYaw(d, part) - yawAddr[part];
+      while (rel > 180) rel -= 360;
+      while (rel < -180) rel += 360;
+      return -rel;
+    }
+    // 3D가 없을 때는 어깨/골반 폭 변화로 근사(부호 없음)
+    function openOr(d, part) {
+      var o = yawOpen(d, part);
+      if (o !== null) return o;
+      return turnFromWidth(part === 'sh' ? A.shWidth : A.hipWidth, part === 'sh' ? d.shWidth : d.hipWidth, view);
+    }
+    function elbowAt(d, side) {
+      if (has3 && d.w3) return angleAt3(d.w3[side + 'Sh'], d.w3[side + 'El'], d.w3[side + 'Wr']);
+      return angleAt2(d[side + 'Sh'], d[side + 'El'], d[side + 'Wr']);
+    }
+
     /* ---- 1) 플레인 ---- */
     var backPlane = armAngle2(T);
     // 다운스윙 플레인: 탑→임팩트 구간 중 손이 충분히 내려온 프레임들의 팔 라인 각도 평균
@@ -770,7 +895,7 @@ var GolfCore = (function () {
     var pathDev = cross2(T.wrist, I.wrist, D.wrist) / S2 * 100; // 탑→임팩트 직선에서 벗어난 정도(%)
 
     /* ---- 2) 척추(얼리 익스텐션) ---- */
-    var spineBendA, spineBendT, spineBendI, spineSideA, spineSideI;
+    var spineBendA, spineBendT, spineBendI, spineBendF, spineSideA, spineSideI, spineSideF;
     if (has3) {
       function bendAt(d) {
         var sp = sub3(d.w3.hipC, d.w3.sh);
@@ -781,18 +906,22 @@ var GolfCore = (function () {
         var sp = sub3(d.w3.hipC, d.w3.sh);
         return Math.atan2(lateral(sp), Math.max(vertical(sp), 1e-6)) * 180 / Math.PI;
       }
-      spineBendA = bendAt(A); spineBendT = bendAt(T); spineBendI = bendAt(I);
-      spineSideA = sideAt(A); spineSideI = sideAt(I);
+      spineBendA = bendAt(A); spineBendT = bendAt(T); spineBendI = bendAt(I); spineBendF = bendAt(F);
+      spineSideA = sideAt(A); spineSideI = sideAt(I); spineSideF = sideAt(N);
     } else {
       spineBendA = Math.abs(A.spineAngle2); spineBendT = Math.abs(T.spineAngle2); spineBendI = Math.abs(I.spineAngle2);
-      spineSideA = 0; spineSideI = 0;
+      spineBendF = Math.abs(F.spineAngle2);
+      spineSideA = 0; spineSideI = 0; spineSideF = 0;
     }
     var spineChangeI = spineBendI - spineBendA;
     var spineChangeT = spineBendT - spineBendA;
+    var spineChangeF = spineBendF - spineBendA;
 
-    /* ---- 3) 머리 안정성 ---- */
+    /* ---- 3) 머리 안정성 (+ 임팩트 후 위치) ---- */
     var headTop = { cm: 0, lat: 0, fwd: 0, up: 0 };
     var headImp = { cm: 0, lat: 0, fwd: 0, up: 0 };
+    var headFollow = { cm: 0, lat: 0, fwd: 0, up: 0 };
+    var hipFollow = { lat: 0, fwd: 0 };
     if (has3) {
       // world landmark 는 골반 중심 좌표계이므로 발목 중심을 기준점으로 옮겨 절대 이동을 구한다
       function anchorAt(d) {
@@ -803,58 +932,87 @@ var GolfCore = (function () {
           hip: { lat: lateral(p) * 100, fwd: forward(p) * 100, up: vertical(p) * 100 }
         };
       }
-      var ancA = anchorAt(A), ancT = anchorAt(T), ancI = anchorAt(I);
+      var ancA = anchorAt(A), ancT = anchorAt(T), ancI = anchorAt(I), ancF = anchorAt(F);
       function diff3(a, b) { return { lat: b.head.lat - a.head.lat, fwd: b.head.fwd - a.head.fwd, up: b.head.up - a.head.up }; }
       headTop = diff3(ancA, ancT);
       headImp = diff3(ancA, ancI);
+      headFollow = diff3(ancA, ancF);
       headTop.cm = Math.sqrt(headTop.lat * headTop.lat + headTop.fwd * headTop.fwd + headTop.up * headTop.up);
       headImp.cm = Math.sqrt(headImp.lat * headImp.lat + headImp.fwd * headImp.fwd + headImp.up * headImp.up);
+      headFollow.cm = Math.sqrt(headFollow.lat * headFollow.lat + headFollow.fwd * headFollow.fwd + headFollow.up * headFollow.up);
+      hipFollow = { lat: ancA.hip.lat - ancF.hip.lat, fwd: ancA.hip.fwd - ancF.hip.fwd };
     } else {
       headTop.lat = (T.head.x - A.head.x) / S2 * 45; headTop.up = (A.head.y - T.head.y) / S2 * 45;
       headImp.lat = (I.head.x - A.head.x) / S2 * 45; headImp.up = (A.head.y - I.head.y) / S2 * 45;
+      headFollow.lat = (F.head.x - A.head.x) / S2 * 45; headFollow.up = (A.head.y - F.head.y) / S2 * 45;
       headTop.cm = Math.sqrt(headTop.lat * headTop.lat + headTop.up * headTop.up);
       headImp.cm = Math.sqrt(headImp.lat * headImp.lat + headImp.up * headImp.up);
+      headFollow.cm = Math.sqrt(headFollow.lat * headFollow.lat + headFollow.up * headFollow.up);
+      hipFollow = { lat: (F.hipC.x - A.hipC.x) / S2 * 45, fwd: 0 };
     }
     var headDrift = Math.max(headTop.cm, headImp.cm);
 
-    /* ---- 4) 어깨/골반 회전 & X-factor ---- */
-    var shTurn, hipTurn;
-    if (has3) {
-      function yawDeg(vTo) { // 어드레스 좌우축(L)에서 회전한 각
-        var h = horiz3(vTo);
-        return Math.atan2(forward(h), lateral(h)) * 180 / Math.PI;
-      }
-      shTurn = Math.abs(yawDeg(sub3(T.w3.lSh, T.w3.rSh)));
-      hipTurn = Math.abs(yawDeg(sub3(T.w3.lHip, T.w3.rHip)));
-      if (shTurn > 120) shTurn = 180 - shTurn;
-      if (hipTurn > 120) hipTurn = 180 - hipTurn;
-    } else {
-      shTurn = turnFromWidth(A.shWidth, T.shWidth, view);
-      hipTurn = turnFromWidth(A.hipWidth, T.hipWidth, view);
-    }
+    /* ---- 4) 바디턴: 어깨/골반 회전·X-factor (구간별) ---- */
+    var shTurn = Math.abs(openOr(T, 'sh'));
+    var hipTurn = Math.abs(openOr(T, 'hip'));
+    if (shTurn > 150) shTurn = 180 - shTurn;
+    if (hipTurn > 150) hipTurn = 180 - hipTurn;
     var xf = shTurn - hipTurn;
+
+    var rawI = { sh: openOr(I, 'sh'), hip: openOr(I, 'hip') };
+    var rawF = { sh: openOr(F, 'sh'), hip: openOr(F, 'hip') };
+    var rawN = { sh: openOr(N, 'sh'), hip: openOr(N, 'hip') };
+    var shImpact = rawI.sh, hipImpact = rawI.hip;      // + = 목표 쪽으로 열림
+    var shFollow = rawF.sh, hipFollowTurn = rawF.hip;
+    var shFinish = rawN.sh, hipFinish = rawN.hip;
+    var clearImpact = hipImpact;                       // 임팩트 골반 클리어런스(열림)
+    // X-factor 스트레치: 탑 이후 다운스윙에서 늘어난 최대 분리(TPI 투어 평균 +5°)
+    var xfMaxDown = xf;
+    if (has3) {
+      for (var qi = ph.top; qi <= ph.impact; qi++) {
+        var fq = frames[qi];
+        if (!fq || !fq.d) continue;
+        var so = yawOpen(fq.d, 'sh'), ho = yawOpen(fq.d, 'hip');
+        if (so === null || ho === null) continue;
+        var xq = Math.abs(so) - Math.abs(ho);
+        if (xq > xfMaxDown) xfMaxDown = xq;
+      }
+    }
+    var xfStretch = Math.max(0, xfMaxDown - xf);
+
 
     /* ---- 5) 골반 이동(스웨이/스러스트) ---- */
     var sway, thrust, swayI = 0;
     if (has3) {
-      sway = ancT.hip.lat - ancA.hip.lat;
-      swayI = ancI.hip.lat - ancA.hip.lat;
-      thrust = ancI.hip.fwd - ancA.hip.fwd;
+      // 월드 좌표는 골반 중심 기준 → 발목 기준 이동의 부호를 뒤집어 '골반이 움직인 방향'으로 맞춘다
+      sway = ancA.hip.lat - ancT.hip.lat;
+      swayI = ancA.hip.lat - ancI.hip.lat;
+      thrust = ancA.hip.fwd - ancI.hip.fwd;
     } else {
       sway = (T.hipC.x - A.hipC.x) / S2 * 45;
       thrust = 0;
       swayI = (I.hipC.x - A.hipC.x) / S2 * 45;
     }
 
-    /* ---- 6) 리드암 스트레이트 ---- */
-    var leadElbow, leadElbowTop;
-    if (has3) {
-      leadElbow = angleAt3(I.w3[lead + 'Sh'], I.w3[lead + 'El'], I.w3[lead + 'Wr']);
-      leadElbowTop = angleAt3(T.w3[lead + 'Sh'], T.w3[lead + 'El'], T.w3[lead + 'Wr']);
-    } else {
-      leadElbow = angleAt2(I[lead + 'Sh'], I[lead + 'El'], I[lead + 'Wr']);
-      leadElbowTop = angleAt2(T[lead + 'Sh'], T[lead + 'El'], T[lead + 'Wr']);
+    /* ---- 6) 리드암 / 트레일암 각도 ---- */
+    var leadElbow = elbowAt(I, lead);
+    var leadElbowTop = elbowAt(T, lead);
+    var leadElbowFollow = elbowAt(F, lead);
+    var leadElbowFinish = elbowAt(N, lead);
+    var trailElbowTop = elbowAt(T, trail);
+    var trailElbowDown = elbowAt(D, trail);
+    var trailElbowImpact = elbowAt(I, trail);
+    var trailElbowFollow = elbowAt(F, trail);
+    var trailElbowFinish = elbowAt(N, trail);
+    // 플라잉 엘보 경향: 탑에서 트레일팔꿈치가 목표 반대(뒤)로 벌어진 정도(% 어깨폭)
+    var trailBackTop = 0;
+    if (has3 && T.w3) {
+      var shW3 = len3(sub3(T.w3.lSh, T.w3.rSh)) || 1;
+      trailBackTop = forward(sub3(T.w3.rEl, T.w3.rSh)) / shW3 * 100;
     }
+    var chickenWing = leadElbowFollow < 148;      // 팔로우에서 리드팔꿈치가 접히면 치킨윙 경향
+    var flyingElbow = trailBackTop > 26 && trailElbowTop > 118;
+
 
     /* ---- 7) 체중 이동 ---- */
     function weightPos(d) {
@@ -886,6 +1044,21 @@ var GolfCore = (function () {
       finHead = Math.abs(N.head.x - N.hipC.x) / S2 * 45;
     }
 
+    /* ---- 8b) 피니시 각도: 척추 굴곡·측굴, 양손 높이 ---- */
+    var finBend, finSide, finHandUp;
+    if (has3) {
+      var spN = sub3(N.w3.hipC, N.w3.sh);
+      finBend = Math.atan2(forward(spN), Math.max(vertical(spN), 1e-6)) * 180 / Math.PI;
+      finSide = Math.atan2(lateral(spN), Math.max(vertical(spN), 1e-6)) * 180 / Math.PI;
+      finHandUp = (N.w3.sh.y - N.w3.wrist.y) * 100;     // + = 손이 어깨보다 높음(하이 피니시)
+    } else {
+      finBend = Math.abs(N.spineAngle2);
+      finSide = 0;
+      finHandUp = (N.sh.y - N.wrist.y) / S2 * 45;
+    }
+    var finBendChange = finBend - spineBendA;
+
+
     /* ---- 9) 자세 값 ---- */
     var headFwdA = has3 ? ancA.head.fwd : 0;
     var stanceW = has3 ? Math.abs(lateral(sub3(A.w3.lAn, A.w3.rAn))) * 100 : A.stance / S2 * 45;
@@ -893,6 +1066,14 @@ var GolfCore = (function () {
 
     /* ------------------------------ 점수 ------------------------------ */
     var checks = [];
+
+    // 권장 범위 안이면 100점, soft 경계에서 38점으로 떨어지는 구간 점수
+    function bandScore(v, lo, hi, softLo, softHi) {
+      if (!isNum(v)) return 60;
+      if (v >= lo && v <= hi) return 100;
+      if (v < lo) return clamp100(100 - (lo - v) / Math.max(1e-6, lo - softLo) * 62);
+      return clamp100(100 - (v - hi) / Math.max(1e-6, softHi - hi) * 62);
+    }
 
     // 1) 스윙 플레인
     var planeScore = 100
@@ -954,21 +1135,42 @@ var GolfCore = (function () {
       hint: '탑 ' + r1(headTop.cm) + 'cm · 임팩트 ' + r1(headImp.cm) + 'cm'
     });
 
-    // 4) 어깨 회전 / X-factor
-    var xfScore = 100 - Math.max(0, TH.xfMin - xf) * 2.2 - Math.max(0, xf - TH.xfMax) * 1.4;
-    var xfTip;
+    // 4) 바디턴 — 백스윙 어깨·골반 회전과 X-factor
+    var turnScore = bandScore(shTurn, 80, 105, 55, 125) * 0.35
+      + bandScore(hipTurn, 40, 55, 20, 70) * 0.3
+      + bandScore(xf, 38, 58, 20, 75) * 0.35;
+    var turnTip;
     if (xf < TH.xfMin) {
-      xfTip = '어깨 회전 ' + Math.round(shTurn) + '°, 골반 ' + Math.round(hipTurn) + '°로 분리(X-factor ' + Math.round(xf) + '°)가 부족합니다. 백스윙에서 등을 목표 반대쪽으로 보여준다는 느낌으로 가슴을 크게 돌리세요.';
+      turnTip = '어깨 회전 ' + Math.round(shTurn) + '°, 골반 ' + Math.round(hipTurn) + '°로 분리(X-factor ' + Math.round(xf) + '°)가 부족합니다. 투어 평균 X-factor는 42~45°입니다. 백스윙에서 등을 목표 반대쪽으로 보여준다는 느낌으로 가슴을 크게 돌리세요.';
     } else if (xf > TH.xfMax) {
-      xfTip = 'X-factor ' + Math.round(xf) + '°는 큰 편입니다. 유연성이 받쳐주지 않으면 허리 부담이 커지니, 골반은 조금 덜 열고 어깨만 감는 연습을 권합니다.';
+      turnTip = 'X-factor ' + Math.round(xf) + '°는 큰 편입니다(투어 평균 42~45°). 유연성이 받쳐주지 않으면 허리 부담이 커지니, 골반은 조금 덜 열고 어깨만 감는 연습을 권합니다.';
+    } else if (hipTurn < 36) {
+      turnTip = '어깨는 ' + Math.round(shTurn) + '° 잘 돌았는데 골반 회전이 ' + Math.round(hipTurn) + '°로 적습니다(권장 40~55°). 골반이 돌지 않으면 X-factor가 과해져 허리 부상 위험이 커집니다.';
     } else {
-      xfTip = '어깨 ' + Math.round(shTurn) + '°, 골반 ' + Math.round(hipTurn) + '°, X-factor ' + Math.round(xf) + '°로 좋은 분리입니다.';
+      turnTip = '어깨 ' + Math.round(shTurn) + '° · 골반 ' + Math.round(hipTurn) + '° · X-factor ' + Math.round(xf) + '°로 좋은 분리입니다(투어 평균 42~45°).';
     }
     checks.push({
-      id: 'xf', label: '어깨 회전 · X-factor',
-      value: Math.round(shTurn) + '° / ' + Math.round(xf) + '°',
-      score: xfScore, tip: xfTip,
-      hint: '어드레스 어깨선 기준 회전량'
+      id: 'xf', label: '바디턴 · 백스윙 회전',
+      value: Math.round(shTurn) + '° / ' + Math.round(hipTurn) + '°',
+      score: turnScore, tip: turnTip,
+      hint: '어깨 ' + Math.round(shTurn) + '°(권장 80~105) · 골반 ' + Math.round(hipTurn) + '°(40~55) · X-factor ' + Math.round(xf) + '°(38~58) · 스트레치 +' + r1(xfStretch) + '°'
+    });
+
+    // 4b) 임팩트 골반 클리어런스
+    var clearScore = bandScore(clearImpact, 26, 48, 8, 66);
+    var clearTip;
+    if (clearImpact < 20) {
+      clearTip = '임팩트에서 골반이 ' + Math.round(clearImpact) + '° 열렸습니다(투어 평균 30~40°). 하체가 일찍 멈추면 손이 먼저 나오며 오버 더 톱·치킨윙·슬라이스가 따라옵니다. 다운스윙 시작과 함께 왼쪽 뒷주머니를 목표 쪽으로 돌린다는 느낌으로 골반을 먼저 여세요.';
+    } else if (clearImpact > 52) {
+      clearTip = '임팩트 골반이 ' + Math.round(clearImpact) + '°로 많이 열렸습니다. 상체가 뒤처지면 페이스가 열리며 미는 공이 납니다. 골반이 먼저 빠지지 않게 어깨 회전과 박자를 맞추세요.';
+    } else {
+      clearTip = '임팩트에서 골반이 ' + Math.round(clearImpact) + '° 열려 적정 범위(30~40°)에 있습니다. 하체가 공 앞을 비켜 줘 팔이 지나갈 길이 생겼습니다.';
+    }
+    checks.push({
+      id: 'clear', label: '임팩트 골반 클리어런스',
+      value: Math.round(clearImpact) + '°',
+      score: clearScore, tip: clearTip,
+      hint: '어드레스 기준 골반 열림 · 권장 30~40° · 임팩트 어깨 ' + Math.round(shImpact) + '°'
     });
 
     // 5) 골반 스웨이 / 스러스트
@@ -988,16 +1190,83 @@ var GolfCore = (function () {
       hint: '백스윙 ' + (sway >= 0 ? '리드쪽 ' : '트레일쪽 ') + Math.abs(r1(sway)) + 'cm · 임팩트 볼 방향 ' + (thrust >= 0 ? '+' : '') + r1(thrust) + 'cm'
     });
 
-    // 6) 리드암 스트레이트
-    var armScore = clamp100((leadElbow - 138) / 38 * 100);
-    var armTip = leadElbow < TH.leadElbow
-      ? '임팩트에서 리드팔꿈치가 ' + Math.round(leadElbow) + '°로 굽어 있습니다(180°가 완전히 편 상태). 임팩트 순간 팔을 뻗는 연습(임팩트 백에 공을 두고 밀기)을 해보세요.'
-      : '임팩트 리드팔이 ' + Math.round(leadElbow) + '°로 잘 펴졌습니다. 공에 힘을 전달하기 좋은 자세입니다.';
+    // 5b) 임팩트 후 상체 유지 (덤빙·얼리 익스텐션·스웨이 구분)
+    var postScore = 100 - Math.max(0, Math.abs(spineChangeF) - 6) * 6 - Math.max(0, headFollow.cm - 6) * 4.5;
+    var postTip;
+    if (spineChangeF < -8) {
+      postTip = '팔로우스루에서 상체가 어드레스보다 ' + Math.abs(r1(spineChangeF)) + '° 일어섰습니다(얼리 익스텐션). 엉덩이가 볼 쪽으로 나오면 팔이 접히며 치킨윙이 생깁니다. 벽에 엉덩이를 대고 힙 힌지 자세로 임팩트를 지나가세요.';
+    } else if (headFollow.cm > 8 || spineChangeF > 10) {
+      postTip = '임팩트 이후 상체가 공 쪽으로 ' + r1(headFollow.cm) + 'cm 쏠렸습니다(덤빙·스웨이 성향). 머리를 공 뒤에 두고 흉추 회전으로 팔을 보내세요.';
+    } else {
+      postTip = '임팩트 이후에도 상체가 ' + r1(spineChangeF) + '° 변화로 버티고, 머리 이동 ' + r1(headFollow.cm) + 'cm로 안정적입니다.';
+    }
     checks.push({
-      id: 'arm', label: '임팩트 리드암 스트레이트',
-      value: Math.round(leadElbow) + '°',
+      id: 'posture', label: '임팩트 후 상체 유지',
+      value: (spineChangeF >= 0 ? '+' : '') + r1(spineChangeF) + '°',
+      score: postScore, tip: postTip,
+      hint: '척추 ' + Math.round(spineBendI) + '°(임팩트) → ' + Math.round(spineBendF) + '°(팔로우) · 머리 이동 임팩트 ' + r1(headImp.cm) + 'cm / 팔로우 ' + r1(headFollow.cm) + 'cm'
+    });
+
+    // 5c) 임팩트 후 하체 안착 (골반이 리드 다리 위로)
+    var lowerCm = hipFollow.lat;                     // + = 리드(목표) 쪽
+    var lowerScore = bandScore(lowerCm, 2, 20, -8, 32) * 0.45
+      + bandScore(wF * 100, 70, 100, 45, 100) * 0.3
+      + bandScore(hipFollowTurn, 45, 90, 20, 115) * 0.25;
+    var lowerTip;
+    if (lowerCm < -2) {
+      lowerTip = '임팩트 이후 골반이 목표 반대쪽에 ' + Math.abs(r1(lowerCm)) + 'cm 남아 있습니다(스웨이). 골반을 리드발 위로 옮기며 회전하세요.';
+    } else if (hipFollowTurn < 40) {
+      lowerTip = '팔로우스루에서 골반 회전이 ' + Math.round(hipFollowTurn) + '°로 멈췄습니다(권장 45° 이상). 하체가 끝까지 돌아야 팔이 자유로워집니다.';
+    } else if (wF < 0.68) {
+      lowerTip = '팔로우스루 체중이 ' + Math.round(wF * 100) + '%로 리드발에 덜 실렸습니다. 리드발 위에 서서 마무리하는 연습을 하세요.';
+    } else {
+      lowerTip = '팔로우스루에서 골반이 리드쪽으로 ' + r1(lowerCm) + 'cm 이동하고 ' + Math.round(hipFollowTurn) + '° 열려 리드 다리 위에 잘 안착했습니다.';
+    }
+    checks.push({
+      id: 'lowerBody', label: '임팩트 후 하체 안착',
+      value: (lowerCm >= 0 ? '리드쪽 ' : '트레일쪽 ') + r1(Math.abs(lowerCm)) + 'cm',
+      score: lowerScore, tip: lowerTip,
+      hint: '골반 좌우 이동 ' + (lowerCm >= 0 ? '+' : '') + r1(lowerCm) + 'cm · 골반 열림 ' + Math.round(hipFollowTurn) + '° · 체중 ' + Math.round(wF * 100) + '%'
+    });
+
+    // 6) 리드암 — 임팩트 스트레이트 + 팔로우 치킨윙
+    var armScore = bandScore(leadElbow, 158, 180, 130, 190) * 0.55
+      + bandScore(leadElbowFollow, 150, 180, 110, 190) * 0.45;
+    if (chickenWing) armScore = Math.min(armScore, 68);
+    var armTip;
+    if (chickenWing) {
+      armTip = '팔로우스루에서 리드팔꿈치가 ' + Math.round(leadElbowFollow) + '°로 접혔습니다(치킨윙 경향, 권장 150° 이상). 대부분 하체 회전이 임팩트에서 멈춰 팔이 접히며 생깁니다. 리드팔을 억지로 펴기보다 가슴·골반 회전을 끝까지 이어가세요.';
+    } else if (leadElbow < TH.leadElbow) {
+      armTip = '임팩트 리드팔꿈치가 ' + Math.round(leadElbow) + '°로 굽어 있습니다(180°가 완전히 편 상태). 임팩트 백에 공을 두고 미는 연습으로 팔을 뻗어 보세요.';
+    } else {
+      armTip = '임팩트 리드팔 ' + Math.round(leadElbow) + '°, 팔로우 ' + Math.round(leadElbowFollow) + '°로 잘 펴졌습니다.';
+    }
+    checks.push({
+      id: 'arm', label: '리드암 (임팩트·팔로우)',
+      value: Math.round(leadElbow) + '° → ' + Math.round(leadElbowFollow) + '°',
       score: armScore, tip: armTip,
-      hint: '탑 ' + Math.round(leadElbowTop) + '° → 임팩트 ' + Math.round(leadElbow) + '°'
+      hint: '임팩트 권장 158~180° · 팔로우 150° 이상(치킨윙 방지) · 탑 ' + Math.round(leadElbowTop) + '°'
+    });
+
+    // 6b) 트레일암 — 탑 각도(플라잉 엘보) + 다운스윙 래그 + 릴리스 확장
+    var trailScore = bandScore(trailElbowTop, 70, 112, 45, 168) * 0.4
+      + bandScore(trailElbowImpact, 135, 175, 100, 190) * 0.25
+      + bandScore(trailElbowFollow, 150, 180, 115, 190) * 0.35;
+    var trailTip;
+    if (flyingElbow) {
+      trailTip = '탑에서 트레일팔꿈치가 ' + Math.round(trailElbowTop) + '°로 펴지고 뒤로 ' + Math.round(trailBackTop) + '% 벌어졌습니다(플라잉 엘보 경향, 권장 70~110°). TPI는 그 자체를 결함으로 보지 않지만 다운스윙 순서가 흐트러지기 쉽습니다. 겨드랑이에 타월을 끼우고 팔꿈치가 아래를 향하게 내려오세요.';
+    } else if (trailElbowFollow < 145) {
+      trailTip = '팔로우스루에서 트레일팔꿈치가 ' + Math.round(trailElbowFollow) + '°로 접혀 있습니다(권장 150° 이상). 임팩트 이후 양팔이 목표 쪽으로 뻗으며 릴리스되도록 하세요.';
+    } else if (trailElbowDown < 70) {
+      trailTip = '다운스윙에서 트레일팔꿈치가 ' + Math.round(trailElbowDown) + '°로 붙어 래그가 만들어집니다. 임팩트 ' + Math.round(trailElbowImpact) + '°, 팔로우 ' + Math.round(trailElbowFollow) + '°로 릴리스도 좋습니다.';
+    } else {
+      trailTip = '트레일팔꿈치 탑 ' + Math.round(trailElbowTop) + '° · 임팩트 ' + Math.round(trailElbowImpact) + '° · 팔로우 ' + Math.round(trailElbowFollow) + '°로 무난합니다.';
+    }
+    checks.push({
+      id: 'trailArm', label: '트레일암 (탑·릴리스)',
+      value: Math.round(trailElbowTop) + '° → ' + Math.round(trailElbowFollow) + '°',
+      score: trailScore, tip: trailTip,
+      hint: '탑 70~110° · 임팩트 135~175° · 팔로우 150° 이상 · 탑 뒤로 벌어짐 ' + Math.round(Math.max(0, trailBackTop)) + '%'
     });
 
     // 7) 체중 이동
@@ -1019,11 +1288,8 @@ var GolfCore = (function () {
     });
 
     // 8) 팔로우스루 확장
-    var leadElbowF = has3
-      ? angleAt3(F.w3[lead + 'Sh'], F.w3[lead + 'El'], F.w3[lead + 'Wr'])
-      : angleAt2(F[lead + 'Sh'], F[lead + 'El'], F[lead + 'Wr']);
     var extFwd = has3 ? forward(sub3(I.w3.wrist, F.w3.wrist)) * 100 : 0;
-    var extScore = 100 - Math.max(0, 8 - extFwd) * 3.2 - Math.max(0, 140 - leadElbowF) * 1.2;
+    var extScore = 100 - Math.max(0, 8 - extFwd) * 3.2 - Math.max(0, 140 - leadElbowFollow) * 1.2;
     var extTip = extFwd < 8
       ? '임팩트 이후 손이 목표 쪽으로 ' + Math.abs(r1(extFwd)) + 'cm밖에 나아가지 못했습니다. 팔로우스루에서 클럽을 목표 방향으로 길게 뻗어 보내세요(임팩트 백 1m 앞에 티를 꽂고 그쪽으로 스윙).'
       : '임팩트 이후 손이 목표 쪽으로 ' + r1(extFwd) + 'cm 이어져 팔로우스루가 잘 뻗었습니다.';
@@ -1031,29 +1297,40 @@ var GolfCore = (function () {
       id: 'ext', label: '팔로우스루 확장',
       value: r1(extFwd) + 'cm',
       score: extScore, tip: extTip,
-      hint: '임팩트→팔로우 손 이동 · 리드팔꿈치 ' + Math.round(leadElbowF) + '°'
+      hint: '임팩트→팔로우 손 이동 · 리드팔꿈치 ' + Math.round(leadElbowFollow) + '°'
     });
 
-    // 9) 피니시 밸런스
+    // 9) 피니시 각도·밸런스
     var finHeadDev = Math.abs(finHead - headFwdA);
-    var finScore = 100 - Math.max(0, finHip - TH.finishHip) * 4.2 - Math.max(0, finHeadDev - 8) * 2.2 + (wF > 0.62 ? 0 : -12);
+    var finScore = bandScore(finBend, -2, 18, -16, 34) * 0.25
+      + bandScore(Math.abs(finSide), 0, 12, 0, 26) * 0.15
+      + bandScore(finHip, 0, TH.finishHip, 0, 26) * 0.3
+      + bandScore(wF * 100, 68, 100, 45, 100) * 0.15
+      + bandScore(finHandUp, -6, 45, -28, 65) * 0.15;
     var finTip;
-    if (finHip > TH.finishHip) {
+    if (Math.abs(finSide) > 18 || finBend < -6) {
+      finTip = '피니시에서 상체가 목표 반대쪽으로 ' + Math.abs(r1(finSide)) + '° 기울어져 있습니다(과도한 역C). 허리 부담이 크고 공이 밀리기 쉽습니다. 가슴을 목표에 향하고 배꼽이 정면을 보는 수직에 가까운 피니시를 만드세요.';
+    } else if (finHip > TH.finishHip) {
       finTip = '피니시에서 골반이 리드발에서 ' + r1(finHip) + 'cm 떨어져 있습니다. 배꼽이 목표를 향하고, 뒤쪽 발 뒤꿈치가 완전히 들린 채 3초 서 있을 수 있는 자세를 목표로 하세요.';
-    } else if (wF < 0.62) {
-      finTip = '피니시에서 체중이 ' + Math.round(wF * 100) + '%로 리드발에 충분히 실리지 않았습니다. 스윙이 끝까지 이어지도록 팔로우스루를 크게 가져가세요.';
+    } else if (wF < 0.68) {
+      finTip = '피니시 체중이 ' + Math.round(wF * 100) + '%로 리드발에 다 실리지 않았습니다. 스윙을 끝까지 이어가 리드발 위에 서 보세요.';
+    } else if (finHandUp < -8) {
+      finTip = '피니시에서 손이 어깨보다 ' + Math.abs(r1(finHandUp)) + 'cm 낮습니다. 양손이 어깨 높이 이상인 하이 피니시로 마무리하면 회전이 끝까지 이어집니다.';
     } else {
-      finTip = '피니시에서 골반이 리드발 위에 ' + r1(finHip) + 'cm 이내로 올라와 균형이 좋습니다.';
+      finTip = '피니시 척추 ' + Math.round(finBend) + '°, 골반-리드발 ' + r1(finHip) + 'cm, 체중 ' + Math.round(wF * 100) + '%로 균형이 좋습니다.';
     }
     checks.push({
-      id: 'finish', label: '피니시 밸런스',
-      value: r1(finHip) + 'cm',
+      id: 'finish', label: '피니시 각도·밸런스',
+      value: Math.round(finBend) + '° · ' + r1(finHip) + 'cm',
       score: finScore, tip: finTip,
-      hint: '골반-리드발 ' + r1(finHip) + 'cm · 머리 위치(어드레스 대비) ' + (finHeadDev < 0.5 ? '동일' : r1(finHeadDev) + 'cm 변동')
+      hint: '척추 굴곡 ' + Math.round(finBend) + '°(권장 0~18, 역C 주의) · 측굴 ' + Math.abs(r1(finSide)) + '° · 골반-리드발 ' + r1(finHip) + 'cm · 양손 ' + (finHandUp >= 0 ? '어깨 위 ' : '어깨 아래 ') + Math.abs(r1(finHandUp)) + 'cm'
     });
 
     /* 상태 재계산(점수 기반) */
-    var WEIGHTS = { plane: 1.5, spine: 1.4, head: 1.1, xf: 1.0, sway: 1.0, arm: 0.9, weight: 1.0, ext: 0.8, finish: 0.9 };
+    var WEIGHTS = {
+      plane: 1.5, spine: 1.4, head: 1.1, xf: 1.2, clear: 1.2, posture: 1.1, lowerBody: 1.0,
+      sway: 1.0, arm: 1.1, trailArm: 1.0, weight: 1.0, ext: 0.8, finish: 1.1
+    };
     var sum = 0, wsum = 0;
     for (var i = 0; i < checks.length; i++) {
       var c = checks[i];
@@ -1070,9 +1347,13 @@ var GolfCore = (function () {
       plane: ott ? '다운스윙이 백스윙보다 세워져 오버 더 톱 경향이 보입니다' : '다운스윙 궤도가 백스윙과 어긋나 있습니다',
       spine: earlyExt ? '임팩트에서 상체가 일어서는 얼리 익스텐션이 나타납니다' : '임팩트에서 스파인 각도가 무너집니다',
       head: '스윙 중 머리가 ' + r1(headDrift) + 'cm 흔들립니다',
-      xf: '어깨와 골반의 분리(X-factor)가 부족합니다',
+      xf: '백스윙에서 어깨·골반 회전(X-factor)이 기준을 벗어납니다',
+      clear: '임팩트에서 골반 회전(클리어런스)이 부족합니다',
+      posture: '임팩트 이후 상체가 공 뒤에서 버티지 못합니다',
+      lowerBody: '임팩트 이후 하체가 리드 다리 위로 넘어가지 못합니다',
       sway: '백스윙에서 골반이 옆으로 밀리는 스웨이가 보입니다',
-      arm: '임팩트에서 리드팔이 굽어 있습니다',
+      arm: '리드암이 임팩트·팔로우에서 굽어 있습니다(치킨윙 경향)',
+      trailArm: '트레일암 각도가 릴리스에 맞지 않습니다',
       weight: '임팩트 체중 이동이 부족합니다',
       ext: '팔로우스루가 목표 쪽으로 뻗지 못합니다',
       finish: '피니시 밸런스가 흐트러집니다'
@@ -1093,28 +1374,37 @@ var GolfCore = (function () {
         { k: '어깨 회전', v: Math.round(shTurn) + '°' },
         { k: '골반 회전', v: Math.round(hipTurn) + '°' },
         { k: 'X-factor', v: Math.round(xf) + '°' },
+        { k: '트레일팔꿈치', v: Math.round(trailElbowTop) + '°' },
         { k: '머리 이동', v: r1(headTop.cm) + 'cm' }
       ],
       downswing: [
         { k: '다운스윙 플레인', v: Math.round(downPlane) + '°' },
         { k: '탑 대비', v: (planeDiff >= 0 ? '+' : '') + r1(planeDiff) + '°' },
+        { k: '트레일팔꿈치', v: Math.round(trailElbowDown) + '°' },
         { k: '손 경로 이탈', v: Math.abs(r1(pathDev)) + '%' }
       ],
       impact: [
         { k: '리드팔꿈치', v: Math.round(leadElbow) + '°' },
-        { k: '머리 이동', v: r1(headImp.cm) + 'cm' },
+        { k: '트레일팔꿈치', v: Math.round(trailElbowImpact) + '°' },
+        { k: '골반 열림', v: Math.round(clearImpact) + '°' },
+        { k: '어깨 열림', v: Math.round(shImpact) + '°' },
         { k: '체중', v: Math.round(wI * 100) + '%' },
         { k: '스파인', v: Math.round(spineBendI) + '°' }
       ],
       follow: [
-        { k: '목표 방향 확장', v: r1(extFwd) + 'cm' },
-        { k: '리드팔꿈치', v: Math.round(leadElbowF) + '°' },
-        { k: '어깨 회전', v: Math.round(Math.abs(turnFromWidth(A.shWidth, F.shWidth, view))) + '°' }
+        { k: '어깨 회전', v: Math.round(shFollow) + '°' },
+        { k: '골반 회전', v: Math.round(hipFollowTurn) + '°' },
+        { k: '리드팔꿈치', v: Math.round(leadElbowFollow) + '°' },
+        { k: '트레일팔꿈치', v: Math.round(trailElbowFollow) + '°' },
+        { k: '골반 위치', v: (hipFollow.lat >= 0 ? '리드쪽 ' : '트레일쪽 ') + r1(Math.abs(hipFollow.lat)) + 'cm' },
+        { k: '목표 확장', v: r1(extFwd) + 'cm' }
       ],
       finish: [
+        { k: '척추 굴곡', v: Math.round(finBend) + '°' },
+        { k: '측굴', v: Math.abs(r1(finSide)) + '°' },
         { k: '골반-리드발', v: r1(finHip) + 'cm' },
         { k: '체중', v: Math.round(wF * 100) + '%' },
-        { k: '머리 변동', v: r1(finHeadDev) + 'cm' }
+        { k: '양손 높이', v: (finHandUp >= 0 ? '어깨 위 ' : '어깨 아래 ') + Math.abs(r1(finHandUp)) + 'cm' }
       ]
     };
 
@@ -1159,7 +1449,16 @@ var GolfCore = (function () {
         headDrift: headDrift, headTop: headTop, headImp: headImp,
         shTurn: shTurn, hipTurn: hipTurn, xf: xf,
         sway: sway, swayI: swayI, thrust: thrust,
-        leadElbow: leadElbow, leadElbowTop: leadElbowTop, leadElbowF: leadElbowF, extFwd: extFwd,
+        leadElbow: leadElbow, leadElbowTop: leadElbowTop, leadElbowFollow: leadElbowFollow, leadElbowFinish: leadElbowFinish, extFwd: extFwd,
+        shTop: shTurn, hipTop: hipTurn, xfTop: xf, xfStretch: xfStretch, clearImpact: clearImpact,
+        shImpact: shImpact, hipImpact: hipImpact, shFollow: shFollow, hipFollowTurn: hipFollowTurn,
+        shFinish: shFinish, hipFinish: hipFinish,
+        spineBendF: spineBendF, spineChangeF: spineChangeF, headFollowCm: headFollow.cm,
+        hipFollowLat: hipFollow.lat, hipFollowFwd: hipFollow.fwd,
+        trailElbowTop: trailElbowTop, trailElbowDown: trailElbowDown, trailElbowImpact: trailElbowImpact,
+        trailElbowFollow: trailElbowFollow, trailElbowFinish: trailElbowFinish, trailBackTop: trailBackTop,
+        chickenWing: chickenWing, flyingElbow: flyingElbow,
+        finBend: finBend, finSide: finSide, finHandUp: finHandUp, finBendChange: finBendChange,
         wA: wA, wI: wI, wF: wF,
         finHip: finHip, finHead: finHead, finHeadDev: finHeadDev, headFwdA: headFwdA, stance: stanceW, handTopH: handTopH,
         ott: ott, shallow: shallow, earlyExt: earlyExt, overBend: overBend, headUp: headUp,
@@ -1274,13 +1573,14 @@ var GolfDemo = (function () {
     return 0.5 * ((2 * p1) + (-p0 + p2) * t + (2 * p0 - 5 * p1 + 4 * p2 - p3) * t2 + (-p0 + 3 * p1 - 3 * p2 + p3) * t3);
   }
 
-  function params(u) {
-    if (u <= KEYS[0].u) return fromVec(vecOf(KEYS[0]));
-    if (u >= KEYS[KEYS.length - 1].u) return fromVec(vecOf(KEYS[KEYS.length - 1]));
+  function params(u, keys) {
+    keys = keys || KEYS;
+    if (u <= keys[0].u) return fromVec(vecOf(keys[0]));
+    if (u >= keys[keys.length - 1].u) return fromVec(vecOf(keys[keys.length - 1]));
     var i = 0;
-    while (i < KEYS.length - 2 && u > KEYS[i + 1].u) i++;
-    var k0 = vecOf(KEYS[Math.max(0, i - 1)]), k1 = vecOf(KEYS[i]), k2 = vecOf(KEYS[i + 1]), k3 = vecOf(KEYS[Math.min(KEYS.length - 1, i + 2)]);
-    var t = (u - KEYS[i].u) / (KEYS[i + 1].u - KEYS[i].u);
+    while (i < keys.length - 2 && u > keys[i + 1].u) i++;
+    var k0 = vecOf(keys[Math.max(0, i - 1)]), k1 = vecOf(keys[i]), k2 = vecOf(keys[i + 1]), k3 = vecOf(keys[Math.min(keys.length - 1, i + 2)]);
+    var t = (u - keys[i].u) / (keys[i + 1].u - keys[i].u);
     var out = [];
     for (var c = 0; c < k1.length; c++) out.push(catmull(k0[c], k1[c], k2[c], k3[c], t));
     var p = fromVec(out);
@@ -1307,8 +1607,8 @@ var GolfDemo = (function () {
   }
 
   /* --- 한 프레임의 3D 인체 --- */
-  function buildPose(u) {
-    var p = params(u);
+  function buildPose(u, keys) {
+    var p = params(u, keys);
     var hipC = V(p.sway, 0.96 + p.lift, 0.0);
     var shC = add(hipC, V(0, 0.50 * Math.cos(p.bend * D2R), 0.50 * Math.sin(p.bend * D2R)));
 
@@ -1371,13 +1671,15 @@ var GolfDemo = (function () {
     ['lAn', 27], ['rAn', 28], ['lHeel', 29], ['rHeel', 30], ['lToe', 31], ['rToe', 32]
   ];
 
-  /** 데모 프레임 생성 → {frames:[{t, landmarks, worldLandmarks}], phases, W, H} */
-  function make(view) {
+  /** 데모 프레임 생성 → {frames:[{t, landmarks, worldLandmarks}], phases, W, H}
+   *  keys 를 주면 같은 3D 리그로 다른 스윙(프로 기준 모델)을 만든다. */
+  function make(view, keys) {
+    keys = keys || KEYS;
     var cam = makeCamera(view);
     var frames = [];
     for (var i = 0; i < N; i++) {
       var u = i / (N - 1);
-      var pose = buildPose(u);
+      var pose = buildPose(u, keys);
       var lm2 = [], lm3 = [];
       for (var k = 0; k < 33; k++) { lm2.push({ x: 0.5, y: 0.6, z: 0, visibility: 0.9 }); lm3.push({ x: 0, y: 0, z: 0 }); }
       var hx = (pose.lHip.x + pose.rHip.x) / 2, hy = (pose.lHip.y + pose.rHip.y) / 2, hz = (pose.lHip.z + pose.rHip.z) / 2;
@@ -1407,11 +1709,11 @@ var GolfDemo = (function () {
     return {
       frames: frames, W: W, H: H, fps: FPS,
       phases: {
-        address: fi(KEYS[0].u), top: fi(KEYS[1].u), downswing: fi(KEYS[2].u),
-        impact: fi(KEYS[3].u), follow: fi(KEYS[4].u), finish: fi(KEYS[5].u), quality: 'demo'
+        address: fi(keys[0].u), top: fi(keys[1].u), downswing: fi(keys[2].u),
+        impact: fi(keys[3].u), follow: fi(keys[4].u), finish: fi(keys[5].u), quality: 'demo'
       },
       ballPos: V(0.02, 0.03, 0.34),
-      KEYS: KEYS
+      KEYS: keys
     };
   }
 
@@ -1426,7 +1728,121 @@ var GolfDemo = (function () {
     };
   }
 
-  return { make: make, scenePoints: scenePoints, W: W, H: H, FPS: FPS, N: N, KEYS: KEYS };
+  function V2(x, y, z) { return V(x, y, z); }
+  return { make: make, scenePoints: scenePoints, W: W, H: H, FPS: FPS, N: N, KEYS: KEYS, vec: V2 };
+})();
+</script>
+<script>
+/* =====================================================================
+ * GolfPros — KLPGA 스타일 기준 스윙 모델
+ *  - 실제 선수 영상/계측값이 아니라, 공개된 생체역학 기준(투어 평균·TPI 자료)과
+ *    널리 알려진 선수 스타일 설명을 바탕으로 같은 3D 리그에서 만든 '참조 모델'이다.
+ *  - GolfDemo 의 3D 인체 리그를 그대로 쓰므로 내 스윙과 같은 파이프라인으로 계측된다.
+ * ===================================================================== */
+var GolfPros = (function () {
+  'use strict';
+
+  var V = GolfDemo.vec;
+
+  function key(u, grip, shYaw, hipYaw, bend, sway, headDx, lift) {
+    return { u: u, grip: grip, shYaw: shYaw, hipYaw: hipYaw, bend: bend, sway: sway, lift: lift || 0,
+      headDx: headDx || 0, headDy: 0, headDz: 0 };
+  }
+
+  var PRESETS = [
+    {
+      id: 'balance',
+      name: '균형형 · 고진영 스타일',
+      short: '균형',
+      note: '축이 거의 흔들리지 않는 컴퓨터 같은 밸런스. 몸통 회전은 크지만 골반은 제자리에서 돌고, 체중이 끝까지 리드발로 넘어갑니다. (공개된 스윙 분석 기사·투어 평균 기준을 참조 모델로 구현)',
+      highlights: [
+        '어드레스~피니시 머리 이동 최소(3cm 이내)',
+        '골반 스웨이 없이 회전만, 임팩트 골반 40° 전후',
+        '피니시에서 리드발 위에 완전히 서고 뒤꿈치가 들림'
+      ],
+      keys: [
+        key(0.100, V(0.00, 0.93, 0.34), 0, 0, 26, 0.000, 0, 0),
+        key(0.400, V(0.02, 1.60, -0.05), -92, -46, 25, -0.020, 0.005, 0.003),
+        key(0.480, V(0.06, 1.10, 0.30), -40, -8, 24, -0.010, 0.003, 0.002),
+        key(0.525, V(0.05, 0.88, 0.48), 22, 40, 24, 0.060, -0.003, -0.002),
+        key(0.700, V(0.24, 1.30, 0.95), 58, 56, 23, 0.070, -0.008, 0),
+        key(0.880, V(0.40, 1.60, 0.10), 92, 72, 10, 0.090, -0.010, 0)
+      ]
+    },
+    {
+      id: 'power',
+      name: '파워 회전형 · 이예원 스타일',
+      short: '파워',
+      note: '오른발로 지면을 강하게 누르며 크게 감아 도는 스윙. 백스윙에서 팔을 높이 들고 임팩트 직전까지 트레일암과 손목 각을 유지하는 래그가 큽니다. (공개된 스윙 분석 기사·투어 평균 기준을 참조 모델로 구현)',
+      highlights: [
+        '어깨 회전 100° 전후, X-factor 45° 내외',
+        '다운스윙 트레일팔꿈치를 붙여 유지하는 래그',
+        '임팩트 후 양팔이 목표 쪽으로 길게 뻗는 릴리스'
+      ],
+      keys: [
+        key(0.100, V(0.00, 0.93, 0.34), 0, 0, 27, 0.000, 0, 0),
+        key(0.400, V(0.00, 1.66, -0.02), -102, -56, 26, -0.028, 0.006, 0.004),
+        key(0.480, V(0.05, 1.12, 0.30), -46, -10, 25, -0.014, 0.004, 0.003),
+        key(0.525, V(0.05, 0.87, 0.44), 26, 46, 25, 0.068, -0.004, -0.002),
+        key(0.700, V(0.26, 1.32, 0.98), 64, 62, 22, 0.080, -0.010, 0),
+        key(0.880, V(0.42, 1.62, 0.08), 100, 82, 8, 0.100, -0.012, 0)
+      ]
+    },
+    {
+      id: 'precision',
+      name: '정교한 임팩트형 · 박인비 스타일',
+      short: '정교',
+      note: '느린 듯 일정한 템포로 임팩트를 정확히 맞추는 스윙. 회전은 조금 아끼고 손목·상체 힘을 빼며, 임팩트에서 손이 공 앞으로 나오는 샤프트 린과 안정된 피니시가 특징입니다. (공개된 스윙 분석 기사·투어 평균 기준을 참조 모델로 구현)',
+      highlights: [
+        '머리·스파인 각도 변화 최소, 일정한 템포',
+        '임팩트에서 손이 공 앞으로(샤프트 린)',
+        '피니시 상체가 수직에 가깝게 서고 균형 유지'
+      ],
+      keys: [
+        key(0.100, V(0.00, 0.93, 0.34), 0, 0, 25, 0.000, 0, 0),
+        key(0.400, V(0.02, 1.58, -0.04), -86, -44, 24, -0.018, 0.004, 0.003),
+        key(0.480, V(0.06, 1.08, 0.30), -38, -8, 23, -0.008, 0.002, 0.002),
+        key(0.525, V(0.05, 0.86, 0.52), 18, 38, 23, 0.058, -0.002, -0.002),
+        key(0.700, V(0.22, 1.28, 0.92), 54, 52, 22, 0.068, -0.006, 0),
+        key(0.880, V(0.38, 1.58, 0.12), 86, 68, 12, 0.088, -0.008, 0)
+      ]
+    }
+  ];
+
+  function byId(id) {
+    for (var i = 0; i < PRESETS.length; i++) if (PRESETS[i].id === id) return PRESETS[i];
+    return null;
+  }
+
+  function list() {
+    var out = [];
+    for (var i = 0; i < PRESETS.length; i++) {
+      var p = PRESETS[i];
+      out.push({ id: p.id, name: p.name, short: p.short, note: p.note, highlights: p.highlights });
+    }
+    return out;
+  }
+
+  /** 기준 스윙 한 벌 생성: {frames, phases, analysis, demoScene, W, H, name, note} */
+  function make(id, view) {
+    var p = byId(id) || PRESETS[0];
+    var v = view === 'face' ? 'face' : 'dtl';
+    var dm = GolfDemo.make(v, p.keys);
+    var asp = dm.W / dm.H;
+    var frames = [];
+    for (var i = 0; i < dm.frames.length; i++) {
+      var f = dm.frames[i];
+      frames.push({ t: f.t, lm2: f.landmarks, lm3: f.worldLandmarks, d: GolfCore.derive(f.landmarks, f.worldLandmarks, asp) });
+    }
+    var m = GolfCore.computeMetrics(frames, dm.phases, v, 'right');
+    return {
+      id: p.id, name: p.name, note: p.note, highlights: p.highlights,
+      frames: frames, phases: dm.phases, analysis: m,
+      demoScene: GolfDemo.scenePoints(v), W: dm.W, H: dm.H, view: v, hand: 'right'
+    };
+  }
+
+  return { list: list, make: make, byId: byId, PRESETS: PRESETS };
 })();
 </script>
 <script>
@@ -1448,10 +1864,11 @@ var GolfDemo = (function () {
   var st = {
     view: 'dtl', hand: 'right', mode: 'idle',
     frames: [], phases: null, cur: 0, playing: false,
-    ov: { skeleton: true, reference: true, correction: true, labels: true },
+    ov: { skeleton: true, reference: true, correction: true, labels: false },
     analysis: null, W: 640, H: 853, aspect: 0.75,
     demoScene: null, busy: false, analyzing: false, engine: 'idle', trim: { a: 0, b: 0, dur: 0 },
-    seekToken: 0
+    seekToken: 0,
+    cmp: { on: false, refId: 'balance', ref: null, k: 0, p: 0, playing: false, saved: [] }
   };
 
   var el = {}, cvs, ctx, vid, work, wctx, landmarker = null, rafId = 0, playTimer = 0, seekBusy = null;
@@ -1490,7 +1907,11 @@ var GolfDemo = (function () {
       headline: $('headline'), bars: $('bars'),
       phaseCard: $('phaseCard'), preads: $('preads'),
       checkCard: $('checkCard'), checks: $('checks'),
-      shotModal: $('shotModal'), shotImg: $('shotImg'), shotLink: $('shotLink'), shotClose: $('shotClose')
+      shotModal: $('shotModal'), shotImg: $('shotImg'), shotLink: $('shotLink'), shotClose: $('shotClose'),
+      cmpCard: $('cmpCard'), proBtn: $('proBtn'), proSelect: $('proSelect'), proDel: $('proDel'),
+      proNote: $('proNote'), cmpA: $('cmpA'), cmpB: $('cmpB'), cmpBTag: $('cmpBTag'),
+      cmpPhases: $('cmpPhases'), cmpPlay: $('cmpPlay'), cmpRange: $('cmpRange'), cmpLabel: $('cmpLabel'),
+      cmpTable: $('cmpTable'), proName: $('proName'), proSaveBtn: $('proSaveBtn'), proSaveHint: $('proSaveHint')
     };
     cvs = el.canvas; ctx = cvs.getContext('2d');
     vid = el.video;
@@ -1500,6 +1921,7 @@ var GolfDemo = (function () {
 
     EMPTY_HTML = el.stageEmpty ? el.stageEmpty.innerHTML : '';
     bind();
+    initCmp();
     paintViewHint();
     paintOvs();
     chip('대기', '');
@@ -1561,6 +1983,30 @@ var GolfDemo = (function () {
       if (!st.trim.dur) return;
       analyzeVideo(st.trim.a, st.trim.b);
     });
+    if (el.proBtn) el.proBtn.addEventListener('click', function () { setCmpOn(!st.cmp.on); });
+    if (el.proSelect) el.proSelect.addEventListener('change', function () { selectPro(el.proSelect.value); });
+    if (el.proDel) el.proDel.addEventListener('click', deletePro);
+    if (el.cmpPhases) {
+      el.cmpPhases.addEventListener('click', function (e) {
+        var b = e.target && e.target.closest ? e.target.closest('[data-ck]') : null;
+        if (!b) return;
+        st.cmp.k = clamp(parseInt(b.getAttribute('data-ck'), 10) || 0, 0, PHASES.length - 1);
+        st.cmp.p = 0;
+        stopCmp();
+        if (el.cmpRange) el.cmpRange.value = '0';
+        markCmpPhase();
+        drawCompare();
+      });
+    }
+    if (el.cmpRange) {
+      el.cmpRange.addEventListener('input', function () {
+        stopCmp();
+        st.cmp.p = clamp((parseInt(el.cmpRange.value, 10) || 0) / 100, 0, 1);
+        drawCompare();
+      });
+    }
+    if (el.cmpPlay) el.cmpPlay.addEventListener('click', cmpPlayToggle);
+    if (el.proSaveBtn) el.proSaveBtn.addEventListener('click', saveCurrentAsPro);
     window.addEventListener('resize', layoutStage);
     if (window.visualViewport) window.visualViewport.addEventListener('resize', layoutStage);
     if (vid) {
@@ -1587,6 +2033,7 @@ var GolfDemo = (function () {
     if (st.view === v) return;
     st.view = v;
     paintViewHint();
+    if (st.cmp && st.cmp.on && st.cmp.ref && !st.cmp.ref.saved) selectPro('p:' + (st.cmp.refId || 'balance'));
     if (st.mode === 'demo') { startDemo(); return; }
     if (st.frames.length && st.phases) analyze();
   }
@@ -1894,6 +2341,7 @@ var GolfDemo = (function () {
     paintTabs();
     if (st.mode === 'video') scrubTo(st.cur);
     else { updateFrameUI(); drawScene(); }
+    if (st.cmp && st.cmp.on) { renderCmpTable(); drawCompare(); }
   }
 
   function renderSummary(m) {
@@ -2163,6 +2611,35 @@ var GolfDemo = (function () {
     return { w: w, h: h, x: bx, y: by };
   }
 
+  /* 색 언어 — 초록 = 기준(올바른 궤도·각도), 주황/빨강 = 기준에서 벗어난 부분 */
+  var COL = {
+    ref: '#34d399',                       // 기준선(초록)
+    refSoft: 'rgba(52,211,153,0.45)',
+    refFill: 'rgba(52,211,153,0.10)',     // 플레인 허용 통로
+    dev: '#f97316',                       // 벗어남(주황)
+    devHot: '#ef4444',                    // 뚜렷한 벗어남(빨강)
+    body: 'rgba(212,232,240,0.66)',       // 중립 스켈레톤
+    bodySoft: 'rgba(212,232,240,0.26)',
+    halo: 'rgba(2,8,12,0.5)'              // 밝은 영상 위에서도 보이게 하는 어두운 받침
+  };
+
+  /* 어두운 받침 + 본선 */
+  function stroke(a, b, color, w, dash) {
+    line(a, b, COL.halo, w + 2.2 * S(), dash);
+    line(a, b, color, w, dash);
+  }
+
+  /* a→b 방향으로 양끝을 늘린 선분 */
+  function ext(a, b, back, fwd) {
+    var dx = b.x - a.x, dy = b.y - a.y, L = Math.sqrt(dx * dx + dy * dy) || 1;
+    var ux = dx / L, uy = dy / L;
+    return [{ x: a.x - ux * L * back, y: a.y - uy * L * back },
+      { x: b.x + ux * L * fwd, y: b.y + uy * L * fwd }];
+  }
+
+  /* 1cm ≈ 몇 px (어깨폭 45cm 기준, 계측과 같은 스케일) */
+  function pxPerCm(A) { return st.H * Math.max(0.02, A.shWidth || 0.2) / 45; }
+
   function drawDemoBG(W, H) {
     var g = ctx.createLinearGradient(0, 0, 0, H);
     g.addColorStop(0, '#0a1a20');
@@ -2191,7 +2668,7 @@ var GolfDemo = (function () {
     line(gl, gr, 'rgba(120,220,180,0.22)', 1.6 * u, []);
     // 목표 방향 표시
     var mid = { x: (gl.x + gr.x) / 2, y: gl.y };
-    line({ x: mid.x, y: mid.y + 6 * u }, { x: mid.x, y: mid.y - 46 * u }, 'rgba(120,220,180,0.16)', 1.4 * u, [6 * u, 8 * u]);
+    line({ x: mid.x, y: mid.y + 6 * u }, { x: mid.x, y: mid.y - 46 * u }, 'rgba(120,220,180,0.14)', 1.4 * u, [6 * u, 8 * u]);
     // 공
     var ball = P(sc.ball);
     circle(ball, 7 * u, 'rgba(255,255,255,0.9)', 'rgba(255,255,255,0.92)', 1.5 * u, []);
@@ -2204,6 +2681,7 @@ var GolfDemo = (function () {
     ctx.fillRect(0, 0, W, H);
   }
 
+  /* 몸(스켈레톤) — 기준에서 벗어나지 않은 부분은 중립색 얇은 선으로만 */
   function drawSkeleton(d) {
     var u = S();
     var bones = [
@@ -2218,212 +2696,237 @@ var GolfDemo = (function () {
       var a = d[bones[i][0]], b = d[bones[i][1]];
       if (!a || !b) continue;
       var pa = P(a), pb = P(b);
-      line(pa, pb, 'rgba(9,26,32,0.55)', 7 * u, []);
-      line(pa, pb, 'rgba(86,235,197,0.95)', 3.4 * u, []);
+      line(pa, pb, COL.halo, 4.6 * u, []);
+      line(pa, pb, COL.body, 2.0 * u, []);
     }
-    // 리드암 강조
-    var lead = st.hand === 'left' ? 'r' : 'l';
-    line(P(d[lead + 'Sh']), P(d[lead + 'El']), 'rgba(255,209,102,0.95)', 4.2 * u, []);
-    line(P(d[lead + 'El']), P(d[lead + 'Wr']), 'rgba(255,209,102,0.95)', 4.2 * u, []);
+    // 어깨선·골반선은 더 흐리게
+    line(P(d.lSh), P(d.rSh), COL.bodySoft, 1.3 * u, []);
+    line(P(d.lHip), P(d.rHip), COL.bodySoft, 1.3 * u, []);
 
     var joints = ['lSh', 'rSh', 'lEl', 'rEl', 'lWr', 'rWr', 'lHip', 'rHip', 'lKn', 'rKn', 'lAn', 'rAn', 'lEar', 'rEar'];
     for (var j = 0; j < joints.length; j++) {
       var p = d[joints[j]];
       if (!p) continue;
-      circle(P(p), 5.2 * u, 'rgba(6,20,26,0.9)', 'rgba(230,255,250,0.96)', 1.8 * u, []);
+      circle(P(p), 2.5 * u, null, 'rgba(232,246,250,0.72)', 0, []);
     }
-    // 머리
-    var hc = P(d.head);
-    circle(hc, d.headR * st.H * 1.05, 'rgba(120,255,225,0.85)', 'rgba(110,240,210,0.10)', 2 * u, []);
-    // 어깨선/골반선
-    line(P(d.lSh), P(d.rSh), 'rgba(255,255,255,0.35)', 1.4 * u, [4 * u, 4 * u]);
-    line(P(d.lHip), P(d.rHip), 'rgba(255,255,255,0.28)', 1.4 * u, [4 * u, 4 * u]);
+    // 손(현재 위치) 표시
+    circle(P(d.wrist), 3.2 * u, COL.halo, 'rgba(255,255,255,0.9)', 1 * u, []);
     ctx.restore();
   }
 
+  /* 기준선 레이어 — 어드레스 척추선 · 머리 기준 원 · 골반 기준 · 플레인 통로 (모두 초록) */
   function drawReferenceLayer(d, A, m) {
     var u = S();
-    var pa = P(A.hipC), pb = P(A.sh);
-    var dx = pb.x - pa.x, dy = pb.y - pa.y;
-    var len = Math.sqrt(dx * dx + dy * dy) || 1;
-    var ux = dx / len, uy = dy / len;
-    line({ x: pa.x - ux * len * 0.35, y: pa.y - uy * len * 0.35 },
-      { x: pb.x + ux * len * 0.45, y: pb.y + uy * len * 0.45 },
-      'rgba(61,220,150,0.55)', 1.8 * u, [7 * u, 6 * u]);
-    // 머리 기준 원
-    circle(P(A.head), A.headR * st.H * 1.9, 'rgba(61,220,150,0.45)', null, 1.6 * u, [6 * u, 6 * u]);
-    // 스탠스 라인
-    var la = P(A.lAn), ra = P(A.rAn);
-    var ax = ra.x - la.x, ay = ra.y - la.y, al = Math.sqrt(ax * ax + ay * ay) || 1;
-    line({ x: la.x - ax / al * 22 * u, y: la.y - ay / al * 22 * u },
-      { x: ra.x + ax / al * 22 * u, y: ra.y + ay / al * 22 * u },
-      'rgba(140,200,255,0.35)', 1.4 * u, [5 * u, 6 * u]);
-    // 정면 뷰: 골반 위치 기준 세로선(스웨이 기준)
+    var ppc = pxPerCm(A);
+
+    // 1) 어드레스 척추선(스파인 각도 기준)
+    var sp = ext(P(A.hipC), P(A.sh), 0.40, 0.28);
+    stroke(sp[0], sp[1], COL.ref, 1.7 * u, [7 * u, 6 * u]);
+
+    // 2) 머리 기준 원 (허용 이동 반경 = 머리 안정성 기준값)
+    var hc = P(A.head);
+    var rHead = Math.max(16 * u, TH.headDrift * ppc);
+    circle(hc, rHead, COL.ref, null, 1.5 * u, [5 * u, 5 * u]);
+    line({ x: hc.x - 6 * u, y: hc.y }, { x: hc.x + 6 * u, y: hc.y }, COL.ref, 1.3 * u, []);
+    line({ x: hc.x, y: hc.y - 6 * u }, { x: hc.x, y: hc.y + 6 * u }, COL.ref, 1.3 * u, []);
+
+    // 3) 골반 기준선(좌우 이동의 0점)
+    var hp = P(A.hipC);
+    line({ x: hp.x, y: hp.y - 34 * u }, { x: hp.x, y: hp.y + 26 * u }, COL.refSoft, 1.4 * u, [5 * u, 6 * u]);
+    line({ x: hp.x - 7 * u, y: hp.y }, { x: hp.x + 7 * u, y: hp.y }, rgba(COL.ref, 0.8), 1.5 * u, []);
+
+    // 4) 정면 뷰: 몸통 세로 중심선(스웨이 기준)
     if (st.view === 'face') {
-      var hx = P(A.hipC).x;
-      line({ x: hx, y: P(A.head).y - A.headR * st.H * 2 }, { x: hx, y: P(A.ankleC).y + 10 * u },
-        'rgba(61,220,150,0.38)', 1.6 * u, [7 * u, 7 * u]);
+      line({ x: hp.x, y: hc.y - rHead }, { x: hp.x, y: P(A.ankleC).y + 10 * u },
+        COL.refSoft, 1.5 * u, [7 * u, 7 * u]);
     }
-    // 손 궤적
-    if (st.phases) {
-      ctx.save();
-      ctx.beginPath();
-      ctx.lineWidth = 2 * u;
-      ctx.strokeStyle = 'rgba(255,209,102,0.35)';
-      ctx.setLineDash([5 * u, 5 * u]);
-      var started = false;
-      for (var i = 0; i <= st.cur; i++) {
-        var fr = st.frames[i];
-        if (!fr || !fr.d) continue;
-        var p = P(fr.d.wrist);
-        if (!started) { ctx.moveTo(p.x, p.y); started = true; }
-        else ctx.lineTo(p.x, p.y);
-      }
-      ctx.stroke();
-      ctx.restore();
-    }
+
+    drawPlaneReference(d, A, m);
   }
 
-  function drawPlaneLayer(d, A, m) {
-    if (!st.phases) return;
-    if (st.view !== 'dtl') return;
-    if (st.cur < st.phases.top - 2 || st.cur > st.phases.impact + 4) return;
-    var u = S();
+  /* 스윙 플레인 기준(측면) — 이상 궤도선 + 허용 통로 */
+  function planeGeom() {
+    if (!st.phases || st.view !== 'dtl') return null;
     var T = st.frames[st.phases.top] && st.frames[st.phases.top].d;
-    var Dp = st.frames[st.phases.downswing] && st.frames[st.phases.downswing].d;
-    if (!T || !Dp) return;
-    var aBack = Math.atan2(T.wrist.y - T.sh.y, T.wrist.x - T.sh.x);
-    var aDown = Math.atan2(Dp.wrist.y - Dp.sh.y, Dp.wrist.x - Dp.sh.x);
+    if (!T || !T.wrist || !T.sh) return null;
+    var a = Math.atan2(T.wrist.y - T.sh.y, T.wrist.x - T.sh.x);   // 백스윙 팔 라인 = 이상 궤도
     var o = P(T.sh);
-    var rBack = Math.sqrt(Math.pow(T.wrist.x - T.sh.x, 2) + Math.pow(T.wrist.y - T.sh.y, 2)) * st.H;
+    var r = Math.sqrt(Math.pow(T.wrist.x - T.sh.x, 2) + Math.pow(T.wrist.y - T.sh.y, 2)) * st.H;
+    var L = Math.max(r * 1.22, 120 * S());
+    return { o: o, a: a, r: r, L: L, tolDeg: TH.planeDiff, tol: TH.planeDiff * Math.PI / 180 };
+  }
 
-    // 플레인 콘(두 라인 사이 영역)
+  function drawPlaneReference(d, A, m) {
+    var g = planeGeom();
+    if (!g) return;
+    if (st.cur < st.phases.top - 2 || st.cur > st.phases.impact + 3) return;
+    var u = S();
+    // 허용 통로(연한 초록 부채꼴)
     ctx.save();
     ctx.beginPath();
-    ctx.moveTo(o.x, o.y);
-    var rr = Math.max(rBack * 0.95, 80 * u);
-    ctx.arc(o.x, o.y, rr, Math.min(aBack, aDown), Math.max(aBack, aDown));
+    ctx.moveTo(g.o.x, g.o.y);
+    ctx.arc(g.o.x, g.o.y, g.L, g.a - g.tol, g.a + g.tol);
     ctx.closePath();
-    ctx.fillStyle = 'rgba(90,169,255,0.10)';
+    ctx.fillStyle = COL.refFill;
     ctx.fill();
     ctx.restore();
+    // 이상 궤도선
+    var e = { x: g.o.x + Math.cos(g.a) * g.L, y: g.o.y + Math.sin(g.a) * g.L };
+    var b = { x: g.o.x - Math.cos(g.a) * g.L * 0.16, y: g.o.y - Math.sin(g.a) * g.L * 0.16 };
+    stroke(b, e, COL.ref, 1.9 * u, [8 * u, 6 * u]);
+  }
 
-    function planeLine(ang, color, dash) {
-      var L = Math.max(rBack * 1.15, 95 * u);
-      line(o, { x: o.x + Math.cos(ang) * L, y: o.y + Math.sin(ang) * L }, color, 1.7 * u, dash);
-      line(o, { x: o.x - Math.cos(ang) * L * 0.18, y: o.y - Math.sin(ang) * L * 0.18 }, color, 1.7 * u, dash);
+  /* 플레인에서 벗어난 손 궤적 구간만 주황/빨강으로 */
+  function drawPlaneDeviation(d, A, m) {
+    var g = planeGeom();
+    if (!g) return;
+    if (st.cur < st.phases.top || st.cur > st.phases.impact + 3) return;
+    var u = S(), toDeg = 180 / Math.PI, pts = [];
+    var hi = Math.min(st.cur, st.phases.impact + 3);
+    for (var i = st.phases.top; i <= hi; i++) {
+      var fr = st.frames[i];
+      if (!fr || !fr.d) continue;
+      var p = P(fr.d.wrist);
+      var ang = Math.atan2(p.y - g.o.y, p.x - g.o.x);
+      pts.push({ p: p, diff: Math.atan2(Math.sin(ang - g.a), Math.cos(ang - g.a)) * toDeg });
     }
-    planeLine(aBack, 'rgba(61,220,150,0.5)', [8 * u, 6 * u]);
-    planeLine(aDown, 'rgba(255,162,72,0.7)', [8 * u, 6 * u]);
-
-    // 편차 호
-    if (st.cur >= st.phases.top) {
-      var a0 = Math.min(aBack, aDown), a1 = Math.max(aBack, aDown);
-      if (a1 - a0 > 0.02) {
-        arcAt(o, rBack * 1.02, a0, a1, 'rgba(255,100,125,0.9)', 2.4 * u);
-      }
-      if (st.ov.labels) {
-        var midA = (aBack + aDown) / 2;
-        var lx = o.x + Math.cos(midA) * (rBack * 0.72), ly = o.y + Math.sin(midA) * (rBack * 0.72);
-        var diff = m.v.planeDiff;
-        tag('플레인 ' + (diff >= 0 ? '+' : '') + C.r1(diff) + '°', lx, ly,
-          Math.abs(diff) > TH.planeDiff ? '#ff8b9e' : '#8ff0cf', 'center');
-      }
+    for (var k = 1; k < pts.length; k++) {
+      var a0 = pts[k - 1], b0 = pts[k];
+      var dv = Math.max(Math.abs(a0.diff), Math.abs(b0.diff));
+      if (dv <= g.tolDeg) continue;                       // 통로 안 = 칠하지 않음
+      var col = dv > g.tolDeg * 1.7 ? COL.devHot : COL.dev;
+      line(a0.p, b0.p, COL.halo, 5.8 * u, []);
+      line(a0.p, b0.p, col, 3.2 * u, []);
+    }
+    var last = pts.length ? pts[pts.length - 1] : null;
+    if (!last || Math.abs(last.diff) <= g.tolDeg) return;
+    var col2 = Math.abs(last.diff) > g.tolDeg * 1.7 ? COL.devHot : COL.dev;
+    var dx = Math.cos(g.a), dy = Math.sin(g.a);
+    var t = (last.p.x - g.o.x) * dx + (last.p.y - g.o.y) * dy;
+    if (t > 0 && Math.abs(last.diff) < 70) {
+      arrow({ x: g.o.x + dx * t, y: g.o.y + dy * t }, last.p, col2, 2.3 * u);
+    }
+    circle(last.p, 4.2 * u, COL.halo, col2, 1 * u, []);
+    if (st.ov.labels) {
+      tag('플레인 ' + (m.v.planeDiff >= 0 ? '+' : '') + C.r1(m.v.planeDiff) + '°',
+        last.p.x + 10 * u, last.p.y - 14 * u, col2, 'left');
     }
   }
 
+  /* 현재 프레임의 팔꿈치 각(3D 우선) */
+  function elbowNow(d, side) {
+    if (d.w3) return C.helpers.angleAt3(d.w3[side + 'Sh'], d.w3[side + 'El'], d.w3[side + 'Wr']);
+    return C.helpers.angleAt2(d[side + 'Sh'], d[side + 'El'], d[side + 'Wr']);
+  }
+
+  /* 교정 레이어 — 기준에서 벗어난 부분만 주황/빨강 */
   function drawCorrectionLayer(d, A, m) {
     var u = S();
     var live = m.live ? m.live(d) : null;
-    var cmPerUnit = 45 / Math.max(0.02, A.shWidth);
 
-    /* --- 머리 --- */
+    /* --- 머리: 기준 원을 벗어나면 중심 → 현재 머리 --- */
     var hA = P(A.head), hN = P(d.head);
-    var headCm = live ? Math.sqrt(live.headLat * live.headLat + live.headUp * live.headUp + (live.headFwd || 0) * (live.headFwd || 0))
-      : Math.sqrt(Math.pow(d.head.x - A.head.x, 2) + Math.pow(d.head.y - A.head.y, 2)) * cmPerUnit;
-    if (headCm > 2) {
-      var col = headCm > TH.headDrift ? '#ff647d' : '#ffc24b';
-      arrow(hA, hN, col, 2.4 * u);
-      if (st.ov.labels) tag('머리 ' + headCm.toFixed(1) + 'cm', hN.x + A.headR * st.H * 1.25 + 6 * u, hN.y + 2 * u, col, 'left');
+    var headCm = live
+      ? Math.sqrt(live.headLat * live.headLat + live.headUp * live.headUp + (live.headFwd || 0) * (live.headFwd || 0))
+      : Math.sqrt(Math.pow(d.head.x - A.head.x, 2) + Math.pow(d.head.y - A.head.y, 2)) / Math.max(0.02, A.shWidth) * 45;
+    if (headCm > TH.headDrift * 0.9) {
+      var ch = headCm > TH.headDrift ? COL.devHot : COL.dev;
+      arrow(hA, hN, ch, 2.6 * u);
+      circle(hN, 4.6 * u, COL.halo, ch, 1 * u, []);
+      if (st.ov.labels) tag('머리 ' + headCm.toFixed(1) + 'cm', hN.x + 12 * u, hN.y - 16 * u, ch, 'left');
     }
 
-    /* --- 척추 각도 --- */
-    var spineNow = d.spineAngle2, spineRef = A.spineAngle2;
-    var dSpine = live ? (live.bend - m.v.spineBendA) : (spineNow - spineRef);
-    if (Math.abs(dSpine) > 2.5) {
-      var hp = P(d.hipC);
-      var a0 = (-90 + spineRef) * Math.PI / 180, a1 = (-90 + spineNow) * Math.PI / 180;
-      var rr = Math.sqrt(Math.pow(d.sh.x - d.hipC.x, 2) + Math.pow(d.sh.y - d.hipC.y, 2)) * st.H * 0.9;
-      var c2 = Math.abs(dSpine) > TH.spineChange ? '#ff647d' : '#ffc24b';
-      arcAt(hp, rr, Math.min(a0, a1), Math.max(a0, a1), c2, 2.2 * u);
-      if (st.ov.labels) tag('스파인 ' + (dSpine >= 0 ? '+' : '') + C.r1(dSpine) + '°', hp.x + 10 * u, hp.y - 14 * u, c2, 'left');
-    }
-
-    /* --- 골반 좌우 --- */
-    var hipCm = live ? live.hipLat : (d.hipC.x - A.hipC.x) * cmPerUnit;
-    if (Math.abs(hipCm) > 2) {
-      var y = P(d.hipC).y + 16 * u;
-      var x0 = P(A.hipC).x, x1 = P(d.hipC).x;
-      var c3 = Math.abs(hipCm) > TH.sway ? '#ff647d' : '#ffc24b';
-      arrow({ x: x0, y: y }, { x: x1, y: y }, c3, 2.2 * u);
-      line({ x: x0, y: y - 26 * u }, { x: x0, y: y + 6 * u }, rgba(c3, 0.5), 1.4 * u, [4 * u, 4 * u]);
-      if (st.ov.labels) tag('골반 ' + Math.abs(hipCm).toFixed(1) + 'cm', x1 + 10 * u, y, c3, 'left');
-    }
-
-    /* --- 오버 더 톱 / 얕은 궤도 --- */
-    if ((m.v.ott || m.v.shallow) && st.view === 'dtl') {
-      if (st.ov.labels && st.cur >= st.phases.top && st.cur <= st.phases.impact + 6) {
-        tag(m.v.ott ? '오버 더 톱 경향' : '얕은 다운스윙', st.W * 0.5, st.H * 0.075, '#ff8b9e', 'center');
+    /* --- 스파인: 어드레스 척추선에서 벗어난 현재 척추선 --- */
+    var dSpine = live ? (live.bend - m.v.spineBendA) : (d.spineAngle2 - A.spineAngle2);
+    if (Math.abs(dSpine) > 4.0) {
+      var cs = Math.abs(dSpine) > TH.spineChange ? COL.devHot : COL.dev;
+      var se = ext(P(d.hipC), P(d.sh), 0.34, 0.20);
+      stroke(se[0], se[1], cs, 3.2 * u, []);
+      if (st.ov.labels) {
+        tag('스파인 ' + (dSpine >= 0 ? '+' : '') + C.r1(dSpine) + '°', P(d.sh).x + 12 * u, P(d.sh).y - 4 * u, cs, 'left');
       }
     }
 
-    /* --- 임팩트: 리드팔 / 체중 --- */
-    var nearImpact = Math.abs(st.cur - st.phases.impact) <= 2;
-    var lead = m.lead;
-    if (nearImpact) {
-      var sh = P(d[lead + 'Sh']), el2 = P(d[lead + 'El']), wr = P(d[lead + 'Wr']);
-      var ang2 = C.helpers.angleAt2(d[lead + 'Sh'], d[lead + 'El'], d[lead + 'Wr']);
-      var ang = (live && live.elbowLead) ? live.elbowLead : ang2;
-      var ca = ang < TH.leadElbow ? '#ff647d' : '#8ff0cf';
-      arcAt(el2, 24 * u, Math.atan2(sh.y - el2.y, sh.x - el2.x), Math.atan2(wr.y - el2.y, wr.x - el2.x), ca, 2.2 * u);
-      if (st.ov.labels) tag('리드팔 ' + Math.round(ang) + '°', el2.x + 12 * u, el2.y, ca, 'left');
-
-      // 체중 위치
-      var tA = P(d[m.trail + 'An']), lA = P(d[lead + 'An']);
-      line(tA, lA, 'rgba(140,200,255,0.45)', 2 * u, []);
-      var wt = m.v.wI;
-      var wx = tA.x + (lA.x - tA.x) * wt, wy = tA.y;
-      circle({ x: wx, y: wy }, 7 * u, '#ffffff', 'rgba(47,224,173,0.95)', 1.6 * u, []);
-      if (st.ov.labels) tag('체중 ' + Math.round(wt * 100) + '%', wx, wy + 22 * u, wt < TH.weightMin ? '#ff8b9e' : '#8ff0cf', 'center');
+    /* --- 골반: 기준선에서 벗어난 좌우 이동 --- */
+    var hipCm = live ? live.hipLat : (d.hipC.x - A.hipC.x) / Math.max(0.02, A.shWidth) * 45;
+    if (Math.abs(hipCm) > 2.2) {
+      var cp = Math.abs(hipCm) > TH.sway ? COL.devHot : COL.dev;
+      var y = P(d.hipC).y + 14 * u;
+      var x0 = P(A.hipC).x, x1 = P(d.hipC).x;
+      arrow({ x: x0, y: y }, { x: x1, y: y }, cp, 2.4 * u);
+      if (st.ov.labels) tag('골반 ' + Math.abs(hipCm).toFixed(1) + 'cm', x1 + 10 * u, y, cp, 'left');
     }
 
-    /* --- 피니시 밸런스 --- */
+    /* --- 오버 더 톱 / 얕은 궤도 (문구는 수치 표시를 켰을 때만) --- */
+    if (st.ov.labels && (m.v.ott || m.v.shallow) && st.view === 'dtl' &&
+      st.cur >= st.phases.top && st.cur <= st.phases.impact + 6) {
+      tag(m.v.ott ? '오버 더 톱 경향' : '얕은 다운스윙', st.W * 0.5, st.H * 0.075, COL.devHot, 'center');
+    }
+
+    /* --- 바디턴: 회전이 기준을 크게 벗어난 순간만 선으로 표시 --- */
+    if (Math.abs(st.cur - st.phases.top) <= 3 && (m.v.xf < 30 || m.v.xf > 62)) {
+      stroke(P(d.lSh), P(d.rSh), m.v.xf < 30 ? COL.dev : COL.devHot, 3.0 * u, []);
+    }
+    if (Math.abs(st.cur - st.phases.impact) <= 2 && Math.abs(m.v.clearImpact) < 24) {
+      stroke(P(d.lHip), P(d.rHip), Math.abs(m.v.clearImpact) < 12 ? COL.devHot : COL.dev, 3.0 * u, []);
+    }
+
+    /* --- 리드암: 임팩트에 굽거나 팔로우에서 접힌(치킨윙) 경우만 --- */
+    var lead = m.lead, trail = m.trail;
+    var nearTop = Math.abs(st.cur - st.phases.top) <= 3;
+    var nearImpact = Math.abs(st.cur - st.phases.impact) <= 2;
+    var nearFollow = Math.abs(st.cur - st.phases.follow) <= 2;
     var nearFinish = Math.abs(st.cur - st.phases.finish) <= 3;
+    var leadAng = elbowNow(d, lead);
+    var leadBad = (nearImpact && leadAng < TH.leadElbow) || (nearFollow && leadAng < 148);
+    if (leadBad) {
+      var cw = leadAng < TH.leadElbowBad ? COL.devHot : COL.dev;
+      var ps = P(d[lead + 'Sh']), pe = P(d[lead + 'El']), pw = P(d[lead + 'Wr']);
+      stroke(ps, pe, cw, 3.4 * u, []);
+      stroke(pe, pw, cw, 3.4 * u, []);
+      circle(pe, 4 * u, COL.halo, cw, 1 * u, []);
+      if (st.ov.labels) tag('리드팔 ' + Math.round(leadAng) + '°', pe.x + 12 * u, pe.y - 14 * u, cw, 'left');
+    }
+
+    /* --- 트레일암: 탑에서 펴져 있거나(플라잉 엘보) 릴리스에서 접힌 경우만 --- */
+    var trailAng = elbowNow(d, trail);
+    var trailBad = (nearTop && m.v.flyingElbow) || (nearImpact && trailAng < 130) || (nearFollow && trailAng < 145);
+    if (trailBad) {
+      var ct = trailAng < 100 ? COL.devHot : COL.dev;
+      var ts2 = P(d[trail + 'Sh']), te = P(d[trail + 'El']), tw = P(d[trail + 'Wr']);
+      stroke(ts2, te, ct, 3.4 * u, []);
+      stroke(te, tw, ct, 3.4 * u, []);
+      circle(te, 4 * u, COL.halo, ct, 1 * u, []);
+      if (st.ov.labels) {
+        tag('트레일팔 ' + Math.round(trailAng) + '°', te.x + 12 * u, te.y - 14 * u, ct, 'left');
+      }
+    }
+
+    /* --- 피니시: 골반이 리드발에서 벗어난 경우 --- */
     if (nearFinish) {
-      var lAn = P(d[lead + 'An']);
-      line({ x: lAn.x, y: lAn.y }, { x: lAn.x, y: P(d.head).y }, 'rgba(61,220,150,0.55)', 1.6 * u, [6 * u, 6 * u]);
-      var hp2 = P(d.hipC);
-      if (Math.abs(hp2.x - lAn.x) > 8 * u) {
-        arrow({ x: hp2.x, y: hp2.y }, { x: lAn.x, y: hp2.y }, '#ffc24b', 2.2 * u);
-        if (st.ov.labels) tag('피니시 ' + Math.abs(m.v.finHip).toFixed(1) + 'cm', (hp2.x + lAn.x) / 2, hp2.y - 16 * u, '#ffc24b', 'center');
+      var lan = P(d[lead + 'An']), hipP = P(d.hipC);
+      var finCm = Math.abs(d.hipC.x - d[lead + 'An'].x) / Math.max(0.02, A.shWidth) * 45;
+      if (finCm > TH.finishHip) {
+        var cf = finCm > TH.finishHipBad ? COL.devHot : COL.dev;
+        arrow({ x: hipP.x, y: hipP.y }, { x: lan.x, y: hipP.y }, cf, 2.4 * u);
+        line({ x: lan.x, y: hipP.y }, { x: lan.x, y: lan.y }, rgba(cf, 0.5), 1.4 * u, [4 * u, 5 * u]);
+        if (st.ov.labels) {
+          tag('피니시 ' + finCm.toFixed(1) + 'cm', (hipP.x + lan.x) / 2, hipP.y - 16 * u, cf, 'center');
+        }
       }
     }
   }
 
+  /* 수치 표시를 켰을 때만: 현재 구간 이름 */
   function drawAngles(d, A, m) {
+    if (!st.phases) return;
     var u = S();
-    // 손 높이 (어드레스 대비)
-    var handNow = P(d.wrist);
-    circle(handNow, 3.4 * u, null, 'rgba(255,209,102,0.9)', 0, []);
-    // 현재 구간 이름
-    if (st.phases) {
-      var best = PHASES[0], bd = 1e9;
-      for (var i = 0; i < PHASES.length; i++) {
-        var dd = Math.abs(st.phases[PHASES[i]] - st.cur);
-        if (dd < bd) { bd = dd; best = PHASES[i]; }
-      }
-      if (bd <= 3) tag(KO[best], st.W - 12 * u, 26 * u, '#9fe9d4', 'right');
+    var best = PHASES[0], bd = 1e9;
+    for (var i = 0; i < PHASES.length; i++) {
+      var dd = Math.abs(st.phases[PHASES[i]] - st.cur);
+      if (dd < bd) { bd = dd; best = PHASES[i]; }
     }
+    if (bd <= 3) tag(KO[best], st.W - 12 * u, 26 * u, COL.ref, 'right');
   }
 
   function drawScene() {
@@ -2452,10 +2955,384 @@ var GolfDemo = (function () {
     var m = st.analysis;
     if (!m) return;
     if (st.ov.reference) drawReferenceLayer(f.d, A.d, m);
-    if (st.ov.reference) drawPlaneLayer(f.d, A.d, m);
     if (st.ov.skeleton) drawSkeleton(f.d);
-    if (st.ov.correction) drawCorrectionLayer(f.d, A.d, m);
+    if (st.ov.correction) { drawPlaneDeviation(f.d, A.d, m); drawCorrectionLayer(f.d, A.d, m); }
     if (st.ov.labels) drawAngles(f.d, A.d, m);
+    if (st.cmp && st.cmp.on) drawCompare();
+  }
+
+  /* ============================== 프로 비교 ============================== */
+  var PRO_KEY = 'swingcheck.proRefs.v1';
+  var cmpCtxA = null, cmpCtxB = null, cmpTimer = 0, cmpBusy = false;
+
+  var CMP_ROWS = [
+    { k: 'shTop', label: '어깨 회전 (탑)', unit: '°', tol: 12 },
+    { k: 'hipTop', label: '골반 회전 (탑)', unit: '°', tol: 10 },
+    { k: 'xfTop', label: 'X-factor (탑)', unit: '°', tol: 10 },
+    { k: 'clearImpact', label: '임팩트 골반 열림', unit: '°', tol: 10 },
+    { k: 'shImpact', label: '임팩트 어깨 열림', unit: '°', tol: 10 },
+    { k: 'spineBendI', label: '임팩트 스파인 각', unit: '°', tol: 6 },
+    { k: 'headDrift', label: '머리 이동 (최대)', unit: 'cm', tol: 2.5 },
+    { k: 'sway', label: '백스윙 골반 이동', unit: 'cm', tol: 2.5, abs: true },
+    { k: 'leadElbow', label: '리드팔 (임팩트)', unit: '°', tol: 10 },
+    { k: 'leadElbowFollow', label: '리드팔 (팔로우)', unit: '°', tol: 12 },
+    { k: 'trailElbowTop', label: '트레일팔 (탑)', unit: '°', tol: 15 },
+    { k: 'trailElbowImpact', label: '트레일팔 (임팩트)', unit: '°', tol: 12 },
+    { k: 'wI', label: '체중 (임팩트)', unit: '%', tol: 10, pct: true },
+    { k: 'finBend', label: '피니시 척추 각', unit: '°', tol: 8 },
+    { k: 'finHip', label: '피니시 골반-리드발', unit: 'cm', tol: 4 }
+  ];
+
+  function round4(v) { return Math.round(v * 1e4) / 1e4; }
+
+  function escapeHtml(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function lsRead() {
+    try {
+      if (!window.localStorage) return [];
+      var raw = window.localStorage.getItem(PRO_KEY);
+      var v = raw ? JSON.parse(raw) : [];
+      return Object.prototype.toString.call(v) === '[object Array]' ? v : [];
+    } catch (e) { return []; }
+  }
+  function lsWrite(list) {
+    try {
+      if (!window.localStorage) return false;
+      window.localStorage.setItem(PRO_KEY, JSON.stringify(list));
+      return true;
+    } catch (e) { return false; }
+  }
+
+  /* 저장용 압축: 랜드마크를 숫자 배열로 (localStorage 용량 절약) */
+  function packFrames(frames) {
+    var out = [];
+    for (var i = 0; i < frames.length; i++) {
+      var f = frames[i];
+      if (!f || !f.lm2) continue;
+      var l2 = [], l3 = [];
+      for (var j = 0; j < 33; j++) {
+        var a = f.lm2[j] || { x: 0, y: 0, visibility: 0 };
+        l2.push(round4(a.x), round4(a.y), Math.round((a.visibility == null ? 1 : a.visibility) * 100) / 100);
+        var b = (f.lm3 && f.lm3[j]) ? f.lm3[j] : null;
+        l3.push(b ? round4(b.x) : null, b ? round4(b.y) : null, b ? round4(b.z) : null);
+      }
+      out.push([Math.round(f.t * 1000) / 1000, l2, l3]);
+    }
+    return out;
+  }
+
+  function unpackFrames(packed, aspect) {
+    var frames = [];
+    for (var i = 0; i < packed.length; i++) {
+      var row = packed[i], l2 = [], l3 = [], has3 = false;
+      for (var j = 0; j < 33; j++) {
+        l2.push({ x: row[1][j * 3], y: row[1][j * 3 + 1], visibility: row[1][j * 3 + 2] });
+        var x3 = row[2][j * 3];
+        if (x3 === null || x3 === undefined) { l3.push(null); }
+        else { has3 = true; l3.push({ x: x3, y: row[2][j * 3 + 1], z: row[2][j * 3 + 2] }); }
+      }
+      frames.push({ t: row[0], lm2: l2, lm3: has3 ? l3 : null, d: C.derive(l2, has3 ? l3 : null, aspect || 0.75) });
+    }
+    return frames;
+  }
+
+  function savedToRef(rec) {
+    var frames = unpackFrames(rec.frames || [], rec.aspect || 0.75);
+    var m = C.computeMetrics(frames, rec.phases, rec.view || 'dtl', rec.hand || 'right');
+    return {
+      id: rec.id, name: rec.name, frames: frames, phases: rec.phases, analysis: m,
+      demoScene: null, view: rec.view || 'dtl', hand: rec.hand || 'right', saved: true, note: ''
+    };
+  }
+
+  function initCmp() {
+    st.cmp.saved = lsRead();
+    if (el.cmpA) cmpCtxA = el.cmpA.getContext('2d');
+    if (el.cmpB) cmpCtxB = el.cmpB.getContext('2d');
+    if (el.cmpRange) el.cmpRange.value = '0';
+    refreshProSelect();
+    renderCmpPhases();
+    if (window.GolfPros) {
+      st.cmp.ref = GolfPros.make(st.cmp.refId, st.view);
+      paintProNote();
+      renderCmpTable();
+    }
+  }
+
+  function refreshProSelect(pref) {
+    if (!el.proSelect) return;
+    var html = '', i;
+    var presets = window.GolfPros ? GolfPros.list() : [];
+    for (i = 0; i < presets.length; i++) {
+      html += '<option value="p:' + presets[i].id + '">기준: ' + escapeHtml(presets[i].name) + '</option>';
+    }
+    for (i = 0; i < st.cmp.saved.length; i++) {
+      html += '<option value="u:' + st.cmp.saved[i].id + '">저장: ' + escapeHtml(st.cmp.saved[i].name) + '</option>';
+    }
+    el.proSelect.innerHTML = html;
+    var want = pref || (st.cmp.ref && st.cmp.ref.saved ? 'u:' + st.cmp.ref.id : 'p:' + (st.cmp.refId || 'balance'));
+    el.proSelect.value = want;
+    if (!el.proSelect.value) el.proSelect.value = presets.length ? 'p:' + presets[0].id : '';
+    if (el.proDel) el.proDel.hidden = String(el.proSelect.value).indexOf('u:') !== 0;
+    if (el.proSaveHint) {
+      setText(el.proSaveHint, '프로 스윙 영상을 분석한 뒤 저장하면 다음부터 내 스윙과 나란히 비교할 수 있습니다. 저장은 이 브라우저(기기)에만 되고, 최대 5개까지 보관됩니다.');
+    }
+  }
+
+  function selectPro(value) {
+    if (!window.GolfPros) return;
+    var rec = null;
+    if (String(value).indexOf('u:') === 0) {
+      var id = String(value).slice(2);
+      for (var i = 0; i < st.cmp.saved.length; i++) if (st.cmp.saved[i].id === id) rec = st.cmp.saved[i];
+    }
+    if (rec) {
+      st.cmp.ref = savedToRef(rec);
+    } else {
+      st.cmp.refId = String(value).replace('p:', '') || 'balance';
+      st.cmp.ref = GolfPros.make(st.cmp.refId, st.view);
+    }
+    if (el.proDel) el.proDel.hidden = !rec;
+    if (el.proSelect) el.proSelect.value = value;
+    paintProNote();
+    renderCmpTable();
+    drawCompare();
+  }
+
+  function paintProNote() {
+    var r = st.cmp.ref;
+    if (!r) { setText(el.proNote, ''); return; }
+    var t = r.note || '내가 분석한 영상에서 저장한 비교 기준 스윙입니다.';
+    if (r.saved && r.view !== st.view) {
+      t += ' ⚠ 이 기준 스윙은 ' + (r.view === 'face' ? '정면' : '측면') + ' 각도로 촬영되어, 지금 보는 ' +
+        (st.view === 'face' ? '정면' : '측면') + '과 시점이 다릅니다.';
+    }
+    if (!r.saved) t += ' 실제 선수 영상이나 계측값이 아니라, 공개된 생체역학 기준으로 만든 참조 모델입니다.';
+    setText(el.proNote, t);
+    if (el.cmpBTag) setText(el.cmpBTag, r.name || '기준 스윙');
+  }
+
+  function renderCmpPhases() {
+    if (!el.cmpPhases) return;
+    var html = '';
+    for (var i = 0; i < PHASES.length; i++) {
+      html += '<button type="button" data-ck="' + i + '">' + SHORT[PHASES[i]] + '</button>';
+    }
+    el.cmpPhases.innerHTML = html;
+    markCmpPhase();
+  }
+
+  function markCmpPhase() {
+    if (!el.cmpPhases) return;
+    var btns = el.cmpPhases.querySelectorAll('[data-ck]');
+    for (var i = 0; i < btns.length; i++) {
+      if (parseInt(btns[i].getAttribute('data-ck'), 10) === st.cmp.k) btns[i].classList.add('on');
+      else btns[i].classList.remove('on');
+    }
+  }
+
+  function cmpFrameIndex(frames, phases, k, p) {
+    if (!frames || !frames.length || !phases) return 0;
+    var a = phases[PHASES[k]];
+    var b = (k < PHASES.length - 1) ? phases[PHASES[k + 1]] : frames.length - 1;
+    if (typeof a !== 'number') return 0;
+    if (typeof b !== 'number' || b <= a) b = Math.min(frames.length - 1, a + 1);
+    return clamp(Math.round(a + (b - a) * p), 0, frames.length - 1);
+  }
+
+  /* 같은 그리기 코드로 다른 스윙을 다른 캔버스에 그린다 */
+  function drawInto(cv, c, o) {
+    if (!cv || !c) return;
+    var saved = {
+      ctx: ctx, W: st.W, H: st.H, frames: st.frames, phases: st.phases, cur: st.cur,
+      analysis: st.analysis, demoScene: st.demoScene, mode: st.mode, view: st.view, hand: st.hand, aspect: st.aspect
+    };
+    ctx = c;
+    st.W = cv.width; st.H = cv.height; st.aspect = cv.width / cv.height;
+    st.frames = o.frames; st.phases = o.phases; st.cur = o.cur; st.analysis = o.analysis;
+    st.demoScene = o.demoScene || null; st.mode = o.mode || 'demo'; st.view = o.view; st.hand = o.hand;
+    try {
+      drawScene();
+    } finally {
+      ctx = saved.ctx; st.W = saved.W; st.H = saved.H; st.frames = saved.frames; st.phases = saved.phases;
+      st.cur = saved.cur; st.analysis = saved.analysis; st.demoScene = saved.demoScene;
+      st.mode = saved.mode; st.view = saved.view; st.hand = saved.hand; st.aspect = saved.aspect;
+    }
+  }
+
+  function clearCompareCanvas(cv, c) {
+    if (!cv || !c) return;
+    c.setTransform(1, 0, 0, 1, 0, 0);
+    c.clearRect(0, 0, cv.width, cv.height);
+    c.fillStyle = '#05080f';
+    c.fillRect(0, 0, cv.width, cv.height);
+  }
+
+  function drawCompare() {
+    if (!st.cmp.on || cmpBusy) return;
+    if (!el.cmpA || !el.cmpB) return;
+    cmpBusy = true;
+    try {
+      var ref = st.cmp.ref;
+      if (!st.frames.length || !st.phases || !st.analysis || !ref) {
+        clearCompareCanvas(el.cmpA, cmpCtxA);
+        clearCompareCanvas(el.cmpB, cmpCtxB);
+        setText(el.cmpLabel, '–');
+        return;
+      }
+      var ia = cmpFrameIndex(st.frames, st.phases, st.cmp.k, st.cmp.p);
+      var ib = cmpFrameIndex(ref.frames, ref.phases, st.cmp.k, st.cmp.p);
+      drawInto(el.cmpA, cmpCtxA, {
+        frames: st.frames, phases: st.phases, analysis: st.analysis, cur: ia,
+        mode: 'demo', demoScene: st.demoScene, view: st.view, hand: st.hand
+      });
+      drawInto(el.cmpB, cmpCtxB, {
+        frames: ref.frames, phases: ref.phases, analysis: ref.analysis, cur: ib,
+        mode: 'demo', demoScene: ref.demoScene, view: ref.view, hand: ref.hand
+      });
+      setText(el.cmpLabel, 'F' + ia + ' / F' + ib);
+    } finally {
+      cmpBusy = false;
+    }
+  }
+
+  function cmpVal(m, row) {
+    if (!m || !m.v) return null;
+    var v = m.v[row.k];
+    if (v === null || v === undefined || (typeof v === 'number' && !isFinite(v))) return null;
+    if (row.pct) v = v * 100;
+    if (row.abs) v = Math.abs(v);
+    return v;
+  }
+
+  function fmtCmp(v, unit) {
+    var a = Math.abs(v);
+    var s = a >= 100 ? String(Math.round(v)) : String(Math.round(v * 10) / 10);
+    return s + unit;
+  }
+
+  function renderCmpTable() {
+    if (!el.cmpTable) return;
+    var mine = st.analysis, ref = st.cmp.ref && st.cmp.ref.analysis;
+    if (!mine || !ref) {
+      el.cmpTable.innerHTML = '<p class="cmp-hint">내 스윙을 먼저 분석하면 기준 스윙과의 수치 비교가 표시됩니다.</p>';
+      return;
+    }
+    var html = '<div class="cmp-row head"><span class="lab">항목</span><span class="mine">내 스윙</span><span class="pro">기준</span><span class="dif">차이</span></div>';
+    for (var i = 0; i < CMP_ROWS.length; i++) {
+      var row = CMP_ROWS[i];
+      var a = cmpVal(mine, row), b = cmpVal(ref, row);
+      if (a === null || b === null) continue;
+      var d = a - b, ad = Math.abs(d);
+      var cls = ad <= row.tol ? 'good' : (ad <= row.tol * 2 ? 'warn' : 'bad');
+      html += '<div class="cmp-row ' + cls + '"><span class="lab">' + row.label + '</span>' +
+        '<span class="mine">' + fmtCmp(a, row.unit) + '</span>' +
+        '<span class="pro">' + fmtCmp(b, row.unit) + '</span>' +
+        '<span class="dif">' + (d >= 0 ? '+' : '−') + fmtCmp(ad, row.unit) + '</span></div>';
+    }
+    el.cmpRange && (el.cmpRange.disabled = false);
+    el.cmpTable.innerHTML = html;
+  }
+
+  function setCmpOn(on) {
+    st.cmp.on = !!on;
+    show(el.cmpCard, st.cmp.on);
+    if (el.proBtn) setText(el.proBtn, st.cmp.on ? '프로 비교 닫기' : '프로 비교');
+    if (st.cmp.on) {
+      if (!st.cmp.ref) selectPro('p:' + (st.cmp.refId || 'balance'));
+      renderCmpPhases();
+      renderCmpTable();
+      drawCompare();
+      if (el.cmpCard && el.cmpCard.scrollIntoView) {
+        try { el.cmpCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch (e) { }
+      }
+    } else {
+      stopCmp();
+    }
+  }
+
+  function cmpPlayToggle() {
+    if (st.cmp.playing) { stopCmp(); return; }
+    if (!st.cmp.ref || !st.frames.length) { note('먼저 내 스윙을 분석해 주세요.'); return; }
+    st.cmp.playing = true;
+    if (el.cmpPlay) setText(el.cmpPlay, '❚❚');
+    if (st.cmp.k >= PHASES.length - 1 && st.cmp.p >= 0.99) { st.cmp.k = 0; st.cmp.p = 0; }
+    cmpTimer = setInterval(function () {
+      st.cmp.p += 0.06;
+      if (st.cmp.p >= 1) {
+        st.cmp.p = 0;
+        st.cmp.k += 1;
+        if (st.cmp.k >= PHASES.length) {
+          st.cmp.k = PHASES.length - 1;
+          st.cmp.p = 1;
+          stopCmp();
+        }
+      }
+      if (el.cmpRange) {
+        el.cmpRange.max = '100';
+        el.cmpRange.value = String(Math.round(st.cmp.p * 100));
+      }
+      markCmpPhase();
+      drawCompare();
+    }, 60);
+  }
+
+  function stopCmp() {
+    st.cmp.playing = false;
+    if (el.cmpPlay) setText(el.cmpPlay, '▶');
+    if (cmpTimer) { clearInterval(cmpTimer); cmpTimer = 0; }
+  }
+
+  function saveCurrentAsPro() {
+    if (!st.frames.length || !st.phases || st.mode !== 'video') {
+      note('프로 스윙 영상을 분석한 뒤에 비교 기준으로 저장할 수 있습니다.');
+      return;
+    }
+    if (st.cmp.saved.length >= 5) {
+      note('저장은 최대 5개까지입니다. 비교 기준 목록에서 하나를 삭제한 뒤 저장해 주세요.');
+      return;
+    }
+    var name = (el.proName && el.proName.value ? el.proName.value : '').trim();
+    if (!name) name = '저장한 프로 스윙 ' + (st.cmp.saved.length + 1);
+    var rec = {
+      id: 'u' + Date.now(),
+      name: name.slice(0, 24),
+      view: st.view,
+      hand: st.hand,
+      aspect: st.W / st.H,
+      phases: {
+        address: st.phases.address, top: st.phases.top, downswing: st.phases.downswing,
+        impact: st.phases.impact, follow: st.phases.follow, finish: st.phases.finish
+      },
+      frames: packFrames(st.frames),
+      createdAt: Date.now()
+    };
+    var list = st.cmp.saved.concat([rec]);
+    if (!lsWrite(list)) {
+      note('저장 공간이 부족해 저장하지 못했습니다. 비교 기준 목록에서 하나를 삭제한 뒤 다시 시도해 주세요.');
+      return;
+    }
+    st.cmp.saved = list;
+    refreshProSelect('u:' + rec.id);
+    selectPro('u:' + rec.id);
+    if (el.proName) el.proName.value = '';
+    note('"' + rec.name + '"을(를) 비교 기준 스윙으로 저장했습니다. (이 브라우저에만 저장됩니다)');
+  }
+
+  function deletePro() {
+    if (!el.proSelect) return;
+    var v = String(el.proSelect.value || '');
+    if (v.indexOf('u:') !== 0) { note('내장 기준 스윙은 삭제할 수 없습니다.'); return; }
+    var id = v.slice(2);
+    var list = [];
+    for (var i = 0; i < st.cmp.saved.length; i++) if (st.cmp.saved[i].id !== id) list.push(st.cmp.saved[i]);
+    lsWrite(list);
+    st.cmp.saved = list;
+    refreshProSelect('p:' + (st.cmp.refId || 'balance'));
+    selectPro('p:' + (st.cmp.refId || 'balance'));
+    note('저장한 비교 기준 스윙을 삭제했습니다.');
   }
 
   /* ------------------------------ 부트 ------------------------------ */
@@ -2467,7 +3344,12 @@ var GolfDemo = (function () {
     st: st, init: init, analysis: function () { return st.analysis; },
     setView: setView, setHand: setHand, startDemo: startDemo, scrubTo: scrubTo,
     drawScene: drawScene, assignPhase: assignPhase, exportShot: exportShot,
-    paintTabs: paintTabs, analyze: analyze
+    paintTabs: paintTabs, analyze: analyze,
+    cmp: {
+      on: setCmpOn, select: selectPro, draw: drawCompare, table: renderCmpTable,
+      save: saveCurrentAsPro, del: deletePro, play: cmpPlayToggle, stop: stopCmp,
+      state: function () { return st.cmp; }
+    }
   };
 })();
 </script>
