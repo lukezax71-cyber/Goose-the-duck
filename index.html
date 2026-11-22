@@ -239,6 +239,22 @@ input[type=range]:disabled { opacity: .45; }
 .grade b { font-size: 12px; color: var(--muted); font-weight: 700; margin-left: 6px; }
 .sumtxt p { margin: 6px 0 0; font-size: 12.5px; line-height: 1.5; color: var(--text); }
 
+/* ---------- tempo ---------- */
+.tempo {
+  margin-top: 12px; padding: 9px 11px; border-radius: 12px;
+  background: #0c1a1f; border: 1px solid #1d3a3c;
+}
+.tempo[hidden] { display: none; }
+.tempo .tmain { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.tempo .tk { font-size: 11px; font-weight: 800; color: var(--muted); }
+.tempo b { font-size: 19px; font-weight: 900; letter-spacing: -.5px; color: #8ff0d4; font-variant-numeric: tabular-nums; }
+.tempo em { font-style: normal; font-size: 10.5px; font-weight: 800; border-radius: 999px; padding: 2px 8px; background: #17233a; color: var(--muted); }
+.tempo.ideal em { background: #123a30; color: var(--good); }
+.tempo.fast em, .tempo.slow em { background: #3a3014; color: var(--warn); }
+.tempo.rush em, .tempo.lag em { background: #3a1520; color: var(--bad); }
+.tempo .td { margin: 4px 0 0; font-size: 11px; color: var(--text); font-variant-numeric: tabular-nums; }
+.tempo .tn { margin: 3px 0 0; font-size: 10px; line-height: 1.5; color: var(--dim); }
+
 .bars { margin-top: 14px; display: grid; gap: 7px; }
 .bar { display: grid; grid-template-columns: 92px 1fr 34px; gap: 8px; align-items: center; font-size: 11.5px; color: var(--muted); }
 .bar .bt2 { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -301,6 +317,7 @@ footer { text-align: center; font-size: 10.5px; color: #4b5a74; padding: 6px 0 1
   max-width: 190px; text-overflow: ellipsis;
 }
 .cmp-note { margin: 8px 2px 0; font-size: 11px; line-height: 1.6; color: var(--dim); }
+.cmp-sub { margin: 5px 2px 0; font-size: 10.5px; line-height: 1.55; color: var(--dim); }
 .cmp-grid { display: grid; grid-template-columns: 1fr; gap: 8px; margin-top: 10px; }
 @media (min-width: 620px) { .cmp-grid { grid-template-columns: 1fr 1fr; } }
 .cmp-pane {
@@ -390,6 +407,14 @@ footer { text-align: center; font-size: 10.5px; color: #4b5a74; padding: 6px 0 1
   background: #121d2e; color: var(--bad); font: inherit; font-size: 11px; font-weight: 800;
   padding: 0 10px; cursor: pointer;
 }
+.hist-cmp {
+  flex: none; appearance: none; border: 0; border-left: 1px solid var(--line);
+  background: #102a2a; color: #7fe0c4; font: inherit; font-size: 11px; font-weight: 800;
+  padding: 0 10px; cursor: pointer;
+}
+.hist-cmp:active { background: #17403c; }
+.hist-hint { margin: 8px 2px 0; font-size: 10px; line-height: 1.5; color: var(--dim); }
+.hist-hint b { color: #7fe0c4; }
 .hist-item.armed .hist-del { background: var(--bad); color: #2b0710; }
 .hist-total { margin: 8px 2px 0; font-size: 10px; color: var(--dim); }
 </style>
@@ -432,6 +457,7 @@ footer { text-align: center; font-size: 10.5px; color: #4b5a74; padding: 6px 0 1
         <div class="hist-panel" id="histPanel" hidden>
           <p class="hist-empty" id="histEmpty">아직 보관한 스윙이 없습니다. 영상을 올려 분석하면 자동으로 보관됩니다.</p>
           <ul class="hist-list" id="histList"></ul>
+          <p class="hist-hint">항목의 <b>비교</b>를 누르면 그 스윙을 기준으로 지금 스윙과 나란히 비교합니다.</p>
           <p class="hist-total" id="histTotal">이 브라우저(기기)에만 저장됩니다 · 최근 15개까지 보관</p>
         </div>
       </div>
@@ -483,7 +509,7 @@ footer { text-align: center; font-size: 10.5px; color: #4b5a74; padding: 6px 0 1
       <div class="tools">
         <button class="btn mini" id="exportBtn" type="button">스냅샷 저장</button>
         <button class="btn mini" id="markerToggle" type="button">구간 미세 조정</button>
-        <button class="btn mini" id="proBtn" type="button">프로 비교</button>
+        <button class="btn mini" id="proBtn" type="button">프로·과거 비교</button>
       </div>
 
       <div class="markers" id="markers" hidden>
@@ -494,12 +520,13 @@ footer { text-align: center; font-size: 10.5px; color: #4b5a74; padding: 6px 0 1
 
     <section class="card compare" id="cmpCard" hidden>
       <div class="cmp-head">
-        <h2>프로 비교</h2>
+        <h2>프로 · 과거 비교</h2>
         <div class="cmp-pick">
           <select id="proSelect" aria-label="비교 기준 스윙"></select>
           <button class="btn mini ghost" id="proDel" type="button" hidden>삭제</button>
         </div>
       </div>
+      <p class="cmp-sub">KLPGA 프로 기준, 저장한 프로 스윙, 그리고 내 스윙 보관함의 과거 내 스윙과 6구간을 맞춰 나란히 비교합니다.</p>
       <p class="cmp-note" id="proNote">기준 스윙을 불러오는 중…</p>
 
       <div class="cmp-grid">
@@ -537,6 +564,11 @@ footer { text-align: center; font-size: 10.5px; color: #4b5a74; padding: 6px 0 1
           <div class="grade" id="gradeLine">–</div>
           <p id="headline">–</p>
         </div>
+      </div>
+      <div class="tempo" id="tempoBox" hidden>
+        <div class="tmain"><span class="tk">⏱ 템포</span><b id="tempoRatio">–</b><em id="tempoVerdict">–</em></div>
+        <p class="td" id="tempoDetail">–</p>
+        <p class="tn">백스윙:다운스윙 비율입니다. 투어 기준 2.6~3.4:1(이상 3.0:1) · 슬로모션 영상은 초가 늘어나도 비율은 그대로입니다.</p>
       </div>
       <div class="bars" id="bars"></div>
     </section>
@@ -634,7 +666,11 @@ var GolfCore = (function () {
     finishHip: 13,       // 피니시 골반-리드발 수평 거리 (cm)
     finishHipBad: 20,
     xfMin: 28,           // X-factor (도)
-    xfMax: 62
+    xfMax: 62,
+    tempoMin: 2.6,       // 백스윙:다운스윙 비율 권장 범위 (투어 평균 3:1)
+    tempoMax: 3.4,
+    tempoRush: 2.3,      // 이보다 짧으면 전환이 급함
+    tempoSlow: 3.8       // 이보다 길면 백스윙이 처짐
   };
 
   /* ------------------------------ 기본 유틸 ------------------------------ */
@@ -852,6 +888,49 @@ var GolfCore = (function () {
     out.quality = 'auto';
     return out;
   }
+
+  /* ----------------------------- 스윙 템포 ----------------------------- */
+  /**
+   * 어드레스·탑·임팩트 세 시각으로 스윙 템포를 계산한다.
+   *  - backswingSec: 탑 - 어드레스
+   *  - downswingSec: 임팩트 - 탑
+   *  - ratio: 백스윙 / 다운스윙 (클래식 3:1 템포, 투어 기준 2.6~3.4:1)
+   * 슬로모션 영상은 초가 늘어나지만 비율(X:1)은 그대로다.
+   */
+  function tempoFromTimes(tAddr, tTop, tImpact) {
+    if (!isNum(tAddr) || !isNum(tTop) || !isNum(tImpact)) return null;
+    var back = tTop - tAddr, down = tImpact - tTop;
+    if (!(back > 0)) return null;
+    var r2 = function (v) { return Math.round(v * 100) / 100; };
+    var ratio = back / Math.max(0.05, down);
+    return {
+      backswingSec: r2(back),
+      downswingSec: r2(down),
+      totalSwingSec: r2(tImpact - tAddr),
+      ratio: r2(ratio)
+    };
+  }
+
+  /** frames[{t}] + 구간 인덱스로 템포를 계산한다. */
+  function computeTempo(frames, ph) {
+    if (!frames || !frames.length || !ph) return null;
+    var a = frames[ph.address], t = frames[ph.top], i = frames[ph.impact];
+    if (!a || !t || !i) return null;
+    return tempoFromTimes(a.t, t.t, i.t);
+  }
+
+  /** 템포 비율의 권장 범위 판정 */
+  function tempoVerdict(ratio) {
+    if (!isNum(ratio)) return { key: 'none', label: '–' };
+    if (ratio < TH.tempoRush) return { key: 'rush', label: '너무 급함' };
+    if (ratio < TH.tempoMin) return { key: 'fast', label: '조금 빠름' };
+    if (ratio <= TH.tempoMax) return { key: 'ideal', label: '이상적' };
+    if (ratio <= TH.tempoSlow) return { key: 'slow', label: '조금 느림' };
+    return { key: 'lag', label: '백스윙 처짐' };
+  }
+
+  function fmtSec(v) { return (Math.round(v * 100) / 100).toFixed(2) + '초'; }
+  function fmtRatio(v) { return (Math.round(v * 10) / 10).toFixed(1); }
 
   /* ------------------------------- 계측 ------------------------------- */
   function armAngle2(d) { // 어깨 중심 → 손목 라인의 수평 대비 각도
@@ -1137,6 +1216,9 @@ var GolfCore = (function () {
       return clamp100(100 - (v - hi) / Math.max(1e-6, softHi - hi) * 62);
     }
 
+    // 14) 스윙 템포 — 구간 시각(frames[i].t)에서 계산
+    var tempo = computeTempo(frames, ph);
+
     // 1) 스윙 플레인
     var planeScore = 100
       - Math.max(0, Math.abs(pathDev) - 6) * 2.6
@@ -1388,10 +1470,36 @@ var GolfCore = (function () {
       hint: '척추 굴곡 ' + Math.round(finBend) + '°(권장 0~18, 역C 주의) · 측굴 ' + Math.abs(r1(finSide)) + '° · 골반-리드발 ' + r1(finHip) + 'cm · 양손 ' + (finHandUp >= 0 ? '어깨 위 ' : '어깨 아래 ') + Math.abs(r1(finHandUp)) + 'cm'
     });
 
+    // 14) 스윙 템포 (백스윙:다운스윙)
+    if (tempo) {
+      var tv = tempoVerdict(tempo.ratio);
+      var tempoScore = bandScore(tempo.ratio, TH.tempoMin, TH.tempoMax, 1.7, 4.6);
+      var tempoTip;
+      if (tv.key === 'rush') {
+        tempoTip = '템포가 너무 급합니다(백 ' + fmtRatio(tempo.ratio) + ':1, 백스윙 ' + fmtSec(tempo.backswingSec) +
+          ' / 다운스윙 ' + fmtSec(tempo.downswingSec) + '). 다운스윙이 먼저 나가며 손이 몸에서 떨어지기 쉽습니다. 탑에서 반 박자 멈춘 뒤 3:1 리듬으로 내려오세요.';
+      } else if (tv.key === 'fast') {
+        tempoTip = '조금 빠른 편입니다(백 ' + fmtRatio(tempo.ratio) + ':1). 목표는 2.6~3.4:1입니다. 백스윙 끝에서 잠깐 여유를 두고 전환하세요.';
+      } else if (tv.key === 'ideal') {
+        tempoTip = '이상적인 템포입니다(백 ' + fmtRatio(tempo.ratio) + ':1, 투어 평균 3:1). 지금 리듬을 그대로 유지하세요.';
+      } else if (tv.key === 'slow') {
+        tempoTip = '백스윙이 조금 느립니다(백 ' + fmtRatio(tempo.ratio) + ':1). 백스윙이 길어지면 전환이 급해집니다. 백스윙을 조금 줄이고 같은 힘으로 내려오세요.';
+      } else {
+        tempoTip = '백스윙이 처집니다(백 ' + fmtRatio(tempo.ratio) + ':1). 백스윙 끝에서 멈칫하면 헤드 스피드가 떨어집니다. 리듬을 세면서 끊김 없이 전환하세요.';
+      }
+      checks.push({
+        id: 'tempo', short: '템포', label: '스윙 템포 (백:다운)',
+        value: fmtRatio(tempo.ratio) + ' : 1',
+        score: tempoScore, tip: tempoTip,
+        hint: '백스윙 ' + fmtSec(tempo.backswingSec) + ' · 다운스윙 ' + fmtSec(tempo.downswingSec) +
+          ' · 전체 ' + fmtSec(tempo.totalSwingSec) + ' · 투어 기준 2.6~3.4:1(이상 3.0:1) · 슬로모션 영상은 초가 늘어나도 비율은 그대로입니다'
+      });
+    }
+
     /* 상태 재계산(점수 기반) */
     var WEIGHTS = {
       plane: 1.5, spine: 1.4, head: 1.1, xf: 1.2, clear: 1.2, posture: 1.1, lowerBody: 1.0,
-      sway: 1.0, arm: 1.1, trailArm: 1.0, weight: 1.0, ext: 0.8, finish: 1.1
+      sway: 1.0, arm: 1.1, trailArm: 1.0, weight: 1.0, ext: 0.8, finish: 1.1, tempo: 0.8
     };
     var sum = 0, wsum = 0;
     for (var i = 0; i < checks.length; i++) {
@@ -1418,7 +1526,8 @@ var GolfCore = (function () {
       trailArm: '트레일암 각도가 릴리스에 맞지 않습니다',
       weight: '임팩트 체중 이동이 부족합니다',
       ext: '팔로우스루가 목표 쪽으로 뻗지 못합니다',
-      finish: '피니시 밸런스가 흐트러집니다'
+      finish: '피니시 밸런스가 흐트러집니다',
+      tempo: '스윙 템포가 3:1 리듬에서 벗어납니다'
     };
     var issues = checks.filter(function (c) { return c.score < 72; }).sort(function (a, b) { return a.score - b.score; });
     var headline = issues.length
@@ -1493,6 +1602,7 @@ var GolfCore = (function () {
       view: view,
       hand: hand,
       source3d: has3,
+      tempo: tempo,
       live: liveVals,
       scale2: S2,
       checks: checks,
@@ -1524,6 +1634,8 @@ var GolfCore = (function () {
         wA: wA, wI: wI, wF: wF,
         finHip: finHip, finHead: finHead, finHeadDev: finHeadDev, headFwdA: headFwdA, stance: stanceW, handTopH: handTopH,
         ott: ott, shallow: shallow, earlyExt: earlyExt, overBend: overBend, headUp: headUp,
+        tempoRatio: tempo ? tempo.ratio : null, backswingSec: tempo ? tempo.backswingSec : null,
+        downswingSec: tempo ? tempo.downswingSec : null, tempoTotalSec: tempo ? tempo.totalSwingSec : null,
         has3: has3
       }
     };
@@ -1580,6 +1692,10 @@ var GolfCore = (function () {
     derive: derive,
     detectPhases: detectPhases,
     computeMetrics: computeMetrics,
+    tempoFromTimes: tempoFromTimes,
+    computeTempo: computeTempo,
+    tempoVerdict: tempoVerdict,
+    fmtRatio: fmtRatio,
     phaseCoaching: phaseCoaching,
     armAngle2: armAngle2,
     helpers: {
@@ -1820,13 +1936,14 @@ var GolfPros = (function () {
       highlights: [
         '어드레스~피니시 머리 이동 최소(3cm 이내)',
         '골반 스웨이 없이 회전만, 임팩트 골반 40° 전후',
-        '피니시에서 리드발 위에 완전히 서고 뒤꿈치가 들림'
+        '피니시에서 리드발 위에 완전히 서고 뒤꿈치가 들림',
+        '템포 3.0:1 (백스윙 1.0초 · 다운스윙 0.33초)'
       ],
       keys: [
-        key(0.100, V(0.00, 0.93, 0.34), 0, 0, 26, 0.000, 0, 0),
-        key(0.400, V(0.02, 1.60, -0.05), -92, -46, 25, -0.020, 0.005, 0.003),
+        key(0.105, V(0.00, 0.93, 0.34), 0, 0, 26, 0.000, 0, 0),
+        key(0.421, V(0.02, 1.60, -0.05), -92, -46, 25, -0.020, 0.005, 0.003),
         key(0.480, V(0.06, 1.10, 0.30), -40, -8, 24, -0.010, 0.003, 0.002),
-        key(0.525, V(0.05, 0.88, 0.48), 22, 40, 24, 0.060, -0.003, -0.002),
+        key(0.526, V(0.05, 0.88, 0.48), 22, 40, 24, 0.060, -0.003, -0.002),
         key(0.700, V(0.24, 1.30, 0.95), 58, 56, 23, 0.070, -0.008, 0),
         key(0.880, V(0.40, 1.60, 0.10), 92, 72, 10, 0.090, -0.010, 0)
       ]
@@ -1839,13 +1956,14 @@ var GolfPros = (function () {
       highlights: [
         '어깨 회전 100° 전후, X-factor 45° 내외',
         '다운스윙 트레일팔꿈치를 붙여 유지하는 래그',
-        '임팩트 후 양팔이 목표 쪽으로 길게 뻗는 릴리스'
+        '임팩트 후 양팔이 목표 쪽으로 길게 뻗는 릴리스',
+        '템포 2.7:1 (백스윙 1.0초 · 다운스윙 0.37초)'
       ],
       keys: [
-        key(0.100, V(0.00, 0.93, 0.34), 0, 0, 27, 0.000, 0, 0),
-        key(0.400, V(0.00, 1.66, -0.02), -102, -56, 26, -0.028, 0.006, 0.004),
+        key(0.105, V(0.00, 0.93, 0.34), 0, 0, 27, 0.000, 0, 0),
+        key(0.421, V(0.00, 1.66, -0.02), -102, -56, 26, -0.028, 0.006, 0.004),
         key(0.480, V(0.05, 1.12, 0.30), -46, -10, 25, -0.014, 0.004, 0.003),
-        key(0.525, V(0.05, 0.87, 0.44), 26, 46, 25, 0.068, -0.004, -0.002),
+        key(0.537, V(0.05, 0.87, 0.44), 26, 46, 25, 0.068, -0.004, -0.002),
         key(0.700, V(0.26, 1.32, 0.98), 64, 62, 22, 0.080, -0.010, 0),
         key(0.880, V(0.42, 1.62, 0.08), 100, 82, 8, 0.100, -0.012, 0)
       ]
@@ -1858,13 +1976,14 @@ var GolfPros = (function () {
       highlights: [
         '머리·스파인 각도 변화 최소, 일정한 템포',
         '임팩트에서 손이 공 앞으로(샤프트 린)',
-        '피니시 상체가 수직에 가깝게 서고 균형 유지'
+        '피니시 상체가 수직에 가깝게 서고 균형 유지',
+        '템포 3.3:1 (백스윙 1.0초 · 다운스윙 0.30초)'
       ],
       keys: [
-        key(0.100, V(0.00, 0.93, 0.34), 0, 0, 25, 0.000, 0, 0),
-        key(0.400, V(0.02, 1.58, -0.04), -86, -44, 24, -0.018, 0.004, 0.003),
+        key(0.105, V(0.00, 0.93, 0.34), 0, 0, 25, 0.000, 0, 0),
+        key(0.421, V(0.02, 1.58, -0.04), -86, -44, 24, -0.018, 0.004, 0.003),
         key(0.480, V(0.06, 1.08, 0.30), -38, -8, 23, -0.008, 0.002, 0.002),
-        key(0.525, V(0.05, 0.86, 0.52), 18, 38, 23, 0.058, -0.002, -0.002),
+        key(0.516, V(0.05, 0.86, 0.52), 18, 38, 23, 0.058, -0.002, -0.002),
         key(0.700, V(0.22, 1.28, 0.92), 54, 52, 22, 0.068, -0.006, 0),
         key(0.880, V(0.38, 1.58, 0.12), 86, 68, 12, 0.088, -0.008, 0)
       ]
@@ -1977,7 +2096,8 @@ var GolfPros = (function () {
       cmpPhases: $('cmpPhases'), cmpPlay: $('cmpPlay'), cmpRange: $('cmpRange'), cmpLabel: $('cmpLabel'),
       cmpTable: $('cmpTable'), proName: $('proName'), proSaveBtn: $('proSaveBtn'), proSaveHint: $('proSaveHint'),
       histToggle: $('histToggle'), histCount: $('histCount'), histSave: $('histSave'),
-      histPanel: $('histPanel'), histEmpty: $('histEmpty'), histList: $('histList'), histTotal: $('histTotal')
+      histPanel: $('histPanel'), histEmpty: $('histEmpty'), histList: $('histList'), histTotal: $('histTotal'),
+      tempoBox: $('tempoBox'), tempoRatio: $('tempoRatio'), tempoDetail: $('tempoDetail'), tempoVerdict: $('tempoVerdict')
     };
     cvs = el.canvas; ctx = cvs.getContext('2d');
     vid = el.video;
@@ -2432,6 +2552,7 @@ var GolfPros = (function () {
     el.scoreNum.textContent = String(m.overall);
     el.gradeLine.innerHTML = m.gradeLabel + '<b>' + m.grade + ' 등급</b>';
     setText(el.headline, m.headline);
+    paintTempo(m.tempo);
     var html = '';
     for (var i = 0; i < m.checks.length; i++) {
       var c = m.checks[i];
@@ -2453,6 +2574,22 @@ var GolfPros = (function () {
       html += '<div class="pread"><div class="ph">' + KO[k] + '</div><div class="pv">' + inner + '</div></div>';
     }
     el.preads.innerHTML = html;
+  }
+
+  /* 템포 배지(요약 카드) */
+  function paintTempo(t) {
+    if (!el.tempoBox) return;
+    if (!t || !(t.ratio > 0)) { show(el.tempoBox, false); return; }
+    show(el.tempoBox, true);
+    setText(el.tempoRatio, C.fmtRatio(t.ratio) + ' : 1');
+    setText(el.tempoDetail, '백스윙 ' + t.backswingSec.toFixed(2) + '초 · 다운스윙 ' + t.downswingSec.toFixed(2) +
+      '초 · 전체 ' + t.totalSwingSec.toFixed(2) + '초');
+    var vd = C.tempoVerdict(t.ratio);
+    setText(el.tempoVerdict, vd.label);
+    if (el.tempoBox.classList) {
+      ['rush', 'fast', 'ideal', 'slow', 'lag'].forEach(function (k) { el.tempoBox.classList.remove(k); });
+      el.tempoBox.classList.add(vd.key);
+    }
   }
 
   function renderChecks(m) {
@@ -3048,6 +3185,7 @@ var GolfPros = (function () {
   var cmpCtxA = null, cmpCtxB = null, cmpTimer = 0, cmpBusy = false;
 
   var CMP_ROWS = [
+    { k: 'tempoRatio', label: '템포 (백:다운)', unit: ':1', tol: 0.4 },
     { k: 'shTop', label: '어깨 회전 (탑)', unit: '°', tol: 12 },
     { k: 'hipTop', label: '골반 회전 (탑)', unit: '°', tol: 10 },
     { k: 'xfTop', label: 'X-factor (탑)', unit: '°', tol: 10 },
@@ -3120,12 +3258,17 @@ var GolfPros = (function () {
     return frames;
   }
 
-  function savedToRef(rec) {
+  function savedToRef(rec, past) {
     var frames = unpackFrames(rec.frames || [], rec.aspect || 0.75);
     var m = C.computeMetrics(frames, rec.phases, rec.view || 'dtl', rec.hand || 'right');
     return {
       id: rec.id, name: rec.name, frames: frames, phases: rec.phases, analysis: m,
-      demoScene: null, view: rec.view || 'dtl', hand: rec.hand || 'right', saved: true, note: ''
+      demoScene: null, view: rec.view || 'dtl', hand: rec.hand || 'right', saved: true,
+      past: !!past, tag: past ? ('과거 · ' + stamp(rec.createdAt)) : null,
+      tempo: histTempo(rec),
+      note: past
+        ? '내 스윙 보관함에 저장해 둔 과거 스윙입니다. 그때 찍은 좌표·구간으로 다시 그려 지금 스윙과 나란히 비교합니다.'
+        : ''
     };
   }
 
@@ -3147,14 +3290,36 @@ var GolfPros = (function () {
     if (!el.proSelect) return;
     var html = '', i;
     var presets = window.GolfPros ? GolfPros.list() : [];
-    for (i = 0; i < presets.length; i++) {
-      html += '<option value="p:' + presets[i].id + '">기준: ' + escapeHtml(presets[i].name) + '</option>';
+    if (presets.length) {
+      html += '<optgroup label="KLPGA 프로 기준">';
+      for (i = 0; i < presets.length; i++) {
+        html += '<option value="p:' + presets[i].id + '">' + escapeHtml(presets[i].name) + '</option>';
+      }
+      html += '</optgroup>';
     }
-    for (i = 0; i < st.cmp.saved.length; i++) {
-      html += '<option value="u:' + st.cmp.saved[i].id + '">저장: ' + escapeHtml(st.cmp.saved[i].name) + '</option>';
+    if (st.cmp.saved.length) {
+      html += '<optgroup label="저장한 프로 스윙">';
+      for (i = 0; i < st.cmp.saved.length; i++) {
+        html += '<option value="u:' + st.cmp.saved[i].id + '">' + escapeHtml(st.cmp.saved[i].name) + '</option>';
+      }
+      html += '</optgroup>';
+    }
+    var pasts = [];
+    for (i = 0; i < st.hist.length; i++) if (st.hist[i].id !== st.savedId) pasts.push(st.hist[i]);
+    if (pasts.length) {
+      html += '<optgroup label="내 스윙 보관함 (과거 내 스윙)">';
+      for (i = 0; i < pasts.length; i++) {
+        html += '<option value="h:' + escapeHtml(pasts[i].id) + '">' + escapeHtml(histRefLabel(pasts[i])) + '</option>';
+      }
+      html += '</optgroup>';
     }
     el.proSelect.innerHTML = html;
-    var want = pref || (st.cmp.ref && st.cmp.ref.saved ? 'u:' + st.cmp.ref.id : 'p:' + (st.cmp.refId || 'balance'));
+    var want = pref;
+    if (!want) {
+      if (st.cmp.ref && st.cmp.ref.past) want = 'h:' + st.cmp.ref.id;
+      else if (st.cmp.ref && st.cmp.ref.saved) want = 'u:' + st.cmp.ref.id;
+      else want = 'p:' + (st.cmp.refId || 'balance');
+    }
     el.proSelect.value = want;
     if (!el.proSelect.value) el.proSelect.value = presets.length ? 'p:' + presets[0].id : '';
     if (el.proDel) el.proDel.hidden = String(el.proSelect.value).indexOf('u:') !== 0;
@@ -3163,17 +3328,27 @@ var GolfPros = (function () {
     }
   }
 
+  /** 비교 선택지에 쓰는 과거 스윙 이름 */
+  function histRefLabel(rec) {
+    var tm = histTempo(rec);
+    return '[과거 내 스윙] ' + histNameOf(rec) + (tm && tm.ratio ? ' · 템포 ' + C.fmtRatio(tm.ratio) + ':1' : '');
+  }
+
   function selectPro(value) {
     if (!window.GolfPros) return;
-    var rec = null;
-    if (String(value).indexOf('u:') === 0) {
-      var id = String(value).slice(2);
+    var v = String(value), rec = null, pastRec = null;
+    if (v.indexOf('u:') === 0) {
+      var id = v.slice(2);
       for (var i = 0; i < st.cmp.saved.length; i++) if (st.cmp.saved[i].id === id) rec = st.cmp.saved[i];
+    } else if (v.indexOf('h:') === 0) {
+      pastRec = histFind(v.slice(2));
     }
     if (rec) {
       st.cmp.ref = savedToRef(rec);
+    } else if (pastRec) {
+      st.cmp.ref = savedToRef(pastRec, true);
     } else {
-      st.cmp.refId = String(value).replace('p:', '') || 'balance';
+      st.cmp.refId = v.replace('p:', '') || 'balance';
       st.cmp.ref = GolfPros.make(st.cmp.refId, st.view);
     }
     if (el.proDel) el.proDel.hidden = !rec;
@@ -3193,7 +3368,7 @@ var GolfPros = (function () {
     }
     if (!r.saved) t += ' 실제 선수 영상이나 계측값이 아니라, 공개된 생체역학 기준으로 만든 참조 모델입니다.';
     setText(el.proNote, t);
-    if (el.cmpBTag) setText(el.cmpBTag, r.name || '기준 스윙');
+    if (el.cmpBTag) setText(el.cmpBTag, r.tag || r.name || '기준 스윙');
   }
 
   function renderCmpPhases() {
@@ -3321,7 +3496,7 @@ var GolfPros = (function () {
   function setCmpOn(on) {
     st.cmp.on = !!on;
     show(el.cmpCard, st.cmp.on);
-    if (el.proBtn) setText(el.proBtn, st.cmp.on ? '프로 비교 닫기' : '프로 비교');
+    if (el.proBtn) setText(el.proBtn, st.cmp.on ? '프로·과거 비교 닫기' : '프로·과거 비교');
     if (st.cmp.on) {
       if (!st.cmp.ref) selectPro('p:' + (st.cmp.refId || 'balance'));
       renderCmpPhases();
@@ -3496,6 +3671,21 @@ var GolfPros = (function () {
     var score = (rec.report && rec.report.overall != null) ? ' · ' + rec.report.overall + '점' : '';
     return stamp(rec.createdAt) + ' · ' + (rec.view === 'face' ? '정면' : '측면') + score;
   }
+
+  /** 기록에 저장된 템포(예전 기록은 좌표·구간에서 다시 계산) */
+  function histTempo(rec) {
+    if (rec && rec.tempo && typeof rec.tempo.ratio === 'number' && rec.tempo.ratio > 0) return rec.tempo;
+    var ph = rec && rec.phases, fr = rec && rec.frames;
+    if (!ph || !fr || !fr.length) return null;
+    var a = fr[ph.address], t = fr[ph.top], i = fr[ph.impact];
+    if (!a || !t || !i) return null;
+    return C.tempoFromTimes(a[0], t[0], i[0]);
+  }
+
+  function histFind(id) {
+    for (var i = 0; i < st.hist.length; i++) if (st.hist[i].id === id) return st.hist[i];
+    return null;
+  }
   function fmtBytes(n) {
     if (!n) return '';
     if (n >= 1024 * 1024 * 1024) return (n / (1024 * 1024 * 1024)).toFixed(1) + 'GB';
@@ -3525,8 +3715,15 @@ var GolfPros = (function () {
         impact: st.phases.impact, follow: st.phases.follow, finish: st.phases.finish
       },
       report: {
-        overall: st.analysis.overall, grade: st.analysis.grade, headline: st.analysis.headline || ''
+        overall: st.analysis.overall, grade: st.analysis.grade, headline: st.analysis.headline || '',
+        tempo: (st.analysis.tempo ? st.analysis.tempo.ratio : null)
       },
+      tempo: (st.analysis.tempo ? {
+        backswingSec: st.analysis.tempo.backswingSec,
+        downswingSec: st.analysis.tempo.downswingSec,
+        totalSwingSec: st.analysis.tempo.totalSwingSec,
+        ratio: st.analysis.tempo.ratio
+      } : null),
       mimeType: st.srcMime || 'video/mp4',
       fileName: st.srcName || '',
       dur: st.frames.length ? st.frames[st.frames.length - 1].t : 0
@@ -3606,10 +3803,12 @@ var GolfPros = (function () {
       all.sort(function (a, b) { return (b.createdAt || 0) - (a.createdAt || 0); });
       st.hist = all;
       if (paint !== false) paintHist();
+      refreshProSelect();
       return all;
     }, function () {
       st.hist = [];
       if (paint !== false) paintHist();
+      refreshProSelect();
       return [];
     });
   }
@@ -3642,6 +3841,8 @@ var GolfPros = (function () {
       if (r.video && r.video.byteLength) bytes += r.video.byteLength;
       var meta = [stamp(r.createdAt), r.view === 'face' ? '정면' : '측면', r.hand === 'left' ? '왼손' : '오른손'];
       meta.push((r.report && r.report.overall != null) ? (r.report.overall + '점 ' + (r.report.grade || '')) : '점수 없음');
+      var tm = histTempo(r);
+      if (tm && tm.ratio) meta.push('템포 ' + C.fmtRatio(tm.ratio) + ':1');
       if (r.dur) meta.push(r.dur.toFixed(1) + '초');
       if (!r.video) meta.push('영상 원본 없음');
       var armed = (r.id === st.histConfirm);
@@ -3651,6 +3852,7 @@ var GolfPros = (function () {
           '<span class="hm">' + escapeHtml(meta.join(' · ')) + '</span>' +
           (r.fileName ? '<span class="hf">' + escapeHtml(r.fileName) + '</span>' : '') +
         '</button>' +
+        '<button class="hist-cmp" type="button" data-cmp="' + escapeHtml(r.id) + '" title="이 스윙을 기준으로 지금 스윙과 비교">비교</button>' +
         '<button class="hist-del" type="button" data-del="' + escapeHtml(r.id) + '">' + (armed ? '정말 삭제' : '삭제') + '</button>' +
         '</li>';
     }
@@ -3675,10 +3877,44 @@ var GolfPros = (function () {
 
   function onHistClick(e) {
     var t = e && e.target;
+    var cmpB = (t && t.closest) ? t.closest('[data-cmp]') : null;
+    if (cmpB) { st.histConfirm = null; histCompare(cmpB.getAttribute('data-cmp')); return; }
     var del = (t && t.closest) ? t.closest('[data-del]') : null;
     if (del) { histDelete(del.getAttribute('data-del')); return; }
     var op = (t && t.closest) ? t.closest('[data-open]') : null;
     if (op) { st.histConfirm = null; openHist(op.getAttribute('data-open')); }
+  }
+
+  /** 보관함 항목을 비교 기준(오른쪽)으로 열고 비교 모드를 켠다. */
+  function histCompare(id) {
+    if (!id) return false;
+    if (st.busy || st.analyzing) { note('분석이 끝난 뒤 비교할 수 있습니다.'); return false; }
+    var rec = histFind(id);
+    if (!rec) {
+      histLoad(false).then(function () { histCompare(id); });
+      return false;
+    }
+    if (st.savedId === id) {
+      note('지금 열어 둔 스윙입니다. 다른 보관 항목의 ‘비교’를 눌러 주세요.');
+      return false;
+    }
+    if (!st.frames.length || !st.analysis) {
+      // 지금 스윙이 없으면 가장 최근의 다른 보관 스윙을 왼쪽에 열고, 이 항목을 기준으로 삼는다
+      var other = null;
+      for (var i = 0; i < st.hist.length; i++) if (st.hist[i].id !== id) { other = st.hist[i]; break; }
+      if (!openHist(other ? other.id : id)) return false;
+    }
+    if (st.savedId === id) {
+      // 비교할 다른 보관 스윙이 없어 같은 항목을 열었다 → KLPGA 기준과 비교
+      setCmpOn(true);
+      selectPro('p:' + (st.cmp.refId || 'balance'));
+      note('비교할 다른 보관 스윙이 없어 KLPGA 기준 스윙과 비교합니다.');
+      return true;
+    }
+    setCmpOn(true);
+    selectPro('h:' + id);
+    note('과거 내 스윙(' + histNameOf(rec) + ')을(를) 비교 기준으로 열었습니다.');
+    return true;
   }
 
   function histDelete(id) {
@@ -3692,6 +3928,10 @@ var GolfPros = (function () {
     st.histConfirm = null;
     idbRun('readwrite', function (os) { return os['delete'](id); }).then(function () {
       if (st.savedId === id) { st.savedId = null; st.savedAt = 0; setHistSave(''); }
+      if (st.cmp.ref && st.cmp.ref.past && st.cmp.ref.id === id) {
+        st.cmp.ref = null;
+        if (st.cmp.on) selectPro('p:' + (st.cmp.refId || 'balance'));
+      }
       return histLoad(true);
     }).then(function () {
       note('보관함에서 삭제했습니다.');
@@ -3762,12 +4002,13 @@ var GolfPros = (function () {
       updateFrameUI();
       drawScene();
       paintHist();
+      refreshProSelect();
       if (el.histPanel) show(el.histPanel, false);
       if (el.histToggle) {
         el.histToggle.classList.remove('open');
         el.histToggle.setAttribute('aria-expanded', 'false');
       }
-      note('보관함에서 불러왔습니다. 다시 분석하지 않아도 재생·구간 이동·프로 비교를 바로 쓸 수 있습니다.');
+      note('보관함에서 불러왔습니다. 다시 분석하지 않아도 재생·구간 이동·프로·과거 비교를 바로 쓸 수 있습니다.');
       return true;
     } catch (e) {
       st.histSuppress = false;
@@ -3788,8 +4029,15 @@ var GolfPros = (function () {
     paintTabs: paintTabs, analyze: analyze,
     hist: {
       toggle: toggleHist, open: openHist, del: histDelete, save: histSaveNow, load: histLoad,
+      compare: histCompare,
       reload: function () { idbDb = null; idbOpening = null; return histLoad(true); },
-      state: function () { return { list: st.hist, savedId: st.savedId, savedAt: st.savedAt, confirm: st.histConfirm, name: st.hist.length ? histNameOf(st.hist[0]) : '' }; }
+      state: function () {
+        return {
+          list: st.hist, savedId: st.savedId, savedAt: st.savedAt, confirm: st.histConfirm,
+          name: st.hist.length ? histNameOf(st.hist[0]) : '',
+          tempo: function (id) { var r = histFind(id); return r ? histTempo(r) : null; }
+        };
+      }
     },
     cmp: {
       on: setCmpOn, select: selectPro, draw: drawCompare, table: renderCmpTable,
