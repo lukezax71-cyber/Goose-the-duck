@@ -1,0 +1,2475 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>골프 스윙 분석 · Swing Check</title>
+<meta name="description" content="골프 스윙 영상을 브라우저에서 바로 분석합니다. 6개 구간 자동 감지, 스윙 플레인·척추 각도·체중 이동 계측, 캔버스 교정선 오버레이.">
+<meta name="theme-color" content="#060a12">
+<meta name="color-scheme" content="dark">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="스윙 분석">
+<meta name="format-detection" content="telephone=no">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<style>
+:root {
+  --bg: #060a12;
+  --bg2: #0a1120;
+  --card: #111a2b;
+  --card2: #0d1524;
+  --line: #1e2b42;
+  --line2: #26364f;
+  --text: #e9f0ff;
+  --muted: #8fa2c2;
+  --dim: #66799a;
+  --accent: #2fe0ad;
+  --accent2: #45b8ff;
+  --warn: #ffc24b;
+  --bad: #ff647d;
+  --good: #35d68c;
+  --r: 16px;
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", "Noto Sans KR", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  -webkit-text-size-adjust: 100%;
+  overscroll-behavior-y: none;
+  background-image: radial-gradient(1100px 500px at 50% -220px, #0d2233 0%, rgba(6, 10, 18, 0) 70%);
+  min-height: 100vh;
+  padding-bottom: calc(24px + env(safe-area-inset-bottom));
+}
+
+.app { max-width: 780px; margin: 0 auto; padding: 0 12px; }
+
+/* ---------- header ---------- */
+.top {
+  position: sticky; top: 0; z-index: 20;
+  display: flex; align-items: center; gap: 10px;
+  padding: calc(10px + env(safe-area-inset-top)) 2px 10px;
+  background: linear-gradient(180deg, rgba(6,10,18,.96) 60%, rgba(6,10,18,.75) 100%);
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+}
+.brand { display: flex; align-items: center; gap: 9px; min-width: 0; }
+.mark { font-size: 22px; line-height: 1; }
+.bt h1 { margin: 0; font-size: 16px; font-weight: 800; letter-spacing: -0.3px; }
+.bt p { margin: 2px 0 0; font-size: 11px; color: var(--dim); letter-spacing: -0.1px; }
+.chip {
+  margin-left: auto; flex: none;
+  font-size: 10.5px; font-weight: 700; color: var(--muted);
+  border: 1px solid var(--line); border-radius: 999px;
+  padding: 5px 9px; background: #0b1322;
+}
+.chip.on { color: #062b22; background: var(--accent); border-color: var(--accent); }
+.chip.err { color: #2b0710; background: var(--bad); border-color: var(--bad); }
+
+/* ---------- cards ---------- */
+.card {
+  background: linear-gradient(180deg, var(--card) 0%, var(--card2) 100%);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  padding: 14px;
+  margin: 10px 0;
+  box-shadow: 0 8px 24px rgba(0,0,0,.28);
+}
+.card h2 { margin: 0 0 10px; font-size: 13px; font-weight: 800; color: var(--text); letter-spacing: -0.2px; }
+
+/* ---------- segmented ---------- */
+.seg { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; background: #0a1220; border: 1px solid var(--line); border-radius: 13px; padding: 4px; }
+.seg button {
+  appearance: none; border: 0; background: transparent; color: var(--muted);
+  font: inherit; font-size: 13px; font-weight: 700; padding: 9px 6px; border-radius: 10px;
+  display: flex; flex-direction: column; align-items: center; gap: 2px; line-height: 1.15;
+  min-height: 46px; justify-content: center; cursor: pointer;
+}
+.seg button span { font-size: 10px; font-weight: 600; color: var(--dim); }
+.seg button.on { background: linear-gradient(180deg, #1b3a4e, #15293a); color: #d8fff4; box-shadow: inset 0 0 0 1px #2c6a63; }
+.seg button.on span { color: #7fd9c0; }
+.seg.small { grid-template-columns: 1fr 1fr; width: 132px; flex: none; }
+.seg.small button { min-height: 40px; font-size: 12.5px; }
+
+.hint { margin: 9px 2px 0; font-size: 11.5px; line-height: 1.55; color: var(--muted); }
+
+.row { display: flex; gap: 8px; align-items: center; margin-top: 11px; }
+
+.btn {
+  appearance: none; border: 1px solid var(--line2); background: #16233a; color: var(--text);
+  font: inherit; font-size: 13px; font-weight: 700; border-radius: 12px;
+  padding: 0 14px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center;
+  gap: 6px; cursor: pointer; text-decoration: none; flex: 1;
+}
+.btn:active { transform: scale(.985); }
+.btn.file { background: linear-gradient(180deg, #1d5c4e, #14453a); border-color: #2b7c66; color: #d6fff3; }
+.btn.mini { flex: none; min-height: 38px; font-size: 12px; padding: 0 12px; border-radius: 10px; background: #131f33; }
+.btn.ghost { background: transparent; color: var(--muted); }
+.btn[disabled] { opacity: .45; }
+
+/* ---------- trim ---------- */
+.trim { margin-top: 12px; padding: 10px; border: 1px dashed var(--line2); border-radius: 12px; background: #0b1321; }
+.trim-head { display: flex; justify-content: space-between; align-items: baseline; font-size: 11.5px; color: var(--muted); margin-bottom: 6px; }
+.trim-head b { color: var(--accent); font-size: 12px; }
+.trim input[type=range] { width: 100%; margin: 2px 0; }
+.trim .btn { margin-top: 6px; width: 100%; }
+
+/* ---------- progress ---------- */
+.progress { margin-top: 11px; }
+.pbar { height: 6px; background: #0a1220; border-radius: 99px; overflow: hidden; border: 1px solid var(--line); }
+.pbar i { display: block; height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent2), var(--accent)); transition: width .18s ease; }
+.progress span { display: block; margin-top: 6px; font-size: 11.5px; color: var(--muted); }
+.note { margin: 10px 2px 0; font-size: 11px; line-height: 1.55; color: var(--dim); }
+
+/* ---------- stage ---------- */
+.stagecard { padding: 8px 8px 12px; }
+.stage {
+  position: relative; display: flex; align-items: center; justify-content: center;
+  background: #04070d; border-radius: 14px; overflow: hidden; min-height: 200px;
+  border: 1px solid #0f1a2b;
+}
+.fbox {
+  position: relative;
+  width: 320px; height: 427px;   /* JS layoutStage() 가 실제 크기를 지정 */
+  max-width: 100%;
+  background: #000; border-radius: 12px; overflow: hidden;
+}
+#video, #canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+#video { object-fit: contain; background: #000; }
+#canvas { touch-action: manipulation; }
+
+.empty {
+  position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 6px; text-align: center; padding: 24px; color: var(--muted);
+  background: radial-gradient(420px 260px at 50% 40%, #0e2033 0%, #05080f 80%);
+}
+.empty .eicon { font-size: 34px; }
+.empty b { font-size: 13.5px; color: var(--text); font-weight: 800; }
+.empty span { font-size: 11px; color: var(--dim); }
+.empty[hidden] { display: none; }
+
+.badge {
+  position: absolute; left: 10px; top: 10px; z-index: 3;
+  font-size: 10.5px; font-weight: 800; letter-spacing: .2px;
+  padding: 4px 8px; border-radius: 8px;
+  background: rgba(8, 20, 32, .82); color: #9fe9d4; border: 1px solid #1c4a44;
+}
+.badge[hidden] { display: none; }
+
+.scrub { display: flex; align-items: center; gap: 9px; margin-top: 10px; padding: 0 3px; }
+.play {
+  flex: none; width: 42px; height: 42px; border-radius: 50%;
+  border: 1px solid #2a6a5f; background: linear-gradient(180deg, #16392f, #0e2a24);
+  color: #9ff0d6; font-size: 15px; display: grid; place-items: center; cursor: pointer;
+}
+.play:active { transform: scale(.95); }
+.fnum { flex: none; font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; min-width: 62px; text-align: right; }
+
+input[type=range] {
+  -webkit-appearance: none; appearance: none; background: transparent; height: 26px; width: 100%; margin: 0;
+}
+input[type=range]::-webkit-slider-runnable-track { height: 5px; border-radius: 99px; background: #1a2740; }
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%; margin-top: -7.5px;
+  background: var(--accent); border: 3px solid #06201a; box-shadow: 0 0 0 1px #2fe0ad55;
+}
+input[type=range]:disabled { opacity: .45; }
+
+/* ---------- phase tabs ---------- */
+.tabs { display: flex; gap: 6px; overflow-x: auto; margin-top: 8px; padding: 2px 3px 4px; scrollbar-width: none; }
+.tabs::-webkit-scrollbar { display: none; }
+.tab {
+  flex: none; appearance: none; cursor: pointer;
+  border: 1px solid var(--line); background: #0c1523; color: var(--muted);
+  border-radius: 11px; padding: 7px 11px; font: inherit; font-size: 12px; font-weight: 700;
+  display: flex; flex-direction: column; gap: 1px; align-items: center; min-width: 64px;
+}
+.tab span { font-size: 9.5px; font-weight: 600; color: var(--dim); font-variant-numeric: tabular-nums; }
+.tab.on { background: linear-gradient(180deg, #1d4238, #14312a); border-color: #2f7d67; color: #ccfff0; }
+.tab.on span { color: #7fe0c4; }
+
+.ovs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; padding: 0 3px; }
+.ovs label {
+  display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; color: var(--muted);
+  border: 1px solid var(--line); border-radius: 9px; padding: 6px 9px; background: #0b1421; cursor: pointer;
+}
+.ovs input { accent-color: var(--accent); width: 14px; height: 14px; margin: 0; }
+.ovs label.on { color: #d9fff5; border-color: #2b6d5e; background: #0f1f1c; }
+
+.tools { display: flex; gap: 8px; margin-top: 10px; padding: 0 3px; }
+.tools .btn { flex: 1; }
+.markers { margin: 10px 3px 0; padding: 10px; border: 1px dashed var(--line2); border-radius: 12px; background: #0b1321; }
+.markers p { margin: 0 0 8px; font-size: 11.5px; color: var(--muted); }
+.markers p b { color: var(--accent); }
+.mrow { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.mrow button {
+  appearance: none; border: 1px solid var(--line2); background: #131f33; color: var(--text);
+  font: inherit; font-size: 11.5px; font-weight: 700; border-radius: 9px; padding: 9px 4px; cursor: pointer;
+}
+.mrow button:active { background: #1b2a42; }
+
+/* ---------- summary ---------- */
+.sumtop { display: flex; align-items: center; gap: 14px; }
+.ring {
+  --p: 0;
+  flex: none; width: 96px; height: 96px; border-radius: 50%;
+  background: conic-gradient(var(--accent) calc(var(--p) * 1%), #1a2740 0);
+  display: grid; place-items: center; position: relative;
+}
+.ring::before { content: ""; position: absolute; inset: 8px; border-radius: 50%; background: #0e1727; }
+.ring span { position: relative; font-size: 29px; font-weight: 900; letter-spacing: -1px; font-variant-numeric: tabular-nums; }
+.ring small { position: relative; font-size: 10px; color: var(--dim); }
+.sumtxt { min-width: 0; }
+.grade { font-size: 15px; font-weight: 800; color: var(--accent); }
+.grade b { font-size: 12px; color: var(--muted); font-weight: 700; margin-left: 6px; }
+.sumtxt p { margin: 6px 0 0; font-size: 12.5px; line-height: 1.5; color: var(--text); }
+
+.bars { margin-top: 14px; display: grid; gap: 7px; }
+.bar { display: grid; grid-template-columns: 92px 1fr 34px; gap: 8px; align-items: center; font-size: 11.5px; color: var(--muted); }
+.bar .bt2 { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bar .bg { height: 7px; border-radius: 99px; background: #16233a; overflow: hidden; }
+.bar .bg i { display: block; height: 100%; border-radius: 99px; }
+.bar b { text-align: right; font-size: 11.5px; color: var(--text); font-variant-numeric: tabular-nums; }
+
+/* ---------- phase readings ---------- */
+.preads { display: grid; gap: 8px; }
+.pread { display: grid; grid-template-columns: 76px 1fr; gap: 10px; align-items: start; padding: 9px 10px; background: #0c1523; border: 1px solid var(--line); border-radius: 11px; }
+.pread .ph { font-size: 11.5px; font-weight: 800; color: #b8ffe9; padding-top: 1px; }
+.pread .pv { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 11px; color: var(--dim); }
+.pread .pv b { color: var(--text); font-weight: 700; margin-left: 3px; font-variant-numeric: tabular-nums; }
+
+/* ---------- checks ---------- */
+.checks { display: grid; gap: 9px; }
+.check { padding: 11px 12px; border-radius: 12px; background: #0c1523; border: 1px solid var(--line); border-left: 3px solid var(--line2); }
+.check.good { border-left-color: var(--good); }
+.check.warn { border-left-color: var(--warn); }
+.check.bad { border-left-color: var(--bad); }
+.ch-head { display: flex; align-items: baseline; gap: 8px; }
+.ch-head b { font-size: 12.5px; font-weight: 800; }
+.ch-head .val { margin-left: auto; font-size: 13px; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--text); }
+.check.good .val { color: var(--good); }
+.check.warn .val { color: var(--warn); }
+.check.bad .val { color: var(--bad); }
+.ch-bar { height: 5px; border-radius: 99px; background: #16233a; margin: 8px 0 8px; overflow: hidden; }
+.ch-bar i { display: block; height: 100%; border-radius: 99px; background: var(--good); }
+.check.warn .ch-bar i { background: var(--warn); }
+.check.bad .ch-bar i { background: var(--bad); }
+.ch-tip { margin: 0; font-size: 11.5px; line-height: 1.62; color: #c4d3ea; }
+.ch-hint { margin: 6px 0 0; font-size: 10.5px; color: var(--dim); }
+
+/* ---------- help ---------- */
+.help ul { margin: 0; padding-left: 17px; }
+.help li { font-size: 11.5px; line-height: 1.7; color: var(--muted); }
+.help li b { color: var(--text); }
+
+footer { text-align: center; font-size: 10.5px; color: #4b5a74; padding: 6px 0 18px; }
+
+/* ---------- modal ---------- */
+.modal {
+  position: fixed; inset: 0; z-index: 60; display: flex; align-items: center; justify-content: center;
+  padding: 18px; background: rgba(2, 5, 10, .88); backdrop-filter: blur(6px);
+}
+.modal[hidden] { display: none; }
+.mcard { width: 100%; max-width: 420px; background: var(--card); border: 1px solid var(--line2); border-radius: 18px; padding: 14px; display: grid; gap: 10px; }
+.mtitle { margin: 0; font-size: 13px; font-weight: 800; }
+.mcard img { width: 100%; border-radius: 10px; display: block; background: #000; }
+.mhint { margin: 0; font-size: 11px; line-height: 1.5; color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <span class="mark">⛳</span>
+      <div class="bt">
+        <h1>골프 스윙 분석</h1>
+        <p>영상 한 편으로 6구간 · 궤도 · 체중 이동</p>
+      </div>
+    </div>
+    <span class="chip" id="engineChip">대기</span>
+  </header>
+
+  <main>
+    <section class="card setup">
+      <div class="seg" id="viewSeg" role="tablist" aria-label="카메라 각도">
+        <button class="on" type="button" data-view="dtl">측면 · DTL<span>골프공 뒤에서 촬영</span></button>
+        <button type="button" data-view="face">정면 · Face-on<span>가슴 정면에서 촬영</span></button>
+      </div>
+      <p class="hint" id="viewHint">측면(Down-the-Line): 골프공 뒤에서 촬영. 스윙 플레인·오버 더 톱·얼리 익스텐션 판정에 유리합니다.</p>
+
+      <div class="row">
+        <div class="seg small" id="handSeg" aria-label="스윙 손">
+          <button class="on" type="button" data-hand="right">오른손</button>
+          <button type="button" data-hand="left">왼손</button>
+        </div>
+        <label class="btn file">영상 올리기<input id="fileInput" type="file" accept="video/*" hidden></label>
+        <button class="btn" id="demoBtn" type="button">데모 스윙</button>
+      </div>
+
+      <div class="trim" id="trimRow" hidden>
+        <div class="trim-head"><span>분석 구간</span><b id="trimLabel">0.0 – 0.0초</b></div>
+        <input id="trimStart" type="range" min="0" max="10" step="0.1" value="0" aria-label="시작 시각">
+        <input id="trimEnd" type="range" min="0" max="10" step="0.1" value="10" aria-label="끝 시각">
+        <button class="btn mini" id="trimApply" type="button">이 구간 다시 분석</button>
+      </div>
+
+      <div class="progress" id="progress" hidden>
+        <div class="pbar"><i id="pbarFill"></i></div>
+        <span id="pText">준비 중…</span>
+      </div>
+      <p class="note" id="statusNote">측면은 궤도·플레인, 정면은 스웨이·체중 이동에 강합니다. 영상은 기기 밖으로 나가지 않습니다.</p>
+    </section>
+
+    <section class="card stagecard">
+      <div class="stage" id="stage">
+        <div class="fbox" id="fbox">
+          <video id="video" playsinline webkit-playsinline muted preload="auto"></video>
+          <canvas id="canvas" width="640" height="853"></canvas>
+        </div>
+        <div class="empty" id="stageEmpty">
+          <div class="eicon">🏌️</div>
+          <b>영상을 올리거나 데모 스윙을 눌러 주세요</b>
+          <span>아이폰 안에서만 처리됩니다</span>
+        </div>
+        <div class="badge" id="stageBadge" hidden></div>
+      </div>
+
+      <div class="scrub">
+        <button class="play" id="playBtn" type="button" aria-label="재생">▶</button>
+        <input id="frameRange" type="range" min="0" max="0" value="0" step="1" aria-label="프레임">
+        <span class="fnum" id="frameLabel">–</span>
+      </div>
+
+      <div class="tabs" id="phaseTabs" aria-label="스윙 구간"></div>
+
+      <div class="ovs" id="ovs">
+        <label class="on"><input type="checkbox" data-ov="skeleton" checked><span>스켈레톤</span></label>
+        <label class="on"><input type="checkbox" data-ov="reference" checked><span>기준선</span></label>
+        <label class="on"><input type="checkbox" data-ov="correction" checked><span>교정선</span></label>
+        <label class="on"><input type="checkbox" data-ov="labels" checked><span>수치</span></label>
+      </div>
+
+      <div class="tools">
+        <button class="btn mini" id="exportBtn" type="button">스냅샷 저장</button>
+        <button class="btn mini" id="markerToggle" type="button">구간 미세 조정</button>
+      </div>
+
+      <div class="markers" id="markers" hidden>
+        <p>현재 프레임 <b id="markerCur">–</b> 을(를) 지정할 구간:</p>
+        <div class="mrow" id="markerBtns"></div>
+      </div>
+    </section>
+
+    <section class="card" id="summaryCard" hidden>
+      <div class="sumtop">
+        <div class="ring" id="scoreRing"><span id="scoreNum">–</span></div>
+        <div class="sumtxt">
+          <div class="grade" id="gradeLine">–</div>
+          <p id="headline">–</p>
+        </div>
+      </div>
+      <div class="bars" id="bars"></div>
+    </section>
+
+    <section class="card" id="phaseCard" hidden>
+      <h2>구간별 계측</h2>
+      <div class="preads" id="preads"></div>
+    </section>
+
+    <section class="card" id="checkCard" hidden>
+      <h2>교정 포인트</h2>
+      <div class="checks" id="checks"></div>
+    </section>
+
+    <section class="card help">
+      <h2>촬영 팁</h2>
+      <ul>
+        <li>전신이 화면에 들어오게, 폰은 세워 두고 찍으세요.</li>
+        <li>측면은 <b>목표선 뒤</b>, 정면은 <b>가슴 정면</b>에서 3~4m 거리.</li>
+        <li>5~10초 길이가 가장 정확합니다. 길면 분석 구간을 좁혀 주세요.</li>
+        <li>결과는 포즈 추정 기반 참고 자료이며 의학적 진단이 아닙니다.</li>
+      </ul>
+    </section>
+  </main>
+
+  <footer>분석은 브라우저 안에서만 처리됩니다 · 영상은 업로드되지 않습니다</footer>
+</div>
+
+<div class="modal" id="shotModal" hidden>
+  <div class="mcard">
+    <p class="mtitle">스냅샷 저장</p>
+    <img id="shotImg" alt="스윙 스냅샷">
+    <p class="mhint">이미지를 길게 눌러 ‘사진에 저장’을 선택하세요. 데스크톱은 아래 버튼을 쓰세요.</p>
+    <a id="shotLink" class="btn" download="swing-snapshot.png" href="#">이미지 다운로드</a>
+    <button class="btn ghost" id="shotClose" type="button">닫기</button>
+  </div>
+</div>
+
+<script>
+/* =====================================================================
+ * GolfCore — 골프 스윙 분석 순수 로직 (DOM 의존 없음)
+ * 좌표계
+ *  - 2D: MediaPipe normalized landmark (x,y 0~1, y는 아래로 증가)
+ *        내부에서는 x 에 종횡비(aspect=W/H)를 곱해 '프레임 높이' 단위로 등방화
+ *  - 3D: MediaPipe world landmark (미터, y는 아래로 증가, hip 중심 원점)
+ *        신체 회전/이동 계산에 사용
+ * ===================================================================== */
+var GolfCore = (function () {
+  'use strict';
+
+  var PHASES = ['address', 'top', 'downswing', 'impact', 'follow', 'finish'];
+  var PHASE_KO = {
+    address: '어드레스',
+    top: '백스윙 탑',
+    downswing: '다운스윙',
+    impact: '임팩트',
+    follow: '팔로우스루',
+    finish: '피니시'
+  };
+  var PHASE_SHORT = {
+    address: '어드레스',
+    top: '탑',
+    downswing: '다운',
+    impact: '임팩트',
+    follow: '팔로우',
+    finish: '피니시'
+  };
+  var PHASE_HINT = {
+    address: '스탠스·자세 기준점',
+    top: '몸통 회전 최대',
+    downswing: '플레인·궤도',
+    impact: '정타·체중 이동',
+    follow: '릴리스·확장',
+    finish: '밸런스'
+  };
+
+  // 판정 기준값 (임계값)
+  var TH = {
+    planeDiff: 8,        // 백/다운 스윙 플레인 각도 차 (도)
+    planeDiffBad: 15,
+    pathDev: 9,          // 손 경로가 탑→임팩트 직선에서 벗어난 정도 (% 어깨폭)
+    pathDevBad: 16,
+    spineChange: 7,      // 임팩트에서 척추 전방 굴곡 변화 (도)
+    spineChangeBad: 13,
+    headDrift: 4.5,      // 어드레스 대비 머리 최대 이동 (cm)
+    headDriftBad: 8,
+    sway: 4.5,           // 백스윙 골반 좌우 이동 (cm)
+    swayBad: 8,
+    thrust: 5,           // 임팩트 골반 볼 방향 이동 (cm)
+    thrustBad: 9,
+    leadElbow: 158,      // 임팩트 리드팔꿈치 각 (도)
+    leadElbowBad: 145,
+    weightMin: 0.58,     // 임팩트 체중 위치 (0=트레일발, 1=리드발)
+    weightMax: 0.92,
+    finishHip: 13,       // 피니시 골반-리드발 수평 거리 (cm)
+    finishHipBad: 20,
+    xfMin: 28,           // X-factor (도)
+    xfMax: 62
+  };
+
+  /* ------------------------------ 기본 유틸 ------------------------------ */
+  function clamp(v, a, b) { return v < a ? a : (v > b ? b : v); }
+  function clamp100(v) { return clamp(v, 0, 100); }
+  function lerp(a, b, t) { return a + (b - a) * t; }
+  function smoothstep(t) { t = clamp(t, 0, 1); return t * t * (3 - 2 * t); }
+  function r1(v) { return Math.round(v * 10) / 10; }
+  function isNum(v) { return typeof v === 'number' && isFinite(v); }
+
+  function mid2(a, b) { return { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }; }
+  function dist2(a, b) { var dx = a.x - b.x, dy = a.y - b.y; return Math.sqrt(dx * dx + dy * dy); }
+  function angleAt2(a, b, c) {
+    var v1x = a.x - b.x, v1y = a.y - b.y, v2x = c.x - b.x, v2y = c.y - b.y;
+    var d = (v1x * v2x + v1y * v2y) / ((Math.sqrt(v1x * v1x + v1y * v1y) * Math.sqrt(v2x * v2x + v2y * v2y)) || 1e-9);
+    return Math.acos(clamp(d, -1, 1)) * 180 / Math.PI;
+  }
+  function cross2(a, b, p) {
+    var dx = b.x - a.x, dy = b.y - a.y, L = Math.sqrt(dx * dx + dy * dy) || 1e-9;
+    return (dx * (p.y - a.y) - dy * (p.x - a.x)) / L;
+  }
+  function angFromHorizontal2(a, b) { // 0=수평, 90=수직
+    var dx = b.x - a.x, dy = b.y - a.y;
+    return Math.atan2(Math.abs(dy), Math.abs(dx)) * 180 / Math.PI;
+  }
+
+  /* 3D 벡터 */
+  var UP = { x: 0, y: -1, z: 0 }; // world 좌표는 y가 아래로 증가
+  function sub3(a, b) { return { x: b.x - a.x, y: b.y - a.y, z: b.z - a.z }; }
+  function dot3(a, b) { return a.x * b.x + a.y * b.y + a.z * b.z; }
+  function cross3(a, b) {
+    return { x: a.y * b.z - a.z * b.y, y: a.z * b.x - a.x * b.z, z: a.x * b.y - a.y * b.x };
+  }
+  function len3(v) { return Math.sqrt(v.x * v.x + v.y * v.y + v.z * v.z); }
+  function norm3(v) { var L = len3(v) || 1e-9; return { x: v.x / L, y: v.y / L, z: v.z / L }; }
+  function horiz3(v) { var d = dot3(v, UP); return { x: v.x - UP.x * d, y: v.y - UP.y * d, z: v.z - UP.z * d }; }
+  function mid3(a, b) { return { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2, z: (a.z + b.z) / 2 }; }
+  function angleAt3(a, b, c) {
+    var v1 = sub3(b, a), v2 = sub3(b, c);
+    var d = dot3(v1, v2) / ((len3(v1) * len3(v2)) || 1e-9);
+    return Math.acos(clamp(d, -1, 1)) * 180 / Math.PI;
+  }
+
+  function movingAvg(arr, r) {
+    var out = new Array(arr.length);
+    for (var i = 0; i < arr.length; i++) {
+      var s = 0, n = 0;
+      for (var k = i - r; k <= i + r; k++) {
+        if (k >= 0 && k < arr.length && isNum(arr[k])) { s += arr[k]; n++; }
+      }
+      out[i] = n ? s / n : arr[i];
+    }
+    return out;
+  }
+
+  /* --------------------------- 프레임 파생 값 --------------------------- */
+  var KEY = ['lSh', 'rSh', 'lEl', 'rEl', 'lWr', 'rWr', 'lHip', 'rHip', 'lKn', 'rKn', 'lAn', 'rAn', 'lToe', 'rToe', 'lHeel', 'rHeel', 'lEar', 'rEar', 'nose', 'lEye', 'rEye'];
+  var KEY3 = [11, 12, 13, 14, 15, 16, 23, 24, 25, 26, 27, 28, 31, 32, 29, 30, 7, 8, 0, 2, 5];
+  var NEED2 = [11, 12, 23, 24, 25, 26, 27, 28];
+
+  function vis(p) {
+    if (!p) return 0;
+    return (p.visibility === undefined || p.visibility === null) ? 1 : p.visibility;
+  }
+
+  /**
+   * 프레임 하나(2D + 3D)를 해석해 그리기/계산용 포인트 집합을 만든다.
+   * 실패하면 null.
+   */
+  function derive(lm2, lm3, aspect) {
+    if (!lm2 || lm2.length < 29) return null;
+    for (var i = 0; i < NEED2.length; i++) {
+      var p = lm2[NEED2[i]];
+      if (!p) return null;
+      if (vis(p) < 0.35) return null;
+    }
+    function q(i) {
+      var p = lm2[i] || { x: 0, y: 0 };
+      return { x: p.x * aspect, y: p.y, v: vis(p) };
+    }
+    var d = { aspect: aspect };
+    d.lSh = q(11); d.rSh = q(12); d.lEl = q(13); d.rEl = q(14); d.lWr = q(15); d.rWr = q(16);
+    d.lHip = q(23); d.rHip = q(24); d.lKn = q(25); d.rKn = q(26); d.lAn = q(27); d.rAn = q(28);
+    d.lToe = q(31); d.rToe = q(32); d.lHeel = q(29); d.rHeel = q(30);
+    d.lEar = q(7); d.rEar = q(8); d.nose = q(0); d.lEye = q(2); d.rEye = q(5);
+
+    d.sh = mid2(d.lSh, d.rSh);
+    d.hipC = mid2(d.lHip, d.rHip);
+    d.kneeC = mid2(d.lKn, d.rKn);
+    d.ankleC = mid2(d.lAn, d.rAn);
+    d.toeC = mid2(d.lToe, d.rToe);
+    d.earC = mid2(d.lEar, d.rEar);
+    d.head = { x: d.nose.x * 0.5 + d.earC.x * 0.5, y: d.nose.y * 0.45 + d.earC.y * 0.55 };
+    d.headR = Math.max(0.008, dist2(d.lEar, d.rEar) * 0.62);
+    d.wrist = mid2(d.lWr, d.rWr);
+    d.shWidth = dist2(d.lSh, d.rSh);
+    d.hipWidth = dist2(d.lHip, d.rHip);
+    d.stance = dist2(d.lAn, d.rAn);
+    d.spineLen = dist2(d.hipC, d.sh);
+    // 2D 척추 기울기(수직 기준, +면 어깨가 화면 +x 쪽)
+    d.spineAngle2 = Math.atan2(d.sh.x - d.hipC.x, Math.max(1e-6, d.hipC.y - d.sh.y)) * 180 / Math.PI;
+
+    // 3D
+    d.w3 = null;
+    if (lm3 && lm3.length >= 29) {
+      var ok = true;
+      var w = {};
+      for (var k = 0; k < KEY.length; k++) {
+        var src = lm3[KEY3[k]];
+        if (!src || !isNum(src.x) || !isNum(src.y) || !isNum(src.z)) { ok = false; break; }
+        w[KEY[k]] = { x: src.x, y: src.y, z: src.z };
+      }
+      if (ok) {
+        w.sh = mid3(w.lSh, w.rSh);
+        w.hipC = mid3(w.lHip, w.rHip);
+        w.ankleC = mid3(w.lAn, w.rAn);
+        w.toeC = mid3(w.lToe, w.rToe);
+        w.earC = mid3(w.lEar, w.rEar);
+        w.head = mid3(w.nose, w.earC);
+        w.wrist = mid3(w.lWr, w.rWr);
+        d.w3 = w;
+      }
+    }
+    return d;
+  }
+
+  /* ----------------------------- 구간 자동 검출 ----------------------------- */
+  /**
+   * 손목 궤적(세로 이동 + 속도)으로 6개 구간을 잡는다.
+   * frames: [{t, d}] (d는 null 가능)
+   * 반환: {address, top, downswing, impact, follow, finish} 인덱스 + quality
+   */
+  function detectPhases(frames) {
+    var n = frames.length, vi = [], i;
+    for (i = 0; i < n; i++) if (frames[i] && frames[i].d) vi.push(i);
+    var m = vi.length;
+
+    function fallback() {
+      var fr = [0.02, 0.30, 0.44, 0.54, 0.74, 0.92];
+      var out = {};
+      for (var k = 0; k < PHASES.length; k++) {
+        out[PHASES[k]] = vi[clamp(Math.round(fr[k] * (m - 1)), 0, m - 1)];
+      }
+      out.quality = 'fallback';
+      return out;
+    }
+    if (m < 6) return m >= 2 ? fallback() : null;
+
+    var xs = [], ys = [], ts = [];
+    for (i = 0; i < m; i++) {
+      xs.push(frames[vi[i]].d.wrist.x);
+      ys.push(frames[vi[i]].d.wrist.y);
+      ts.push(frames[vi[i]].t);
+    }
+    var sx = movingAvg(xs, 2), sy = movingAvg(ys, 2);
+    var sp = new Array(m).fill(0);
+    for (i = 1; i < m; i++) {
+      var dt = Math.max(1 / 240, ts[i] - ts[i - 1]);
+      sp[i] = Math.sqrt(Math.pow(sx[i] - sx[i - 1], 2) + Math.pow(sy[i] - sy[i - 1], 2)) / dt;
+    }
+    var maxSp = 0, peak = 0;
+    for (i = 1; i < m; i++) if (sp[i] > maxSp) { maxSp = sp[i]; peak = i; }
+    if (!(maxSp > 1e-7)) return fallback();
+
+    var thr = maxSp * 0.16, s0 = 0, s1 = m - 1;
+    for (i = 1; i < m; i++) if (sp[i] > thr) { s0 = i; break; }
+    for (i = m - 1; i >= 1; i--) if (sp[i] > thr) { s1 = i; break; }
+    if (s1 <= s0) return fallback();
+
+    // 어드레스: 동작 시작 직전의 가장 정지된 프레임
+    var a = Math.max(0, s0 - 2), bestSp = Infinity;
+    for (i = Math.max(0, s0 - 6); i <= Math.max(0, s0 - 1); i++) {
+      if (sp[i] < bestSp) { bestSp = sp[i]; a = i; }
+    }
+    if (a >= peak) a = Math.max(0, peak - 6);
+
+    // 탑: 어드레스~최대속도 사이에서 손이 가장 높은(작은 y) 지점
+    var t = -1, minY = Infinity;
+    for (i = a + 1; i <= Math.max(a + 1, peak - 1); i++) {
+      if (sy[i] < minY) { minY = sy[i]; t = i; }
+    }
+    if (t <= a) t = clamp(Math.round(a + (peak - a) * 0.72), a + 1, Math.max(a + 1, m - 2));
+
+    // 임팩트: 손이 어드레스 위치(공)로 가장 가까이 돌아온 프레임.
+    // 2D 거리가 어깨폭 대비 너무 크면(잘린 영상 등) 손 속도 최대 지점으로 대체.
+    var im = peak, bestD = 1e9;
+    for (i = t + 2; i <= Math.max(t + 2, s1); i++) {
+      var dd = Math.sqrt(Math.pow(sx[i] - sx[a], 2) + Math.pow(sy[i] - sy[a], 2));
+      if (dd < bestD) { bestD = dd; im = i; }
+    }
+    var wRef = frames[vi[a]].d.shWidth || 0.2;
+    if (bestD > wRef * 0.8 || Math.abs(im - peak) > Math.max(3, (s1 - a) * 0.45)) im = peak;
+    if (im <= t) im = Math.min(m - 1, t + 1);
+
+    // 피니시: 동작이 끝난 지점(+2)
+    var fin = Math.min(m - 1, s1 + 2);
+    if (fin <= im + 1) fin = Math.min(m - 1, im + Math.max(1, Math.round((m - 1 - im) * 0.5)));
+
+    // 다운스윙: 손이 탑→임팩트 높이의 55% 지점을 지나는 프레임
+    var dw = t + Math.max(1, Math.round((im - t) * 0.45));
+    var yTarget = sy[t] + (sy[im] - sy[t]) * 0.55;
+    for (i = t + 1; i < im; i++) { if (sy[i] >= yTarget) { dw = i; break; } }
+    if (dw >= im) dw = Math.max(t + 1, im - 1);
+    var fo = im + Math.max(1, Math.round((fin - im) * 0.45));
+    if (fo >= fin) fo = Math.max(im + 1, fin - 1);
+
+    // 순서 보정
+    var seq = [a, t, dw, im, fo, fin];
+    for (i = 1; i < seq.length; i++) if (seq[i] <= seq[i - 1]) seq[i] = seq[i - 1] + 1;
+    for (i = seq.length - 1; i >= 0; i--) if (seq[i] > m - 1) seq[i] = Math.max(0, m - 1 - (seq.length - 1 - i));
+    for (i = 1; i < seq.length; i++) if (seq[i] <= seq[i - 1]) return fallback();
+
+    var out = {};
+    for (i = 0; i < PHASES.length; i++) out[PHASES[i]] = vi[clamp(seq[i], 0, m - 1)];
+    out.quality = 'auto';
+    return out;
+  }
+
+  /* ------------------------------- 계측 ------------------------------- */
+  function armAngle2(d) { // 어깨 중심 → 손목 라인의 수평 대비 각도
+    return angFromHorizontal2(d.sh, d.wrist);
+  }
+
+  function turnFromWidth(wAddr, wPhase, view) {
+    if (!(wAddr > 1e-4) || !(wPhase > 1e-4)) return 0;
+    var ratio = view === 'face'
+      ? clamp(wPhase / wAddr, 0.02, 1)
+      : clamp(wAddr / wPhase, 0.02, 1);
+    return Math.acos(ratio) * 180 / Math.PI;
+  }
+
+  function planeAngle3(d) { // 어깨→손목 라인의 수평면 대비 상승각
+    if (!d.w3) return 0;
+    var v = sub3(d.w3.sh, d.w3.wrist);
+    var h = len3(horiz3(v));
+    return Math.atan2(Math.abs(v.y), Math.max(1e-6, h)) * 180 / Math.PI;
+  }
+
+  /**
+   * 6구간 + 뷰 + 손잡이로 전체 계측/점수/코칭을 만든다.
+   */
+  function computeMetrics(frames, ph, view, hand) {
+    function check(id, label, value, score, tip, hint) {
+      return { id: id, label: label, value: value, score: score, status: 'warn', tip: tip, hint: hint };
+    }
+    var A = frames[ph.address] && frames[ph.address].d;
+    var T = frames[ph.top] && frames[ph.top].d;
+    var D = frames[ph.downswing] && frames[ph.downswing].d;
+    var I = frames[ph.impact] && frames[ph.impact].d;
+    var F = frames[ph.follow] && frames[ph.follow].d;
+    var N = frames[ph.finish] && frames[ph.finish].d;
+    if (!A || !T || !D || !I || !F || !N) return null;
+
+    var lead = hand === 'left' ? 'r' : 'l';   // 오른손 스윙의 리드암 = 왼팔
+    var trail = lead === 'l' ? 'r' : 'l';
+    var S2 = Math.max(A.shWidth, 0.02);       // 2D 기준 스케일(프레임 높이 단위)
+    var has3 = !!(A.w3 && T.w3 && D.w3 && I.w3 && F.w3 && N.w3);
+
+    /* ---- 3D 기준축: 어드레스 좌우축 L, 전방축 F ---- */
+    var L = null, Fw = null;
+    if (has3) {
+      var hipLine = horiz3(sub3(A.w3.lHip, A.w3.rHip));
+      if (len3(hipLine) < 0.02) hipLine = horiz3(sub3(A.w3.lSh, A.w3.rSh));
+      L = norm3(hipLine);
+      var fRaw = horiz3(sub3(A.w3.ankleC, A.w3.toeC));
+      if (len3(fRaw) < 1e-4) fRaw = cross3(UP, L);
+      var fDot = dot3(fRaw, L);
+      var fPerp = { x: fRaw.x - L.x * fDot, y: fRaw.y - L.y * fDot, z: fRaw.z - L.z * fDot };
+      if (len3(fPerp) < 1e-4) fPerp = cross3(UP, L);
+      Fw = norm3(fPerp);
+    }
+    function lateral(v) { return dot3(v, L); }
+    function forward(v) { return dot3(v, Fw); }
+    function vertical(v) { return dot3(v, UP); }
+
+    /* ---- 1) 플레인 ---- */
+    var backPlane = armAngle2(T);
+    // 다운스윙 플레인: 탑→임팩트 구간 중 손이 충분히 내려온 프레임들의 팔 라인 각도 평균
+    // (수평에 가까운 순간은 방향이 모호하므로 제외)
+    var dsAngles = [];
+    var yT = T.wrist.y, yI = I.wrist.y;
+    for (var k = ph.top + 1; k <= ph.impact; k++) {
+      var frk = frames[k];
+      if (!frk || !frk.d) continue;
+      var frac = (frk.d.wrist.y - yT) / ((yI - yT) || 1e-6);
+      if (frac < 0.62) continue;
+      var adx = Math.abs(frk.d.wrist.x - frk.d.sh.x), ady = Math.abs(frk.d.wrist.y - frk.d.sh.y);
+      if (ady < 0.42 * adx) continue;
+      dsAngles.push(armAngle2(frk.d));
+    }
+    var downPlane = dsAngles.length ? dsAngles.reduce(function (a, b) { return a + b; }, 0) / dsAngles.length : armAngle2(I);
+    var planeDiff = downPlane - backPlane;                     // +면 다운스윙이 더 세움(오버 더 톱 경향)
+    var pathDev = cross2(T.wrist, I.wrist, D.wrist) / S2 * 100; // 탑→임팩트 직선에서 벗어난 정도(%)
+
+    /* ---- 2) 척추(얼리 익스텐션) ---- */
+    var spineBendA, spineBendT, spineBendI, spineSideA, spineSideI;
+    if (has3) {
+      function bendAt(d) {
+        var sp = sub3(d.w3.hipC, d.w3.sh);
+        var fh = forward(sp), vh = vertical(sp);
+        return Math.atan2(fh, Math.max(vh, 1e-6)) * 180 / Math.PI;
+      }
+      function sideAt(d) {
+        var sp = sub3(d.w3.hipC, d.w3.sh);
+        return Math.atan2(lateral(sp), Math.max(vertical(sp), 1e-6)) * 180 / Math.PI;
+      }
+      spineBendA = bendAt(A); spineBendT = bendAt(T); spineBendI = bendAt(I);
+      spineSideA = sideAt(A); spineSideI = sideAt(I);
+    } else {
+      spineBendA = Math.abs(A.spineAngle2); spineBendT = Math.abs(T.spineAngle2); spineBendI = Math.abs(I.spineAngle2);
+      spineSideA = 0; spineSideI = 0;
+    }
+    var spineChangeI = spineBendI - spineBendA;
+    var spineChangeT = spineBendT - spineBendA;
+
+    /* ---- 3) 머리 안정성 ---- */
+    var headTop = { cm: 0, lat: 0, fwd: 0, up: 0 };
+    var headImp = { cm: 0, lat: 0, fwd: 0, up: 0 };
+    if (has3) {
+      // world landmark 는 골반 중심 좌표계이므로 발목 중심을 기준점으로 옮겨 절대 이동을 구한다
+      function anchorAt(d) {
+        var h = sub3(d.w3.ankleC, d.w3.head);
+        var p = sub3(d.w3.ankleC, d.w3.hipC);
+        return {
+          head: { lat: lateral(h) * 100, fwd: forward(h) * 100, up: vertical(h) * 100 },
+          hip: { lat: lateral(p) * 100, fwd: forward(p) * 100, up: vertical(p) * 100 }
+        };
+      }
+      var ancA = anchorAt(A), ancT = anchorAt(T), ancI = anchorAt(I);
+      function diff3(a, b) { return { lat: b.head.lat - a.head.lat, fwd: b.head.fwd - a.head.fwd, up: b.head.up - a.head.up }; }
+      headTop = diff3(ancA, ancT);
+      headImp = diff3(ancA, ancI);
+      headTop.cm = Math.sqrt(headTop.lat * headTop.lat + headTop.fwd * headTop.fwd + headTop.up * headTop.up);
+      headImp.cm = Math.sqrt(headImp.lat * headImp.lat + headImp.fwd * headImp.fwd + headImp.up * headImp.up);
+    } else {
+      headTop.lat = (T.head.x - A.head.x) / S2 * 45; headTop.up = (A.head.y - T.head.y) / S2 * 45;
+      headImp.lat = (I.head.x - A.head.x) / S2 * 45; headImp.up = (A.head.y - I.head.y) / S2 * 45;
+      headTop.cm = Math.sqrt(headTop.lat * headTop.lat + headTop.up * headTop.up);
+      headImp.cm = Math.sqrt(headImp.lat * headImp.lat + headImp.up * headImp.up);
+    }
+    var headDrift = Math.max(headTop.cm, headImp.cm);
+
+    /* ---- 4) 어깨/골반 회전 & X-factor ---- */
+    var shTurn, hipTurn;
+    if (has3) {
+      function yawDeg(vTo) { // 어드레스 좌우축(L)에서 회전한 각
+        var h = horiz3(vTo);
+        return Math.atan2(forward(h), lateral(h)) * 180 / Math.PI;
+      }
+      shTurn = Math.abs(yawDeg(sub3(T.w3.lSh, T.w3.rSh)));
+      hipTurn = Math.abs(yawDeg(sub3(T.w3.lHip, T.w3.rHip)));
+      if (shTurn > 120) shTurn = 180 - shTurn;
+      if (hipTurn > 120) hipTurn = 180 - hipTurn;
+    } else {
+      shTurn = turnFromWidth(A.shWidth, T.shWidth, view);
+      hipTurn = turnFromWidth(A.hipWidth, T.hipWidth, view);
+    }
+    var xf = shTurn - hipTurn;
+
+    /* ---- 5) 골반 이동(스웨이/스러스트) ---- */
+    var sway, thrust, swayI = 0;
+    if (has3) {
+      sway = ancT.hip.lat - ancA.hip.lat;
+      swayI = ancI.hip.lat - ancA.hip.lat;
+      thrust = ancI.hip.fwd - ancA.hip.fwd;
+    } else {
+      sway = (T.hipC.x - A.hipC.x) / S2 * 45;
+      thrust = 0;
+      swayI = (I.hipC.x - A.hipC.x) / S2 * 45;
+    }
+
+    /* ---- 6) 리드암 스트레이트 ---- */
+    var leadElbow, leadElbowTop;
+    if (has3) {
+      leadElbow = angleAt3(I.w3[lead + 'Sh'], I.w3[lead + 'El'], I.w3[lead + 'Wr']);
+      leadElbowTop = angleAt3(T.w3[lead + 'Sh'], T.w3[lead + 'El'], T.w3[lead + 'Wr']);
+    } else {
+      leadElbow = angleAt2(I[lead + 'Sh'], I[lead + 'El'], I[lead + 'Wr']);
+      leadElbowTop = angleAt2(T[lead + 'Sh'], T[lead + 'El'], T[lead + 'Wr']);
+    }
+
+    /* ---- 7) 체중 이동 ---- */
+    function weightPos(d) {
+      if (has3 && d.w3) {
+        var la = d.w3[lead + 'An'], ta = d.w3[trail + 'An'];
+        var den = lateral(sub3(ta, la));
+        if (Math.abs(den) < 1e-4) return 0.5;
+        return lateral(sub3(ta, d.w3.hipC)) / den;
+      }
+      var la2 = d[lead + 'An'], ta2 = d[trail + 'An'];
+      var den2 = la2.x - ta2.x;
+      if (Math.abs(den2) < 1e-4) return 0.5;
+      return (d.hipC.x - ta2.x) / den2;
+    }
+    var wA = clamp(weightPos(A), -0.3, 1.5);
+    var wI = clamp(weightPos(I), -0.3, 1.5);
+    var wF = clamp(weightPos(N), -0.3, 1.5);
+
+    /* ---- 8) 피니시 밸런스 ---- */
+    var finHip, finHead, finHeadOverHip;
+    if (has3) {
+      var v1 = sub3(N.w3[lead + 'An'], N.w3.hipC);
+      finHip = Math.sqrt(Math.pow(lateral(v1), 2) + Math.pow(forward(v1), 2)) * 100;
+      var v2 = sub3(N.w3.hipC, N.w3.head);
+      finHeadOverHip = Math.sqrt(Math.pow(lateral(v2), 2) + Math.pow(forward(v2), 2)) * 100;
+      finHead = finHeadOverHip;
+    } else {
+      finHip = Math.abs(N.hipC.x - N[lead + 'An'].x) / S2 * 45;
+      finHead = Math.abs(N.head.x - N.hipC.x) / S2 * 45;
+    }
+
+    /* ---- 9) 자세 값 ---- */
+    var headFwdA = has3 ? ancA.head.fwd : 0;
+    var stanceW = has3 ? Math.abs(lateral(sub3(A.w3.lAn, A.w3.rAn))) * 100 : A.stance / S2 * 45;
+    var handTopH = has3 ? (A.w3.hipC.y - T.w3.wrist.y) * 100 : 0;
+
+    /* ------------------------------ 점수 ------------------------------ */
+    var checks = [];
+
+    // 1) 스윙 플레인
+    var planeScore = 100
+      - Math.max(0, Math.abs(pathDev) - 6) * 2.6
+      - Math.max(0, Math.abs(planeDiff) - 12) * 1.3;
+    var ott = planeDiff > 25;
+    var shallow = planeDiff < -25;
+    var planeTip;
+    if (ott) {
+      planeTip = '다운스윙 팔 라인이 백스윙보다 ' + Math.abs(r1(planeDiff)) + '° 세워져 오버 더 톱 경향입니다. 탑에서 손이 먼저 떨어지지 않게 반 박자 멈춘 뒤, 팔을 몸 가까이 붙여(겨드랑이에 타월 끼우기) 내려오세요.';
+    } else if (shallow) {
+      planeTip = '다운스윙이 백스윙보다 ' + Math.abs(r1(planeDiff)) + '° 얕습니다. 손이 몸 뒤로 처지며 헤드가 늦게 따라오기 쉽습니다. 왼쪽 어깨를 목표 쪽으로 조금 더 감아 내려오세요.';
+    } else {
+      planeTip = '백스윙과 다운스윙의 팔 라인이 ' + Math.abs(r1(planeDiff)) + '° 차이로 안정적입니다. 같은 통로로 내려오고 있습니다.';
+    }
+    checks.push({
+      id: 'plane', label: '스윙 플레인 일관성',
+      value: Math.abs(r1(pathDev)) + '% 이탈',
+      score: planeScore, tip: planeTip,
+      hint: '탑→임팩트 직선 대비 손 경로 · 팔 라인 탑 ' + Math.round(backPlane) + '° → 다운스윙 ' + Math.round(downPlane) + '°'
+    });
+
+    // 2) 스파인 각도 / 얼리 익스텐션
+    var spineScore = 100
+      - Math.max(0, Math.abs(spineChangeI) - TH.spineChange) * 5.2
+      - Math.max(0, Math.abs(spineChangeT) - 9) * 1.6;
+    var earlyExt = spineChangeI < -TH.spineChange;
+    var overBend = spineChangeI > TH.spineChange;
+    var spineTip;
+    if (earlyExt) {
+      spineTip = '임팩트에서 상체가 ' + Math.abs(r1(spineChangeI)) + '° 일어섰습니다(어드레스 ' + Math.round(spineBendA) + '° → 임팩트 ' + Math.round(spineBendI) + '°). 엉덩이가 볼 쪽으로 밀리는 얼리 익스텐션입니다. 벽에 엉덩이를 대고 힙 힌지 자세로 백스윙하고, 임팩트까지 코어에 힘을 유지하세요.';
+    } else if (overBend) {
+      spineTip = '임팩트에서 상체가 ' + Math.abs(r1(spineChangeI)) + '° 더 숙여졌습니다. 허리가 말리며 오른쪽 어깨가 떨어지기 쉽습니다. 어드레스 각도를 그대로 유지한다는 느낌으로 스윙하세요.';
+    } else {
+      spineTip = '어드레스 ' + Math.round(spineBendA) + '° → 임팩트 ' + Math.round(spineBendI) + '°로 스파인 각도가 잘 유지됐습니다.';
+    }
+    checks.push({
+      id: 'spine', label: '스파인 각도 유지',
+      value: (spineChangeI >= 0 ? '+' : '') + r1(spineChangeI) + '°',
+      score: spineScore, tip: spineTip,
+      hint: '어드레스 ' + Math.round(spineBendA) + '° · 탑 ' + Math.round(spineBendT) + '° · 임팩트 ' + Math.round(spineBendI) + '°'
+    });
+
+    // 3) 머리 안정성
+    var headScore = 100 - Math.max(0, headDrift - TH.headDrift) * 7.5;
+    var headUp = headImp.up > TH.headDrift * 0.8;
+    var headTip;
+    if (headDrift > TH.headDrift) {
+      headTip = headUp
+        ? '임팩트에서 머리가 ' + r1(headImp.up) + 'cm 들렸습니다. 시선을 목표 뒤편에 고정하고, 왼쪽 눈으로 공을 보는 느낌으로 임팩트까지 머리를 지켜 주세요.'
+        : '스윙 중 머리가 ' + r1(headDrift) + 'cm 흔들렸습니다. 백스윙 때 머리 위에 공을 얹었다는 느낌으로 회전하세요.';
+    } else {
+      headTip = '머리 이동이 ' + r1(headDrift) + 'cm로 매우 안정적입니다. 축이 잘 유지되고 있습니다.';
+    }
+    checks.push({
+      id: 'head', label: '머리 안정성',
+      value: r1(headDrift) + 'cm',
+      score: headScore, tip: headTip,
+      hint: '탑 ' + r1(headTop.cm) + 'cm · 임팩트 ' + r1(headImp.cm) + 'cm'
+    });
+
+    // 4) 어깨 회전 / X-factor
+    var xfScore = 100 - Math.max(0, TH.xfMin - xf) * 2.2 - Math.max(0, xf - TH.xfMax) * 1.4;
+    var xfTip;
+    if (xf < TH.xfMin) {
+      xfTip = '어깨 회전 ' + Math.round(shTurn) + '°, 골반 ' + Math.round(hipTurn) + '°로 분리(X-factor ' + Math.round(xf) + '°)가 부족합니다. 백스윙에서 등을 목표 반대쪽으로 보여준다는 느낌으로 가슴을 크게 돌리세요.';
+    } else if (xf > TH.xfMax) {
+      xfTip = 'X-factor ' + Math.round(xf) + '°는 큰 편입니다. 유연성이 받쳐주지 않으면 허리 부담이 커지니, 골반은 조금 덜 열고 어깨만 감는 연습을 권합니다.';
+    } else {
+      xfTip = '어깨 ' + Math.round(shTurn) + '°, 골반 ' + Math.round(hipTurn) + '°, X-factor ' + Math.round(xf) + '°로 좋은 분리입니다.';
+    }
+    checks.push({
+      id: 'xf', label: '어깨 회전 · X-factor',
+      value: Math.round(shTurn) + '° / ' + Math.round(xf) + '°',
+      score: xfScore, tip: xfTip,
+      hint: '어드레스 어깨선 기준 회전량'
+    });
+
+    // 5) 골반 스웨이 / 스러스트
+    var swayScore = 100 - Math.max(0, Math.abs(sway) - TH.sway) * 6.5 - Math.max(0, Math.abs(thrust) - TH.thrust) * 3.5;
+    var swayTip;
+    if (Math.abs(sway) > TH.sway) {
+      swayTip = '백스윙에서 골반이 ' + Math.abs(r1(sway)) + 'cm 옆으로 밀렸습니다. 뒤쪽 발 안쪽 모서리에 체중을 느끼며, 골반은 제자리에서 회전만 하도록 해보세요.';
+    } else if (Math.abs(thrust) > TH.thrust) {
+      swayTip = '임팩트에서 골반이 볼 쪽으로 ' + Math.abs(r1(thrust)) + 'cm 나왔습니다. 어드레스 때의 엉덩이 위치를 벽으로 밀고 있다는 느낌을 유지하세요.';
+    } else {
+      swayTip = '백스윙 골반 이동 ' + Math.abs(r1(sway)) + 'cm, 임팩트 볼 방향 이동 ' + Math.abs(r1(thrust)) + 'cm로 안정적입니다.';
+    }
+    checks.push({
+      id: 'sway', label: view === 'face' ? '골반 스웨이 (좌우)' : '골반 이동 (스웨이·스러스트)',
+      value: Math.abs(r1(sway)) + 'cm',
+      score: swayScore, tip: swayTip,
+      hint: '백스윙 ' + (sway >= 0 ? '리드쪽 ' : '트레일쪽 ') + Math.abs(r1(sway)) + 'cm · 임팩트 볼 방향 ' + (thrust >= 0 ? '+' : '') + r1(thrust) + 'cm'
+    });
+
+    // 6) 리드암 스트레이트
+    var armScore = clamp100((leadElbow - 138) / 38 * 100);
+    var armTip = leadElbow < TH.leadElbow
+      ? '임팩트에서 리드팔꿈치가 ' + Math.round(leadElbow) + '°로 굽어 있습니다(180°가 완전히 편 상태). 임팩트 순간 팔을 뻗는 연습(임팩트 백에 공을 두고 밀기)을 해보세요.'
+      : '임팩트 리드팔이 ' + Math.round(leadElbow) + '°로 잘 펴졌습니다. 공에 힘을 전달하기 좋은 자세입니다.';
+    checks.push({
+      id: 'arm', label: '임팩트 리드암 스트레이트',
+      value: Math.round(leadElbow) + '°',
+      score: armScore, tip: armTip,
+      hint: '탑 ' + Math.round(leadElbowTop) + '° → 임팩트 ' + Math.round(leadElbow) + '°'
+    });
+
+    // 7) 체중 이동
+    var wScore = 100, weightTip;
+    if (wI < TH.weightMin) {
+      wScore = 100 - (TH.weightMin - wI) * 220;
+      weightTip = '임팩트에서 체중이 ' + Math.round(wI * 100) + '%만 리드발 쪽으로 넘어갔습니다(목표 60~90%). 다운스윙 시작과 함께 골반을 목표 쪽으로 밀고, 임팩트 후 뒤쪽 발 뒤꿈치가 들리는지 확인하세요.';
+    } else if (wI > TH.weightMax) {
+      wScore = 100 - (wI - TH.weightMax) * 160;
+      weightTip = '임팩트에서 이미 체중이 ' + Math.round(wI * 100) + '% 리드발에 쏠려 있습니다. 상체가 앞으로 쏠리며 슬라이스가 나기 쉽습니다. 머리를 공 뒤에 두고 회전으로 공을 맞히세요.';
+    } else {
+      weightTip = '임팩트 체중이 ' + Math.round(wI * 100) + '%로 리드발 쪽으로 잘 이동했습니다.';
+    }
+    checks.push({
+      id: 'weight', label: '임팩트 체중 이동',
+      value: Math.round(wI * 100) + '%',
+      score: wScore, tip: weightTip,
+      hint: '어드레스 ' + Math.round(wA * 100) + '% → 임팩트 ' + Math.round(wI * 100) + '% → 피니시 ' + Math.round(wF * 100) + '%'
+    });
+
+    // 8) 팔로우스루 확장
+    var leadElbowF = has3
+      ? angleAt3(F.w3[lead + 'Sh'], F.w3[lead + 'El'], F.w3[lead + 'Wr'])
+      : angleAt2(F[lead + 'Sh'], F[lead + 'El'], F[lead + 'Wr']);
+    var extFwd = has3 ? forward(sub3(I.w3.wrist, F.w3.wrist)) * 100 : 0;
+    var extScore = 100 - Math.max(0, 8 - extFwd) * 3.2 - Math.max(0, 140 - leadElbowF) * 1.2;
+    var extTip = extFwd < 8
+      ? '임팩트 이후 손이 목표 쪽으로 ' + Math.abs(r1(extFwd)) + 'cm밖에 나아가지 못했습니다. 팔로우스루에서 클럽을 목표 방향으로 길게 뻗어 보내세요(임팩트 백 1m 앞에 티를 꽂고 그쪽으로 스윙).'
+      : '임팩트 이후 손이 목표 쪽으로 ' + r1(extFwd) + 'cm 이어져 팔로우스루가 잘 뻗었습니다.';
+    checks.push({
+      id: 'ext', label: '팔로우스루 확장',
+      value: r1(extFwd) + 'cm',
+      score: extScore, tip: extTip,
+      hint: '임팩트→팔로우 손 이동 · 리드팔꿈치 ' + Math.round(leadElbowF) + '°'
+    });
+
+    // 9) 피니시 밸런스
+    var finHeadDev = Math.abs(finHead - headFwdA);
+    var finScore = 100 - Math.max(0, finHip - TH.finishHip) * 4.2 - Math.max(0, finHeadDev - 8) * 2.2 + (wF > 0.62 ? 0 : -12);
+    var finTip;
+    if (finHip > TH.finishHip) {
+      finTip = '피니시에서 골반이 리드발에서 ' + r1(finHip) + 'cm 떨어져 있습니다. 배꼽이 목표를 향하고, 뒤쪽 발 뒤꿈치가 완전히 들린 채 3초 서 있을 수 있는 자세를 목표로 하세요.';
+    } else if (wF < 0.62) {
+      finTip = '피니시에서 체중이 ' + Math.round(wF * 100) + '%로 리드발에 충분히 실리지 않았습니다. 스윙이 끝까지 이어지도록 팔로우스루를 크게 가져가세요.';
+    } else {
+      finTip = '피니시에서 골반이 리드발 위에 ' + r1(finHip) + 'cm 이내로 올라와 균형이 좋습니다.';
+    }
+    checks.push({
+      id: 'finish', label: '피니시 밸런스',
+      value: r1(finHip) + 'cm',
+      score: finScore, tip: finTip,
+      hint: '골반-리드발 ' + r1(finHip) + 'cm · 머리 위치(어드레스 대비) ' + (finHeadDev < 0.5 ? '동일' : r1(finHeadDev) + 'cm 변동')
+    });
+
+    /* 상태 재계산(점수 기반) */
+    var WEIGHTS = { plane: 1.5, spine: 1.4, head: 1.1, xf: 1.0, sway: 1.0, arm: 0.9, weight: 1.0, ext: 0.8, finish: 0.9 };
+    var sum = 0, wsum = 0;
+    for (var i = 0; i < checks.length; i++) {
+      var c = checks[i];
+      c.score = Math.round(clamp100(c.score));
+      c.status = c.score >= 80 ? 'good' : (c.score >= 58 ? 'warn' : 'bad');
+      var w = WEIGHTS[c.id] || 1;
+      sum += c.score * w; wsum += w;
+    }
+    var overall = Math.round(sum / wsum);
+    var grade = overall >= 86 ? 'A' : (overall >= 72 ? 'B' : (overall >= 58 ? 'C' : 'D'));
+    var gradeLabel = { A: '아주 좋음', B: '좋음', C: '보완 필요', D: '교정 필요' }[grade];
+
+    var HEADLINE = {
+      plane: ott ? '다운스윙이 백스윙보다 세워져 오버 더 톱 경향이 보입니다' : '다운스윙 궤도가 백스윙과 어긋나 있습니다',
+      spine: earlyExt ? '임팩트에서 상체가 일어서는 얼리 익스텐션이 나타납니다' : '임팩트에서 스파인 각도가 무너집니다',
+      head: '스윙 중 머리가 ' + r1(headDrift) + 'cm 흔들립니다',
+      xf: '어깨와 골반의 분리(X-factor)가 부족합니다',
+      sway: '백스윙에서 골반이 옆으로 밀리는 스웨이가 보입니다',
+      arm: '임팩트에서 리드팔이 굽어 있습니다',
+      weight: '임팩트 체중 이동이 부족합니다',
+      ext: '팔로우스루가 목표 쪽으로 뻗지 못합니다',
+      finish: '피니시 밸런스가 흐트러집니다'
+    };
+    var issues = checks.filter(function (c) { return c.score < 72; }).sort(function (a, b) { return a.score - b.score; });
+    var headline = issues.length
+      ? (HEADLINE[issues[0].id] || issues[0].label + '을(를) 점검해 보세요')
+      : '전체적으로 균형 잡힌 스윙입니다. 지금 리듬을 유지하세요';
+
+    /* 구간별 읽기 값 */
+    var readings = {
+      address: [
+        { k: '척추 굴곡', v: Math.round(spineBendA) + '°' },
+        { k: '스탠스 폭', v: r1(stanceW) + 'cm' },
+        { k: '체중', v: Math.round(wA * 100) + '%' }
+      ],
+      top: [
+        { k: '어깨 회전', v: Math.round(shTurn) + '°' },
+        { k: '골반 회전', v: Math.round(hipTurn) + '°' },
+        { k: 'X-factor', v: Math.round(xf) + '°' },
+        { k: '머리 이동', v: r1(headTop.cm) + 'cm' }
+      ],
+      downswing: [
+        { k: '다운스윙 플레인', v: Math.round(downPlane) + '°' },
+        { k: '탑 대비', v: (planeDiff >= 0 ? '+' : '') + r1(planeDiff) + '°' },
+        { k: '손 경로 이탈', v: Math.abs(r1(pathDev)) + '%' }
+      ],
+      impact: [
+        { k: '리드팔꿈치', v: Math.round(leadElbow) + '°' },
+        { k: '머리 이동', v: r1(headImp.cm) + 'cm' },
+        { k: '체중', v: Math.round(wI * 100) + '%' },
+        { k: '스파인', v: Math.round(spineBendI) + '°' }
+      ],
+      follow: [
+        { k: '목표 방향 확장', v: r1(extFwd) + 'cm' },
+        { k: '리드팔꿈치', v: Math.round(leadElbowF) + '°' },
+        { k: '어깨 회전', v: Math.round(Math.abs(turnFromWidth(A.shWidth, F.shWidth, view))) + '°' }
+      ],
+      finish: [
+        { k: '골반-리드발', v: r1(finHip) + 'cm' },
+        { k: '체중', v: Math.round(wF * 100) + '%' },
+        { k: '머리 변동', v: r1(finHeadDev) + 'cm' }
+      ]
+    };
+
+    // 현재 프레임의 실시간 3D 계측(캔버스 교정선용)
+    function liveVals(d) {
+      if (!has3 || !d || !d.w3) return null;
+      var sp = sub3(d.w3.hipC, d.w3.sh);
+      var bend = Math.atan2(dot3(sp, Fw), Math.max(dot3(sp, UP), 1e-6)) * 180 / Math.PI;
+      var h = sub3(d.w3.ankleC, d.w3.head);
+      var hp = sub3(d.w3.ankleC, d.w3.hipC);
+      return {
+        bend: bend,
+        headLat: lateral(h) * 100 - ancA.head.lat,
+        headUp: vertical(h) * 100 - ancA.head.up,
+        headFwd: forward(h) * 100 - ancA.head.fwd,
+        hipLat: lateral(hp) * 100 - ancA.hip.lat,
+        hipFwd: forward(hp) * 100 - ancA.hip.fwd,
+        elbowLead: angleAt3(d.w3[lead + 'Sh'], d.w3[lead + 'El'], d.w3[lead + 'Wr'])
+      };
+    }
+
+    return {
+      ok: true,
+      view: view,
+      hand: hand,
+      source3d: has3,
+      live: liveVals,
+      scale2: S2,
+      checks: checks,
+      overall: overall,
+      grade: grade,
+      gradeLabel: gradeLabel,
+      headline: headline,
+      issues: issues.map(function (c) { return c.id; }),
+      readings: readings,
+      lead: lead,
+      trail: trail,
+      v: {
+        backPlane: backPlane, downPlane: downPlane, planeDiff: planeDiff, pathDev: pathDev,
+        spineBendA: spineBendA, spineBendT: spineBendT, spineBendI: spineBendI,
+        spineChangeI: spineChangeI, spineSideA: spineSideA, spineSideI: spineSideI,
+        headDrift: headDrift, headTop: headTop, headImp: headImp,
+        shTurn: shTurn, hipTurn: hipTurn, xf: xf,
+        sway: sway, swayI: swayI, thrust: thrust,
+        leadElbow: leadElbow, leadElbowTop: leadElbowTop, leadElbowF: leadElbowF, extFwd: extFwd,
+        wA: wA, wI: wI, wF: wF,
+        finHip: finHip, finHead: finHead, finHeadDev: finHeadDev, headFwdA: headFwdA, stance: stanceW, handTopH: handTopH,
+        ott: ott, shallow: shallow, earlyExt: earlyExt, overBend: overBend, headUp: headUp,
+        has3: has3
+      }
+    };
+
+  }
+
+  /* --------------------------- 구간별 코칭 문장 --------------------------- */
+  function phaseCoaching(m, ph) {
+    if (!m) return [];
+    var out = [], v = m.v;
+    out.push({
+      phase: 'address', title: '셋업',
+      text: '척추 굴곡 ' + Math.round(v.spineBendA) + '°, 체중 ' + Math.round(v.wA * 100) +
+        '%. 이 자세가 스윙 전체의 기준선입니다.'
+    });
+    out.push({
+      phase: 'top', title: '백스윙 탑',
+      text: '어깨 ' + Math.round(v.shTurn) + '° / 골반 ' + Math.round(v.hipTurn) + '° 회전, X-factor ' +
+        Math.round(v.xf) + '°' + (Math.abs(v.sway) > TH.sway ? ', 골반이 ' + Math.abs(r1(v.sway)) + 'cm 밀림' : '') +
+        '. 탑에서 1초 멈추는 연습으로 회전을 고정해 보세요.'
+    });
+    out.push({
+      phase: 'downswing', title: '다운스윙',
+      text: '팔 라인 ' + Math.round(v.downPlane) + '°(백스윙 대비 ' + (v.planeDiff >= 0 ? '+' : '') + r1(v.planeDiff) + '°). ' +
+        (v.ott ? '손이 몸에서 멀어지지 않도록 팔을 붙여 내려오세요.' : '현재 통로를 유지하세요.')
+    });
+    out.push({
+      phase: 'impact', title: '임팩트',
+      text: '리드팔 ' + Math.round(v.leadElbow) + '°, 머리 이동 ' + r1(v.headImp.cm) + 'cm, 체중 ' + Math.round(v.wI * 100) + '%. ' +
+        (v.earlyExt ? '엉덩이를 뒤로 유지한 채 임팩트를 지나가세요.' : '좋은 임팩트 자세입니다.')
+    });
+    out.push({
+      phase: 'follow', title: '팔로우스루',
+      text: '팔을 목표 쪽으로 뻗어 보내고, 클럽이 몸 앞을 지나도록 하세요.'
+    });
+    out.push({
+      phase: 'finish', title: '피니시',
+      text: '골반-리드발 ' + r1(v.finHip) + 'cm, 체중 ' + Math.round(v.wF * 100) + '%. ' +
+        (v.finHip > TH.finishHip ? '배꼽을 목표로 향하고 3초 서 있을 수 있는 피니시를 만들어 보세요.' : '균형 잡힌 피니시입니다.')
+    });
+    return out;
+  }
+
+  return {
+    PHASES: PHASES,
+    PHASE_KO: PHASE_KO,
+    PHASE_SHORT: PHASE_SHORT,
+    PHASE_HINT: PHASE_HINT,
+    TH: TH,
+    clamp: clamp,
+    lerp: lerp,
+    smoothstep: smoothstep,
+    r1: r1,
+    derive: derive,
+    detectPhases: detectPhases,
+    computeMetrics: computeMetrics,
+    phaseCoaching: phaseCoaching,
+    armAngle2: armAngle2,
+    helpers: {
+      mid2: mid2, dist2: dist2, angleAt2: angleAt2, cross2: cross2,
+      sub3: sub3, dot3: dot3, cross3: cross3, len3: len3, norm3: norm3, horiz3: horiz3, mid3: mid3, angleAt3: angleAt3, movingAvg: movingAvg
+    }
+  };
+})();
+</script>
+<script>
+/* =====================================================================
+ * GolfDemo — 데모용 합성 스윙 (3D 인체 모델 → 카메라 투영 → MediaPipe 형식)
+ * 실제 업로드 없이도 6개 구간·계측·교정선을 모두 확인할 수 있게 한다.
+ * ===================================================================== */
+var GolfDemo = (function () {
+  'use strict';
+
+  var W = 640, H = 853, FPS = 30, N = 96;
+  var D2R = Math.PI / 180;
+
+  /* --- 3D 벡터 유틸 (y = 위) --- */
+  function V(x, y, z) { return { x: x, y: y, z: z }; }
+  function add(a, b) { return V(a.x + b.x, a.y + b.y, a.z + b.z); }
+  function muls(a, s) { return V(a.x * s, a.y * s, a.z * s); }
+  function sub(a, b) { return V(a.x - b.x, a.y - b.y, a.z - b.z); }
+  function dot(a, b) { return a.x * b.x + a.y * b.y + a.z * b.z; }
+  function cross(a, b) { return V(a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x); }
+  function len(a) { return Math.sqrt(a.x * a.x + a.y * a.y + a.z * a.z); }
+  function norm(a) { var L = len(a) || 1e-9; return V(a.x / L, a.y / L, a.z / L); }
+  function mix(a, b, t) { return V(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t, a.z + (b.z - a.z) * t); }
+
+  /* --- 키프레임 (u = 0~1) --- */
+  // grip: 손 위치(m), shYaw/hipYaw: +면 목표 쪽으로 열림, bend: 척추 굴곡(도)
+  // sway: 골반 좌우 이동(m, + = 리드/왼쪽), lift: 골반 상하, headDx/headDy: 머리 보정(m)
+  var KEYS = [
+    { u: 0.10, grip: V(0.00, 0.93, 0.34), shYaw: 0, hipYaw: 0, bend: 24, sway: 0.000, lift: 0.000, headDx: 0.000, headDy: 0.000, headDz: 0.000 },
+    { u: 0.40, grip: V(-0.31, 1.76, -0.40), shYaw: -78, hipYaw: -30, bend: 21, sway: -0.055, lift: 0.003, headDx: 0.055, headDy: 0.002, headDz: 0.000 },
+    { u: 0.48, grip: V(0.06, 1.06, 0.38), shYaw: -40, hipYaw: -12, bend: 17, sway: -0.030, lift: 0.002, headDx: 0.032, headDy: 0.000, headDz: 0.000 },
+    { u: 0.525, grip: V(0.06, 0.90, 0.36), shYaw: 12, hipYaw: 32, bend: 12, sway: 0.035, lift: -0.004, headDx: -0.028, headDy: 0.040, headDz: 0.045 },
+    { u: 0.70, grip: V(0.28, 1.22, 0.74), shYaw: 52, hipYaw: 48, bend: 14, sway: 0.065, lift: 0.000, headDx: -0.062, headDy: 0.010, headDz: 0.040 },
+    { u: 0.88, grip: V(0.44, 1.58, 0.04), shYaw: 82, hipYaw: 56, bend: 10, sway: 0.085, lift: 0.000, headDx: -0.080, headDy: 0.000, headDz: 0.060 }
+  ];
+
+  function vecOf(k) { return [k.grip.x, k.grip.y, k.grip.z, k.shYaw, k.hipYaw, k.bend, k.sway, k.lift, k.headDx, k.headDy, k.headDz]; }
+  function fromVec(v) {
+    return {
+      grip: V(v[0], v[1], v[2]), shYaw: v[3], hipYaw: v[4], bend: v[5],
+      sway: v[6], lift: v[7], headDx: v[8], headDy: v[9], headDz: v[10]
+    };
+  }
+  function catmull(p0, p1, p2, p3, t) {
+    var t2 = t * t, t3 = t2 * t;
+    return 0.5 * ((2 * p1) + (-p0 + p2) * t + (2 * p0 - 5 * p1 + 4 * p2 - p3) * t2 + (-p0 + 3 * p1 - 3 * p2 + p3) * t3);
+  }
+
+  function params(u) {
+    if (u <= KEYS[0].u) return fromVec(vecOf(KEYS[0]));
+    if (u >= KEYS[KEYS.length - 1].u) return fromVec(vecOf(KEYS[KEYS.length - 1]));
+    var i = 0;
+    while (i < KEYS.length - 2 && u > KEYS[i + 1].u) i++;
+    var k0 = vecOf(KEYS[Math.max(0, i - 1)]), k1 = vecOf(KEYS[i]), k2 = vecOf(KEYS[i + 1]), k3 = vecOf(KEYS[Math.min(KEYS.length - 1, i + 2)]);
+    var t = (u - KEYS[i].u) / (KEYS[i + 1].u - KEYS[i].u);
+    var out = [];
+    for (var c = 0; c < k1.length; c++) out.push(catmull(k0[c], k1[c], k2[c], k3[c], t));
+    var p = fromVec(out);
+    if (p.bend < 0) p.bend = 0;
+    return p;
+  }
+
+  /* --- 2-bone IK --- */
+  function ik(S, Wp, L1, L2, pole) {
+    var d = sub(Wp, S), dd = len(d), maxD = (L1 + L2) * 0.995;
+    var wrist = Wp;
+    if (dd > maxD) {
+      wrist = add(S, muls(d, maxD / dd));
+      d = sub(wrist, S); dd = maxD;
+    }
+    dd = Math.max(dd, Math.abs(L1 - L2) + 1e-3);
+    var u = norm(d);
+    var a = (L1 * L1 - L2 * L2 + dd * dd) / (2 * dd);
+    var h = Math.sqrt(Math.max(0, L1 * L1 - a * a));
+    var pd = dot(pole, u);
+    var perp = V(pole.x - u.x * pd, pole.y - u.y * pd, pole.z - u.z * pd);
+    var n = len(perp) < 1e-6 ? norm(cross(u, V(0, 1, 0))) : norm(perp);
+    return { elbow: add(add(S, muls(u, a)), muls(n, h)), wrist: wrist };
+  }
+
+  /* --- 한 프레임의 3D 인체 --- */
+  function buildPose(u) {
+    var p = params(u);
+    var hipC = V(p.sway, 0.96 + p.lift, 0.0);
+    var shC = add(hipC, V(0, 0.50 * Math.cos(p.bend * D2R), 0.50 * Math.sin(p.bend * D2R)));
+
+    function lineDir(yaw) { return V(Math.cos(yaw * D2R), 0, Math.sin(yaw * D2R)); }
+    var hipDir = lineDir(p.hipYaw), shDir = lineDir(p.shYaw);
+
+    var hipHalf = 0.135, shHalf = 0.195;
+    var lHip = add(hipC, muls(hipDir, hipHalf));
+    var rHip = add(hipC, muls(hipDir, -hipHalf));
+    var lSh = add(shC, muls(shDir, shHalf));
+    var rSh = add(shC, muls(shDir, -shHalf));
+
+    var headC = add(add(shC, V(0, 0.30, 0)), V(p.headDx, p.headDy, p.headDz + 0.03 + Math.sin(p.bend * D2R) * 0.06));
+    var nose = add(headC, V(0, -0.005, 0.095));
+    var lEar = add(headC, V(0.072, 0.01, -0.015));
+    var rEar = add(headC, V(-0.072, 0.01, -0.015));
+    var lEye = add(headC, V(0.032, 0.025, 0.082));
+    var rEye = add(headC, V(-0.032, 0.025, 0.082));
+
+    var grip = p.grip;
+    var lWr = add(grip, muls(shDir, 0.022));
+    var rWr = add(grip, muls(shDir, -0.022));
+    var lArm = ik(lSh, lWr, 0.315, 0.295, V(1, 0.15, -0.55));
+    var rArm = ik(rSh, rWr, 0.315, 0.295, V(-1, 0.15, -0.55));
+
+    var lAn = V(0.145, 0.075, 0.02), rAn = V(-0.135, 0.075, -0.03);
+    var toeOff = V(0, -0.02, 0.135), heelOff = V(0, -0.03, -0.075);
+    var lToe = add(lAn, toeOff), rToe = add(rAn, toeOff);
+    var lHeel = add(lAn, heelOff), rHeel = add(rAn, heelOff);
+    var lKn = V(0.5 * (lHip.x + lAn.x) + p.sway * 0.4, 0.5 * (lHip.y + lAn.y), 0.05);
+    var rKn = V(0.5 * (rHip.x + rAn.x) + p.sway * 0.4, 0.5 * (rHip.y + rAn.y), 0.04);
+
+    return {
+      lSh: lSh, rSh: rSh, lEl: lArm.elbow, rEl: rArm.elbow, lWr: lArm.wrist, rWr: rArm.wrist,
+      lHip: lHip, rHip: rHip, lKn: lKn, rKn: rKn, lAn: lAn, rAn: rAn, lToe: lToe, rToe: rToe,
+      lHeel: lHeel, rHeel: rHeel, nose: nose, lEar: lEar, rEar: rEar, lEye: lEye, rEye: rEye,
+      headC: headC, grip: grip
+    };
+  }
+
+  /* --- 카메라 --- */
+  function makeCamera(view) {
+    var eye = view === 'face' ? V(0, 1.18, 4.35) : V(0, 1.18, -4.35);
+    var target = V(0, 0.95, 0);
+    var f = norm(sub(target, eye));
+    var r = norm(cross(f, V(0, 1, 0)));
+    var u = cross(r, f);
+    var tanY = Math.tan(32 * D2R / 2), aspect = W / H;
+    return function (p) {
+      var d = sub(p, eye);
+      var cz = Math.max(0.05, dot(d, f)), cx = dot(d, r), cy = dot(d, u);
+      return { x: 0.5 + (cx / cz) / (tanY * aspect) * 0.5, y: 0.5 - (cy / cz) / tanY * 0.5, z: cz };
+    };
+  }
+
+  var IDX_MAP = [
+    ['nose', 0], ['lEye', 2], ['rEye', 5], ['lEar', 7], ['rEar', 8],
+    ['lSh', 11], ['rSh', 12], ['lEl', 13], ['rEl', 14], ['lWr', 15], ['rWr', 16],
+    ['lHip', 23], ['rHip', 24], ['lKn', 25], ['rKn', 26],
+    ['lAn', 27], ['rAn', 28], ['lHeel', 29], ['rHeel', 30], ['lToe', 31], ['rToe', 32]
+  ];
+
+  /** 데모 프레임 생성 → {frames:[{t, landmarks, worldLandmarks}], phases, W, H} */
+  function make(view) {
+    var cam = makeCamera(view);
+    var frames = [];
+    for (var i = 0; i < N; i++) {
+      var u = i / (N - 1);
+      var pose = buildPose(u);
+      var lm2 = [], lm3 = [];
+      for (var k = 0; k < 33; k++) { lm2.push({ x: 0.5, y: 0.6, z: 0, visibility: 0.9 }); lm3.push({ x: 0, y: 0, z: 0 }); }
+      var hx = (pose.lHip.x + pose.rHip.x) / 2, hy = (pose.lHip.y + pose.rHip.y) / 2, hz = (pose.lHip.z + pose.rHip.z) / 2;
+      for (var m = 0; m < IDX_MAP.length; m++) {
+        var key = IDX_MAP[m][0], idx = IDX_MAP[m][1], p3 = pose[key];
+        var pr = cam(p3);
+        lm2[idx] = { x: pr.x, y: pr.y, z: 0, visibility: 0.97 };
+        lm3[idx] = { x: p3.x - hx, y: -(p3.y - hy), z: -(p3.z - hz) };
+      }
+      [17, 18, 19, 20, 21, 22].forEach(function (idx) {
+        var src = idx % 2 === 1 ? 15 : 16;
+        lm2[idx] = { x: lm2[src].x, y: lm2[src].y, z: 0, visibility: 0.6 };
+        lm3[idx] = { x: lm3[src].x, y: lm3[src].y, z: lm3[src].z };
+      });
+      [1, 3, 4, 6].forEach(function (idx) {
+        var src = idx % 2 === 1 ? 2 : 5;
+        lm2[idx] = { x: lm2[src].x, y: lm2[src].y, z: 0, visibility: 0.6 };
+        lm3[idx] = { x: lm3[src].x, y: lm3[src].y, z: lm3[src].z };
+      });
+      [9, 10].forEach(function (idx) {
+        lm2[idx] = { x: lm2[0].x, y: lm2[0].y + 0.008, z: 0, visibility: 0.6 };
+        lm3[idx] = { x: lm3[0].x, y: lm3[0].y, z: lm3[0].z };
+      });
+      frames.push({ t: i / FPS, landmarks: lm2, worldLandmarks: lm3 });
+    }
+    var fi = function (u) { return Math.round(u * (N - 1)); };
+    return {
+      frames: frames, W: W, H: H, fps: FPS,
+      phases: {
+        address: fi(KEYS[0].u), top: fi(KEYS[1].u), downswing: fi(KEYS[2].u),
+        impact: fi(KEYS[3].u), follow: fi(KEYS[4].u), finish: fi(KEYS[5].u), quality: 'demo'
+      },
+      ballPos: V(0.02, 0.03, 0.34),
+      KEYS: KEYS
+    };
+  }
+
+  /** 배경(지면·공) 투영 좌표 */
+  function scenePoints(view) {
+    var cam = makeCamera(view);
+    return {
+      ball: cam(V(0.02, 0.035, 0.34)),
+      gL: cam(V(-0.9, 0, 0.34)), gR: cam(V(0.9, 0, 0.34)),
+      bL: cam(V(-0.9, 0, -1.2)), bR: cam(V(0.9, 0, -1.2)),
+      far: cam(V(0, 0.9, 8))
+    };
+  }
+
+  return { make: make, scenePoints: scenePoints, W: W, H: H, FPS: FPS, N: N, KEYS: KEYS };
+})();
+</script>
+<script>
+/* =====================================================================
+ * 골프 스윙 분석 — 앱 레이어 (DOM/캔버스)
+ * ===================================================================== */
+(function () {
+  'use strict';
+
+  var C = window.GolfCore, DM = window.GolfDemo;
+  var PHASES = C.PHASES, KO = C.PHASE_KO, SHORT = C.PHASE_SHORT, HINT = C.PHASE_HINT, TH = C.TH;
+  var CDN = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.2.3';
+  var MODEL_FULL = 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_full/float16/latest/pose_landmarker_full.task';
+  var MODEL_LITE = 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/latest/pose_landmarker_lite.task';
+
+  var $ = function (id) { return document.getElementById(id); };
+  var clamp = function (v, a, b) { return v < a ? a : (v > b ? b : v); };
+
+  var st = {
+    view: 'dtl', hand: 'right', mode: 'idle',
+    frames: [], phases: null, cur: 0, playing: false,
+    ov: { skeleton: true, reference: true, correction: true, labels: true },
+    analysis: null, W: 640, H: 853, aspect: 0.75,
+    demoScene: null, busy: false, analyzing: false, engine: 'idle', trim: { a: 0, b: 0, dur: 0 },
+    seekToken: 0
+  };
+
+  var el = {}, cvs, ctx, vid, work, wctx, landmarker = null, rafId = 0, playTimer = 0, seekBusy = null;
+  var EMPTY_HTML = '';
+
+  /* ------------------------------ 유틸 ------------------------------ */
+  function setText(node, t) { if (node) node.textContent = t; }
+  function show(node, on) { if (!node) return; if (on) node.removeAttribute('hidden'); else node.setAttribute('hidden', ''); }
+  function chip(text, cls) {
+    if (!el.chip) return;
+    el.chip.textContent = text;
+    el.chip.className = 'chip' + (cls ? ' ' + cls : '');
+  }
+  function setProgress(p, text) {
+    if (p === null) { show(el.progress, false); return; }
+    show(el.progress, true);
+    el.pbarFill.style.width = Math.round(clamp(p, 0, 1) * 100) + '%';
+    if (text) setText(el.pText, text);
+  }
+  function wait(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+  function nextTick() { return new Promise(function (r) { setTimeout(r, 0); }); }
+
+  /* ============================== 초기화 ============================== */
+  function init() {
+    el = {
+      chip: $('engineChip'), viewSeg: $('viewSeg'), handSeg: $('handSeg'), viewHint: $('viewHint'),
+      fileInput: $('fileInput'), demoBtn: $('demoBtn'),
+      trimRow: $('trimRow'), trimStart: $('trimStart'), trimEnd: $('trimEnd'), trimLabel: $('trimLabel'), trimApply: $('trimApply'),
+      progress: $('progress'), pbarFill: $('pbarFill'), pText: $('pText'), statusNote: $('statusNote'),
+      stage: $('stage'), fbox: $('fbox'), video: $('video'), canvas: $('canvas'),
+      stageEmpty: $('stageEmpty'), stageBadge: $('stageBadge'),
+      playBtn: $('playBtn'), frameRange: $('frameRange'), frameLabel: $('frameLabel'),
+      phaseTabs: $('phaseTabs'), ovs: $('ovs'), exportBtn: $('exportBtn'),
+      markerToggle: $('markerToggle'), markers: $('markers'), markerCur: $('markerCur'), markerBtns: $('markerBtns'),
+      summaryCard: $('summaryCard'), scoreRing: $('scoreRing'), scoreNum: $('scoreNum'), gradeLine: $('gradeLine'),
+      headline: $('headline'), bars: $('bars'),
+      phaseCard: $('phaseCard'), preads: $('preads'),
+      checkCard: $('checkCard'), checks: $('checks'),
+      shotModal: $('shotModal'), shotImg: $('shotImg'), shotLink: $('shotLink'), shotClose: $('shotClose')
+    };
+    cvs = el.canvas; ctx = cvs.getContext('2d');
+    vid = el.video;
+    work = document.createElement('canvas');
+    wctx = work.getContext('2d');
+    if (vid) { vid.muted = true; vid.setAttribute('playsinline', ''); vid.setAttribute('webkit-playsinline', ''); }
+
+    EMPTY_HTML = el.stageEmpty ? el.stageEmpty.innerHTML : '';
+    bind();
+    paintViewHint();
+    paintOvs();
+    chip('대기', '');
+    setStageSize(640, 853);
+    drawScene();
+  }
+
+  function bind() {
+    el.viewSeg.addEventListener('click', function (e) {
+      var b = e.target && e.target.closest ? e.target.closest('[data-view]') : null;
+      if (!b) return;
+      setView(b.getAttribute('data-view'));
+    });
+    el.handSeg.addEventListener('click', function (e) {
+      var b = e.target && e.target.closest ? e.target.closest('[data-hand]') : null;
+      if (!b) return;
+      setHand(b.getAttribute('data-hand'));
+    });
+    el.fileInput.addEventListener('change', function (e) {
+      var f = e.target.files && e.target.files[0];
+      if (f) loadFile(f);
+    });
+    el.demoBtn.addEventListener('click', function () { startDemo(); });
+    el.playBtn.addEventListener('click', togglePlay);
+    el.frameRange.addEventListener('input', function () { scrubTo(parseInt(el.frameRange.value, 10) || 0); });
+    el.phaseTabs.addEventListener('click', function (e) {
+      var b = e.target && e.target.closest ? e.target.closest('[data-phase]') : null;
+      if (!b || !st.phases) return;
+      var k = b.getAttribute('data-phase');
+      scrubTo(st.phases[k]);
+    });
+    el.ovs.addEventListener('change', function (e) {
+      var t = e.target;
+      if (!t || !t.getAttribute) return;
+      var k = t.getAttribute('data-ov');
+      if (!k) return;
+      st.ov[k] = !!t.checked;
+      var lab = t.parentNode;
+      if (lab && lab.classList) { if (t.checked) lab.classList.add('on'); else lab.classList.remove('on'); }
+      drawScene();
+    });
+    el.exportBtn.addEventListener('click', exportShot);
+    el.shotClose.addEventListener('click', function () { show(el.shotModal, false); });
+    el.shotModal.addEventListener('click', function (e) { if (e.target === el.shotModal) show(el.shotModal, false); });
+    el.markerToggle.addEventListener('click', function () {
+      if (!st.phases) { note('먼저 영상이나 데모를 불러오세요.'); return; }
+      var open = el.markers.hasAttribute('hidden');
+      show(el.markers, open);
+      if (open) paintMarkerButtons();
+    });
+    el.markerBtns.addEventListener('click', function (e) {
+      var b = e.target && e.target.closest ? e.target.closest('[data-set]') : null;
+      if (!b) return;
+      assignPhase(b.getAttribute('data-set'));
+    });
+    el.trimStart.addEventListener('input', onTrimInput);
+    el.trimEnd.addEventListener('input', onTrimInput);
+    el.trimApply.addEventListener('click', function () {
+      if (!st.trim.dur) return;
+      analyzeVideo(st.trim.a, st.trim.b);
+    });
+    window.addEventListener('resize', layoutStage);
+    if (window.visualViewport) window.visualViewport.addEventListener('resize', layoutStage);
+    if (vid) {
+      vid.addEventListener('ended', function () { if (st.playing) stopPlay(); });
+      vid.addEventListener('loadedmetadata', function () { /* noop */ });
+    }
+  }
+
+  function note(t) { setText(el.statusNote, t); }
+
+  /* ============================== 뷰/손 ============================== */
+  function paintViewHint() {
+    setText(el.viewHint, st.view === 'dtl'
+      ? '측면(Down-the-Line): 골프공 뒤에서 촬영. 스윙 플레인·오버 더 톱·얼리 익스텐션 판정에 유리합니다.'
+      : '정면(Face-on): 가슴 정면에서 촬영. 골반 스웨이·체중 이동·X-factor 판정에 유리합니다.');
+    var btns = el.viewSeg.querySelectorAll('[data-view]');
+    for (var i = 0; i < btns.length; i++) {
+      if (btns[i].getAttribute('data-view') === st.view) btns[i].classList.add('on');
+      else btns[i].classList.remove('on');
+    }
+  }
+  function setView(v) {
+    if (v !== 'dtl' && v !== 'face') return;
+    if (st.view === v) return;
+    st.view = v;
+    paintViewHint();
+    if (st.mode === 'demo') { startDemo(); return; }
+    if (st.frames.length && st.phases) analyze();
+  }
+  function setHand(h) {
+    if (h !== 'left' && h !== 'right') return;
+    if (st.hand === h) return;
+    st.hand = h;
+    var btns = el.handSeg.querySelectorAll('[data-hand]');
+    for (var i = 0; i < btns.length; i++) {
+      if (btns[i].getAttribute('data-hand') === h) btns[i].classList.add('on');
+      else btns[i].classList.remove('on');
+    }
+    if (st.frames.length && st.phases) analyze();
+  }
+
+  function paintOvs() {
+    var inputs = el.ovs.querySelectorAll('input[data-ov]');
+    for (var i = 0; i < inputs.length; i++) {
+      var k = inputs[i].getAttribute('data-ov');
+      inputs[i].checked = !!st.ov[k];
+      var lab = inputs[i].parentNode;
+      if (lab && lab.classList) { if (st.ov[k]) lab.classList.add('on'); else lab.classList.remove('on'); }
+    }
+  }
+
+  /* ============================ 스테이지 크기 ============================ */
+  function setStageSize(W, H) {
+    st.W = W; st.H = H; st.aspect = W / H;
+    cvs.width = W; cvs.height = H;
+    el.fbox.style.setProperty('--ar', (st.aspect).toFixed(4));
+    layoutStage();
+  }
+
+  // 캔버스/영상 박스의 CSS 크기를 영상 비율에 정확히 맞춘다(오버레이 정합)
+  function layoutStage() {
+    if (!el.fbox || !el.stage) return;
+    var ar = st.aspect || 0.75;
+    var vw = window.innerWidth || 390, vh = window.innerHeight || 844;
+    var availW = (el.stage.clientWidth || (vw - 40)) - 16;
+    var maxH = vh * 0.66;
+    if (!(availW > 80)) availW = vw - 40;
+    if (!(maxH > 120)) maxH = 420;
+    var w = Math.min(availW, maxH * ar);
+    var h = w / ar;
+    el.fbox.style.width = Math.round(w) + 'px';
+    el.fbox.style.height = Math.round(h) + 'px';
+  }
+
+  /* ============================== 엔진 로드 ============================== */
+  function loadScript(src) {
+    return new Promise(function (resolve, reject) {
+      var s = document.createElement('script');
+      s.src = src; s.async = true;
+      s.onload = function () { resolve(); };
+      s.onerror = function () { reject(new Error('script load failed')); };
+      document.head.appendChild(s);
+    });
+  }
+
+  async function ensureEngine() {
+    if (landmarker) return landmarker;
+    if (st.engine === 'loading' && seekBusy) { await seekBusy; if (landmarker) return landmarker; }
+    st.engine = 'loading';
+    chip('엔진 로드 중', '');
+    setProgress(0.03, '자세 인식 엔진을 불러오는 중… (최초 1회, 수 MB 내려받습니다)');
+    if (!window.Vision || !window.Vision.PoseLandmarker) {
+      await loadScript(CDN + '/vision_bundle.js');
+    }
+    if (!window.Vision || !window.Vision.PoseLandmarker) throw new Error('자세 인식 엔진을 불러오지 못했습니다.');
+    var fileset = await window.Vision.FilesetResolver.forVisionTasks(CDN + '/wasm');
+    var models = [MODEL_LITE, MODEL_FULL];
+    var delegates = ['GPU', 'CPU'];
+    var lastErr = null;
+    for (var mi = 0; mi < models.length; mi++) {
+      for (var di = 0; di < delegates.length; di++) {
+        try {
+          landmarker = await window.Vision.PoseLandmarker.createFromOptions(fileset, {
+            baseOptions: { modelAssetPath: models[mi], delegate: delegates[di] },
+            runningMode: 'IMAGE',
+            numPoses: 1,
+            minPoseDetectionConfidence: 0.4,
+            minPosePresenceConfidence: 0.4
+          });
+          st.engine = 'ready';
+          chip('엔진 준비됨', 'on');
+          return landmarker;
+        } catch (e) {
+          lastErr = e;
+          landmarker = null;
+        }
+      }
+    }
+    st.engine = 'error';
+    chip('엔진 오류', 'err');
+    throw lastErr || new Error('엔진 초기화 실패');
+  }
+
+  /* ============================== 영상 로드 ============================== */
+  async function loadFile(file) {
+    stopPlay();
+    st.mode = 'video'; st.frames = []; st.phases = null; st.analysis = null;
+    st.cur = 0; st.demoScene = null;
+    if (EMPTY_HTML) el.stageEmpty.innerHTML = EMPTY_HTML;
+    show(el.stageEmpty, false);
+    show(el.stageBadge, true); setText(el.stageBadge, '불러오는 중');
+    lockUI(true);
+    setProgress(0.02, '동영상을 여는 중…');
+    try {
+      if (!vid.src) { /* noop */ }
+      if (vid.src && vid.src.indexOf('blob:') === 0) URL.revokeObjectURL(vid.src);
+      vid.src = URL.createObjectURL(file);
+      vid.load();
+      await once(vid, 'loadedmetadata', 8000);
+      var W = vid.videoWidth || 0, H = vid.videoHeight || 0;
+      if (!W || !H) throw new Error('영상 해상도를 읽을 수 없습니다. 다른 형식을 시도해 주세요.');
+      setStageSize(W, H);
+      await once(vid, 'loadeddata', 8000).catch(function () {});
+      var dur = vid.duration;
+      if (!isFinite(dur) || dur <= 0) dur = 0;
+      st.trim.dur = dur;
+      el.trimStart.max = String(Math.max(0.1, dur));
+      el.trimEnd.max = String(Math.max(0.1, dur));
+      el.trimStart.value = '0';
+      el.trimEnd.value = String(dur.toFixed(1));
+      st.trim.a = 0; st.trim.b = dur;
+      updateTrimLabel();
+      show(el.trimRow, dur > 2.5);
+      setText(el.stageBadge, '엔진 준비 중');
+      var t0 = dur > 12 ? dur * 0.05 : 0;
+      var t1 = dur > 12 ? dur * 0.95 : dur;
+      await analyzeVideo(t0, t1);
+    } catch (e) {
+      fail(e && e.message ? e.message : '영상 분석에 실패했습니다.');
+    }
+  }
+
+  function once(target, evt, timeout) {
+    return new Promise(function (resolve, reject) {
+      var done = false;
+      function on() { if (done) return; done = true; target.removeEventListener(evt, on); resolve(); }
+      target.addEventListener(evt, on);
+      if (timeout) setTimeout(function () { if (!done) { done = true; target.removeEventListener(evt, on); reject(new Error('timeout')); } }, timeout);
+    });
+  }
+
+  function updateTrimLabel() {
+    setText(el.trimLabel, st.trim.a.toFixed(1) + ' – ' + st.trim.b.toFixed(1) + '초');
+  }
+  function onTrimInput() {
+    var a = parseFloat(el.trimStart.value) || 0;
+    var b = parseFloat(el.trimEnd.value) || 0;
+    if (b - a < 0.6) { if (this === el.trimStart) a = Math.max(0, b - 0.6); else b = a + 0.6; }
+    st.trim.a = a; st.trim.b = b;
+    el.trimStart.value = String(a); el.trimEnd.value = String(b);
+    updateTrimLabel();
+  }
+
+  function lockUI(busy) {
+    st.busy = busy;
+    if (el.demoBtn) el.demoBtn.disabled = busy;
+    if (el.exportBtn) el.exportBtn.disabled = busy || !st.frames.length;
+    if (el.playBtn) el.playBtn.disabled = busy || !st.frames.length;
+  }
+
+  function fail(msg) {
+    st.analyzing = false;
+    lockUI(false);
+    st.busy = false;
+    setProgress(null);
+    setText(el.stageBadge, '오류');
+    note(msg);
+    chip('오류', 'err');
+    if (!st.frames.length) {
+      show(el.stageEmpty, true);
+      el.stageEmpty.innerHTML = '<div class="eicon">😵</div><b>분석할 수 없습니다</b><span>' + msg + '</span>';
+    }
+  }
+
+  /* ============================== 영상 분석 ============================== */
+  async function seekVideo(t) {
+    return new Promise(function (resolve) {
+      if (!vid) { resolve(); return; }
+      var dur = isFinite(vid.duration) ? vid.duration : 0;
+      var target = clamp(t, 0, Math.max(0, dur - 0.03));
+      var done = false;
+      function finish() {
+        if (done) return;
+        done = true;
+        vid.removeEventListener('seeked', finish);
+        requestAnimationFrame(function () { requestAnimationFrame(resolve); });
+      }
+      vid.addEventListener('seeked', finish);
+      try { vid.currentTime = target; } catch (e) { finish(); return; }
+      setTimeout(finish, 1200);
+    });
+  }
+
+  async function analyzeVideo(t0, t1) {
+    if (!vid || st.analyzing) return;
+    st.analyzing = true;
+    st.busy = true;
+    lockUI(true);
+    stopPlay();
+    show(el.stageEmpty, false);
+    try {
+      await ensureEngine();
+    } catch (e) {
+      fail('자세 인식 엔진을 불러오지 못했습니다. 네트워크를 확인하고 다시 시도해 주세요.');
+      return;
+    }
+    var dur = Math.max(0.2, t1 - t0);
+    var n = Math.round(dur * 15);
+    n = clamp(n, 24, 110);
+    var W = Math.min(720, vid.videoWidth || 640);
+    var H = Math.round(W * (vid.videoHeight || 853) / (vid.videoWidth || 640));
+    work.width = W; work.height = H;
+    setStageSize(W, H);
+    st.frames = []; st.cur = 0; st.phases = null; st.analysis = null;
+    setText(el.stageBadge, '분석 중');
+    var aspect = W / H;
+    for (var i = 0; i < n; i++) {
+      var t = t0 + dur * (i + 0.5) / n;
+      await seekVideo(t);
+      var d = null, lm2 = null, lm3 = null;
+      try {
+        wctx.drawImage(vid, 0, 0, W, H);
+        var res = landmarker.detect(work);
+        lm2 = res && res.landmarks && res.landmarks[0];
+        lm3 = res && res.worldLandmarks && res.worldLandmarks[0];
+        d = lm2 ? C.derive(lm2, lm3, aspect) : null;
+      } catch (e) { d = null; }
+      st.frames.push({ t: t, d: d, lm2: lm2, lm3: lm3 });
+      if (i % 2 === 0 || i === n - 1) {
+        setProgress(0.04 + 0.94 * (i + 1) / n, '프레임 분석 ' + (i + 1) + ' / ' + n);
+        await nextTick();
+      }
+    }
+    var valid = 0;
+    for (var k = 0; k < st.frames.length; k++) if (st.frames[k].d) valid++;
+    if (valid < 8) {
+      fail('사람의 전신이 보이는 프레임을 8개 이상 찾지 못했습니다. 전신이 나오게 다시 찍어 주세요.');
+      return;
+    }
+    st.phases = C.detectPhases(st.frames) || fallbackPhases();
+    st.cur = st.phases.address;
+    setProgress(null);
+    lockUI(false);
+    st.busy = false;
+    setText(el.stageBadge, valid + ' / ' + n + ' 프레임 인식');
+    note('자동으로 6개 구간을 잡았습니다. 구간이 어긋나면 ‘구간 미세 조정’에서 맞춰 주세요.');
+    analyze();
+    st.analyzing = false;
+  }
+
+  function fallbackPhases() {
+    var idx = [], o = {};
+    for (var i = 0; i < st.frames.length; i++) if (st.frames[i].d) idx.push(i);
+    var fr = [0.02, 0.30, 0.44, 0.54, 0.74, 0.92];
+    for (var k = 0; k < PHASES.length; k++) o[PHASES[k]] = idx[clamp(Math.round(fr[k] * (idx.length - 1)), 0, idx.length - 1)];
+    return o;
+  }
+
+  /* ============================== 데모 ============================== */
+  function startDemo() {
+    if (st.busy) return;
+    stopPlay();
+    el.demoBtn.disabled = true;
+    setTimeout(function () { el.demoBtn.disabled = false; }, 300);
+    st.mode = 'demo';
+    st.busy = false;
+    lockUI(false);
+    if (EMPTY_HTML) el.stageEmpty.innerHTML = EMPTY_HTML;
+    show(el.stageEmpty, false);
+    show(el.trimRow, false);
+    setProgress(null);
+    var dm = DM.make(st.view);
+    setStageSize(dm.W, dm.H);
+    st.demoScene = DM.scenePoints(st.view);
+    var frames = [];
+    for (var i = 0; i < dm.frames.length; i++) {
+      var f = dm.frames[i];
+      frames.push({ t: f.t, lm2: f.landmarks, lm3: f.worldLandmarks, d: C.derive(f.landmarks, f.worldLandmarks, dm.W / dm.H) });
+    }
+    st.frames = frames;
+    var auto = C.detectPhases(frames);
+    st.phases = (auto && auto.quality === 'auto') ? auto : dm.phases;
+    st.cur = st.phases.address;
+    setText(el.stageBadge, '데모 · 시뮬레이션 스윙');
+    note('데모는 실제 스윙을 3D로 만들어 분석 파이프라인에 통과시킨 결과입니다. 일부러 결함(스웨이·얼리 익스텐션·머리 들림)을 넣어 교정선을 보여 줍니다.');
+    chip('데모', 'on');
+    analyze();
+    lockUI(false);
+  }
+
+  /* ============================== 분석 ============================== */
+  function analyze() {
+    if (!st.frames.length || !st.phases) return;
+    var m = C.computeMetrics(st.frames, st.phases, st.view, st.hand);
+    st.analysis = m;
+    if (!m) { note('구간을 계산할 수 없습니다. 구간을 다시 맞춰 주세요.'); return; }
+    if (!m.source3d) note('3D 좌표를 얻지 못해 2D 근사로 계산했습니다. 카메라 각도를 정확히 맞춰 다시 찍으면 정확해집니다.');
+    renderSummary(m);
+    renderReadings(m);
+    renderChecks(m);
+    paintTabs();
+    if (st.mode === 'video') scrubTo(st.cur);
+    else { updateFrameUI(); drawScene(); }
+  }
+
+  function renderSummary(m) {
+    show(el.summaryCard, true);
+    el.scoreRing.style.setProperty('--p', String(m.overall));
+    el.scoreNum.textContent = String(m.overall);
+    el.gradeLine.innerHTML = m.gradeLabel + '<b>' + m.grade + ' 등급</b>';
+    setText(el.headline, m.headline);
+    var html = '';
+    for (var i = 0; i < m.checks.length; i++) {
+      var c = m.checks[i];
+      var col = c.status === 'good' ? 'var(--good)' : (c.status === 'warn' ? 'var(--warn)' : 'var(--bad)');
+      html += '<div class="bar"><span class="bt2">' + c.label + '</span>' +
+        '<span class="bg"><i style="width:' + c.score + '%;background:' + col + '"></i></span>' +
+        '<b>' + c.score + '</b></div>';
+    }
+    el.bars.innerHTML = html;
+  }
+
+  function renderReadings(m) {
+    show(el.phaseCard, true);
+    var html = '';
+    for (var i = 0; i < PHASES.length; i++) {
+      var k = PHASES[i], arr = m.readings[k] || [];
+      var inner = '';
+      for (var j = 0; j < arr.length; j++) inner += '<span>' + arr[j].k + '<b>' + arr[j].v + '</b></span>';
+      html += '<div class="pread"><div class="ph">' + KO[k] + '</div><div class="pv">' + inner + '</div></div>';
+    }
+    el.preads.innerHTML = html;
+  }
+
+  function renderChecks(m) {
+    show(el.checkCard, true);
+    var html = '';
+    for (var i = 0; i < m.checks.length; i++) {
+      var c = m.checks[i];
+      html += '<div class="check ' + c.status + '">' +
+        '<div class="ch-head"><b>' + c.label + '</b><span class="val">' + c.value + '</span></div>' +
+        '<div class="ch-bar"><i style="width:' + c.score + '%"></i></div>' +
+        '<p class="ch-tip">' + c.tip + '</p>' +
+        '<p class="ch-hint">' + c.hint + '</p></div>';
+    }
+    el.checks.innerHTML = html;
+  }
+
+  /* ============================== 구간 탭 ============================== */
+  function paintTabs() {
+    if (!st.phases || !st.frames.length) { el.phaseTabs.innerHTML = ''; return; }
+    var html = '';
+    for (var i = 0; i < PHASES.length; i++) {
+      var k = PHASES[i];
+      html += '<button type="button" class="tab" data-phase="' + k + '"><b>' + SHORT[k] + '</b><span>F' + st.phases[k] + '</span></button>';
+    }
+    el.phaseTabs.innerHTML = html;
+    markTab();
+  }
+  function markTab() {
+    if (!st.phases) return;
+    var btns = el.phaseTabs.querySelectorAll('[data-phase]');
+    var best = null, bd = 1e9;
+    for (var i = 0; i < PHASES.length; i++) {
+      var d = Math.abs(st.phases[PHASES[i]] - st.cur);
+      if (d < bd) { bd = d; best = PHASES[i]; }
+    }
+    for (var j = 0; j < btns.length; j++) {
+      if (btns[j].getAttribute('data-phase') === best && bd <= 4) btns[j].classList.add('on');
+      else btns[j].classList.remove('on');
+    }
+  }
+
+  function paintMarkerButtons() {
+    var html = '';
+    for (var i = 0; i < PHASES.length; i++) {
+      html += '<button type="button" data-set="' + PHASES[i] + '">' + KO[PHASES[i]] + '</button>';
+    }
+    el.markerBtns.innerHTML = html;
+  }
+
+  function assignPhase(k) {
+    if (!st.phases || !st.frames.length) return;
+    st.phases[k] = st.cur;
+    // 순서 보장
+    var order = [];
+    for (var i = 0; i < PHASES.length; i++) order.push(st.phases[PHASES[i]]);
+    for (var j = 1; j < order.length; j++) {
+      if (order[j] <= order[j - 1]) {
+        note('구간 순서가 어긋납니다. ' + KO[PHASES[j]] + '는 ' + KO[PHASES[j - 1]] + '보다 뒤 프레임이어야 합니다.');
+        st.phases[k] = findFree(st.phases, k, st.cur);
+        return;
+      }
+    }
+    paintTabs();
+    analyze();
+    note(KO[k] + ' 구간을 F' + st.cur + '(으)로 지정했습니다.');
+  }
+
+  function findFree(phases, key, want) {
+    var idx = PHASES.indexOf(key);
+    var lo = idx > 0 ? phases[PHASES[idx - 1]] + 1 : 0;
+    var hi = idx < PHASES.length - 1 ? phases[PHASES[idx + 1]] - 1 : st.frames.length - 1;
+    return clamp(want, lo, hi);
+  }
+
+  /* ============================== 재생/스크럽 ============================== */
+  function updateFrameUI() {
+    if (!st.frames.length) {
+      el.frameRange.max = '0'; el.frameRange.value = '0';
+      setText(el.frameLabel, '–');
+      return;
+    }
+    el.frameRange.max = String(st.frames.length - 1);
+    el.frameRange.value = String(st.cur);
+    var f = st.frames[st.cur];
+    setText(el.frameLabel, 'F' + st.cur + ' · ' + (f ? f.t.toFixed(2) + 's' : ''));
+    if (st.phases) markTab();
+    if (el.markerCur) setText(el.markerCur, 'F' + st.cur);
+    el.playBtn.disabled = st.busy;
+    el.exportBtn.disabled = st.busy || !st.frames.length;
+  }
+
+  function scrubTo(i) {
+    if (!st.frames.length) return;
+    st.cur = clamp(i, 0, st.frames.length - 1);
+    updateFrameUI();
+    if (st.mode === 'video') {
+      var token = ++st.seekToken;
+      seekVideo(st.frames[st.cur].t).then(function () {
+        if (token === st.seekToken) drawScene();
+      });
+    } else {
+      drawScene();
+    }
+  }
+
+  function togglePlay() { if (st.playing) stopPlay(); else startPlay(); }
+
+  function startPlay() {
+    if (!st.frames.length || st.busy) return;
+    st.playing = true;
+    el.playBtn.textContent = '❚❚';
+    if (st.mode === 'video' && vid) {
+      try { vid.currentTime = st.frames[st.cur].t; } catch (e) {}
+      var pr = vid.play();
+      if (pr && pr.catch) pr.catch(function () {});
+      var loop = function () {
+        if (!st.playing) return;
+        var t = vid.currentTime, best = 0, bd = 1e9;
+        for (var i = 0; i < st.frames.length; i++) {
+          var d = Math.abs(st.frames[i].t - t);
+          if (d < bd) { bd = d; best = i; }
+        }
+        if (best !== st.cur) { st.cur = best; updateFrameUI(); }
+        drawScene();
+        rafId = requestAnimationFrame(loop);
+      };
+      rafId = requestAnimationFrame(loop);
+    } else {
+      playTimer = setInterval(function () {
+        st.cur = (st.cur + 1) % st.frames.length;
+        updateFrameUI();
+        drawScene();
+      }, 70);
+    }
+  }
+
+  function stopPlay() {
+    st.playing = false;
+    if (el.playBtn) el.playBtn.textContent = '▶';
+    if (rafId) { cancelAnimationFrame(rafId); rafId = 0; }
+    if (playTimer) { clearInterval(playTimer); playTimer = 0; }
+    if (st.mode === 'video' && vid) { try { vid.pause(); } catch (e) {} }
+  }
+
+  /* ============================== 스냅샷 ============================== */
+  function exportShot() {
+    if (!st.frames.length) return;
+    var url = '';
+    try { url = cvs.toDataURL('image/png'); } catch (e) { url = ''; }
+    if (!url) { note('이미지를 만들 수 없습니다. 영상이 보호된 형식일 수 있습니다.'); return; }
+    el.shotImg.src = url;
+    el.shotLink.href = url;
+    show(el.shotModal, true);
+  }
+
+  /* ============================== 캔버스 그리기 ============================== */
+  function S() { return st.H / 853; }          // 크기 스케일
+  function P(p) { return { x: p.x * st.H, y: p.y * st.H }; } // 높이 단위 → 픽셀
+
+  function rgba(hex, a) {
+    var h = hex.replace('#', '');
+    var r = parseInt(h.substring(0, 2), 16), g = parseInt(h.substring(2, 4), 16), b = parseInt(h.substring(4, 6), 16);
+    return 'rgba(' + r + ',' + g + ',' + b + ',' + a + ')';
+  }
+
+  function line(a, b, color, w, dash) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.setLineDash(dash || []);
+    ctx.lineWidth = w;
+    ctx.strokeStyle = color;
+    ctx.lineCap = 'round';
+    ctx.moveTo(a.x, a.y);
+    ctx.lineTo(b.x, b.y);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function arrow(a, b, color, w) {
+    var ang = Math.atan2(b.y - a.y, b.x - a.x);
+    var u = S();
+    line(a, b, color, w, []);
+    var hx = b.x - Math.cos(ang) * 10 * u, hy = b.y - Math.sin(ang) * 10 * u;
+    ctx.save();
+    ctx.beginPath();
+    ctx.fillStyle = color;
+    ctx.moveTo(b.x, b.y);
+    ctx.lineTo(hx - Math.sin(ang) * 5 * u, hy + Math.cos(ang) * 5 * u);
+    ctx.lineTo(hx + Math.sin(ang) * 5 * u, hy - Math.cos(ang) * 5 * u);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function circle(p, r, stroke, fill, w, dash) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.setLineDash(dash || []);
+    ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+    if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+    if (stroke) { ctx.lineWidth = w || 2; ctx.strokeStyle = stroke; ctx.stroke(); }
+    ctx.restore();
+  }
+
+  function arcAt(center, r, a0, a1, color, w) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.lineWidth = w;
+    ctx.strokeStyle = color;
+    ctx.lineCap = 'round';
+    ctx.arc(center.x, center.y, r, a0, a1);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function tag(text, x, y, color, align) {
+    var u = S();
+    var fs = 22 * u;
+    ctx.save();
+    ctx.font = '700 ' + fs + 'px -apple-system, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif';
+    var tw = ctx.measureText(text).width;
+    var padX = 7 * u, padY = 5 * u;
+    var w = tw + padX * 2, h = fs + padY * 2;
+    var bx = align === 'right' ? x - w : (align === 'center' ? x - w / 2 : x);
+    var by = y - h / 2;
+    bx = clamp(bx, 3, st.W - w - 3);
+    by = clamp(by, 3, st.H - h - 3);
+    ctx.fillStyle = 'rgba(6,12,20,0.82)';
+    ctx.fillRect(bx, by, w, h);
+    ctx.strokeStyle = rgba(color, 0.65);
+    ctx.lineWidth = 1.2 * u;
+    ctx.strokeRect(bx, by, w, h);
+    ctx.fillStyle = color;
+    ctx.textBaseline = 'middle';
+    ctx.textAlign = 'left';
+    ctx.fillText(text, bx + padX, by + h / 2 + 0.5);
+    ctx.restore();
+    return { w: w, h: h, x: bx, y: by };
+  }
+
+  function drawDemoBG(W, H) {
+    var g = ctx.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, '#0a1a20');
+    g.addColorStop(0.45, '#0b2024');
+    g.addColorStop(1, '#050b10');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, H);
+    var sc = st.demoScene;
+    if (!sc) return;
+    var u = S();
+    var gl = P(sc.gL), gr = P(sc.gR), bl = P(sc.bL), br = P(sc.bR);
+    // 지면
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(gl.x, gl.y);
+    ctx.lineTo(gr.x, gr.y);
+    ctx.lineTo(br.x, br.y);
+    ctx.lineTo(bl.x, bl.y);
+    ctx.closePath();
+    var g2 = ctx.createLinearGradient(0, gl.y - 40 * u, 0, H);
+    g2.addColorStop(0, 'rgba(38,84,60,0.42)');
+    g2.addColorStop(1, 'rgba(16,40,30,0.16)');
+    ctx.fillStyle = g2;
+    ctx.fill();
+    ctx.restore();
+    line(gl, gr, 'rgba(120,220,180,0.22)', 1.6 * u, []);
+    // 목표 방향 표시
+    var mid = { x: (gl.x + gr.x) / 2, y: gl.y };
+    line({ x: mid.x, y: mid.y + 6 * u }, { x: mid.x, y: mid.y - 46 * u }, 'rgba(120,220,180,0.16)', 1.4 * u, [6 * u, 8 * u]);
+    // 공
+    var ball = P(sc.ball);
+    circle(ball, 7 * u, 'rgba(255,255,255,0.9)', 'rgba(255,255,255,0.92)', 1.5 * u, []);
+    circle({ x: ball.x + 4 * u, y: ball.y + 12 * u }, 8 * u, null, 'rgba(0,0,0,0.28)', 0, []);
+    // 비네트
+    var vg = ctx.createRadialGradient(W / 2, H * 0.45, H * 0.15, W / 2, H * 0.5, H * 0.75);
+    vg.addColorStop(0, 'rgba(0,0,0,0)');
+    vg.addColorStop(1, 'rgba(0,0,0,0.45)');
+    ctx.fillStyle = vg;
+    ctx.fillRect(0, 0, W, H);
+  }
+
+  function drawSkeleton(d) {
+    var u = S();
+    var bones = [
+      ['lSh', 'rSh'], ['lSh', 'lEl'], ['lEl', 'lWr'], ['rSh', 'rEl'], ['rEl', 'rWr'],
+      ['lSh', 'lHip'], ['rSh', 'rHip'], ['lHip', 'rHip'], ['lHip', 'lKn'], ['lKn', 'lAn'],
+      ['rHip', 'rKn'], ['rKn', 'rAn'], ['lAn', 'lToe'], ['rAn', 'rToe'], ['lAn', 'lHeel'], ['rAn', 'rHeel'],
+      ['lEar', 'rEar'], ['nose', 'lEar'], ['nose', 'rEar']
+    ];
+    ctx.save();
+    ctx.lineCap = 'round';
+    for (var i = 0; i < bones.length; i++) {
+      var a = d[bones[i][0]], b = d[bones[i][1]];
+      if (!a || !b) continue;
+      var pa = P(a), pb = P(b);
+      line(pa, pb, 'rgba(9,26,32,0.55)', 7 * u, []);
+      line(pa, pb, 'rgba(86,235,197,0.95)', 3.4 * u, []);
+    }
+    // 리드암 강조
+    var lead = st.hand === 'left' ? 'r' : 'l';
+    line(P(d[lead + 'Sh']), P(d[lead + 'El']), 'rgba(255,209,102,0.95)', 4.2 * u, []);
+    line(P(d[lead + 'El']), P(d[lead + 'Wr']), 'rgba(255,209,102,0.95)', 4.2 * u, []);
+
+    var joints = ['lSh', 'rSh', 'lEl', 'rEl', 'lWr', 'rWr', 'lHip', 'rHip', 'lKn', 'rKn', 'lAn', 'rAn', 'lEar', 'rEar'];
+    for (var j = 0; j < joints.length; j++) {
+      var p = d[joints[j]];
+      if (!p) continue;
+      circle(P(p), 5.2 * u, 'rgba(6,20,26,0.9)', 'rgba(230,255,250,0.96)', 1.8 * u, []);
+    }
+    // 머리
+    var hc = P(d.head);
+    circle(hc, d.headR * st.H * 1.05, 'rgba(120,255,225,0.85)', 'rgba(110,240,210,0.10)', 2 * u, []);
+    // 어깨선/골반선
+    line(P(d.lSh), P(d.rSh), 'rgba(255,255,255,0.35)', 1.4 * u, [4 * u, 4 * u]);
+    line(P(d.lHip), P(d.rHip), 'rgba(255,255,255,0.28)', 1.4 * u, [4 * u, 4 * u]);
+    ctx.restore();
+  }
+
+  function drawReferenceLayer(d, A, m) {
+    var u = S();
+    var pa = P(A.hipC), pb = P(A.sh);
+    var dx = pb.x - pa.x, dy = pb.y - pa.y;
+    var len = Math.sqrt(dx * dx + dy * dy) || 1;
+    var ux = dx / len, uy = dy / len;
+    line({ x: pa.x - ux * len * 0.35, y: pa.y - uy * len * 0.35 },
+      { x: pb.x + ux * len * 0.45, y: pb.y + uy * len * 0.45 },
+      'rgba(61,220,150,0.55)', 1.8 * u, [7 * u, 6 * u]);
+    // 머리 기준 원
+    circle(P(A.head), A.headR * st.H * 1.9, 'rgba(61,220,150,0.45)', null, 1.6 * u, [6 * u, 6 * u]);
+    // 스탠스 라인
+    var la = P(A.lAn), ra = P(A.rAn);
+    var ax = ra.x - la.x, ay = ra.y - la.y, al = Math.sqrt(ax * ax + ay * ay) || 1;
+    line({ x: la.x - ax / al * 22 * u, y: la.y - ay / al * 22 * u },
+      { x: ra.x + ax / al * 22 * u, y: ra.y + ay / al * 22 * u },
+      'rgba(140,200,255,0.35)', 1.4 * u, [5 * u, 6 * u]);
+    // 정면 뷰: 골반 위치 기준 세로선(스웨이 기준)
+    if (st.view === 'face') {
+      var hx = P(A.hipC).x;
+      line({ x: hx, y: P(A.head).y - A.headR * st.H * 2 }, { x: hx, y: P(A.ankleC).y + 10 * u },
+        'rgba(61,220,150,0.38)', 1.6 * u, [7 * u, 7 * u]);
+    }
+    // 손 궤적
+    if (st.phases) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.lineWidth = 2 * u;
+      ctx.strokeStyle = 'rgba(255,209,102,0.35)';
+      ctx.setLineDash([5 * u, 5 * u]);
+      var started = false;
+      for (var i = 0; i <= st.cur; i++) {
+        var fr = st.frames[i];
+        if (!fr || !fr.d) continue;
+        var p = P(fr.d.wrist);
+        if (!started) { ctx.moveTo(p.x, p.y); started = true; }
+        else ctx.lineTo(p.x, p.y);
+      }
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
+
+  function drawPlaneLayer(d, A, m) {
+    if (!st.phases) return;
+    if (st.view !== 'dtl') return;
+    if (st.cur < st.phases.top - 2 || st.cur > st.phases.impact + 4) return;
+    var u = S();
+    var T = st.frames[st.phases.top] && st.frames[st.phases.top].d;
+    var Dp = st.frames[st.phases.downswing] && st.frames[st.phases.downswing].d;
+    if (!T || !Dp) return;
+    var aBack = Math.atan2(T.wrist.y - T.sh.y, T.wrist.x - T.sh.x);
+    var aDown = Math.atan2(Dp.wrist.y - Dp.sh.y, Dp.wrist.x - Dp.sh.x);
+    var o = P(T.sh);
+    var rBack = Math.sqrt(Math.pow(T.wrist.x - T.sh.x, 2) + Math.pow(T.wrist.y - T.sh.y, 2)) * st.H;
+
+    // 플레인 콘(두 라인 사이 영역)
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(o.x, o.y);
+    var rr = Math.max(rBack * 0.95, 80 * u);
+    ctx.arc(o.x, o.y, rr, Math.min(aBack, aDown), Math.max(aBack, aDown));
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(90,169,255,0.10)';
+    ctx.fill();
+    ctx.restore();
+
+    function planeLine(ang, color, dash) {
+      var L = Math.max(rBack * 1.15, 95 * u);
+      line(o, { x: o.x + Math.cos(ang) * L, y: o.y + Math.sin(ang) * L }, color, 1.7 * u, dash);
+      line(o, { x: o.x - Math.cos(ang) * L * 0.18, y: o.y - Math.sin(ang) * L * 0.18 }, color, 1.7 * u, dash);
+    }
+    planeLine(aBack, 'rgba(61,220,150,0.5)', [8 * u, 6 * u]);
+    planeLine(aDown, 'rgba(255,162,72,0.7)', [8 * u, 6 * u]);
+
+    // 편차 호
+    if (st.cur >= st.phases.top) {
+      var a0 = Math.min(aBack, aDown), a1 = Math.max(aBack, aDown);
+      if (a1 - a0 > 0.02) {
+        arcAt(o, rBack * 1.02, a0, a1, 'rgba(255,100,125,0.9)', 2.4 * u);
+      }
+      if (st.ov.labels) {
+        var midA = (aBack + aDown) / 2;
+        var lx = o.x + Math.cos(midA) * (rBack * 0.72), ly = o.y + Math.sin(midA) * (rBack * 0.72);
+        var diff = m.v.planeDiff;
+        tag('플레인 ' + (diff >= 0 ? '+' : '') + C.r1(diff) + '°', lx, ly,
+          Math.abs(diff) > TH.planeDiff ? '#ff8b9e' : '#8ff0cf', 'center');
+      }
+    }
+  }
+
+  function drawCorrectionLayer(d, A, m) {
+    var u = S();
+    var live = m.live ? m.live(d) : null;
+    var cmPerUnit = 45 / Math.max(0.02, A.shWidth);
+
+    /* --- 머리 --- */
+    var hA = P(A.head), hN = P(d.head);
+    var headCm = live ? Math.sqrt(live.headLat * live.headLat + live.headUp * live.headUp + (live.headFwd || 0) * (live.headFwd || 0))
+      : Math.sqrt(Math.pow(d.head.x - A.head.x, 2) + Math.pow(d.head.y - A.head.y, 2)) * cmPerUnit;
+    if (headCm > 2) {
+      var col = headCm > TH.headDrift ? '#ff647d' : '#ffc24b';
+      arrow(hA, hN, col, 2.4 * u);
+      if (st.ov.labels) tag('머리 ' + headCm.toFixed(1) + 'cm', hN.x + A.headR * st.H * 1.25 + 6 * u, hN.y + 2 * u, col, 'left');
+    }
+
+    /* --- 척추 각도 --- */
+    var spineNow = d.spineAngle2, spineRef = A.spineAngle2;
+    var dSpine = live ? (live.bend - m.v.spineBendA) : (spineNow - spineRef);
+    if (Math.abs(dSpine) > 2.5) {
+      var hp = P(d.hipC);
+      var a0 = (-90 + spineRef) * Math.PI / 180, a1 = (-90 + spineNow) * Math.PI / 180;
+      var rr = Math.sqrt(Math.pow(d.sh.x - d.hipC.x, 2) + Math.pow(d.sh.y - d.hipC.y, 2)) * st.H * 0.9;
+      var c2 = Math.abs(dSpine) > TH.spineChange ? '#ff647d' : '#ffc24b';
+      arcAt(hp, rr, Math.min(a0, a1), Math.max(a0, a1), c2, 2.2 * u);
+      if (st.ov.labels) tag('스파인 ' + (dSpine >= 0 ? '+' : '') + C.r1(dSpine) + '°', hp.x + 10 * u, hp.y - 14 * u, c2, 'left');
+    }
+
+    /* --- 골반 좌우 --- */
+    var hipCm = live ? live.hipLat : (d.hipC.x - A.hipC.x) * cmPerUnit;
+    if (Math.abs(hipCm) > 2) {
+      var y = P(d.hipC).y + 16 * u;
+      var x0 = P(A.hipC).x, x1 = P(d.hipC).x;
+      var c3 = Math.abs(hipCm) > TH.sway ? '#ff647d' : '#ffc24b';
+      arrow({ x: x0, y: y }, { x: x1, y: y }, c3, 2.2 * u);
+      line({ x: x0, y: y - 26 * u }, { x: x0, y: y + 6 * u }, rgba(c3, 0.5), 1.4 * u, [4 * u, 4 * u]);
+      if (st.ov.labels) tag('골반 ' + Math.abs(hipCm).toFixed(1) + 'cm', x1 + 10 * u, y, c3, 'left');
+    }
+
+    /* --- 오버 더 톱 / 얕은 궤도 --- */
+    if ((m.v.ott || m.v.shallow) && st.view === 'dtl') {
+      if (st.ov.labels && st.cur >= st.phases.top && st.cur <= st.phases.impact + 6) {
+        tag(m.v.ott ? '오버 더 톱 경향' : '얕은 다운스윙', st.W * 0.5, st.H * 0.075, '#ff8b9e', 'center');
+      }
+    }
+
+    /* --- 임팩트: 리드팔 / 체중 --- */
+    var nearImpact = Math.abs(st.cur - st.phases.impact) <= 2;
+    var lead = m.lead;
+    if (nearImpact) {
+      var sh = P(d[lead + 'Sh']), el2 = P(d[lead + 'El']), wr = P(d[lead + 'Wr']);
+      var ang2 = C.helpers.angleAt2(d[lead + 'Sh'], d[lead + 'El'], d[lead + 'Wr']);
+      var ang = (live && live.elbowLead) ? live.elbowLead : ang2;
+      var ca = ang < TH.leadElbow ? '#ff647d' : '#8ff0cf';
+      arcAt(el2, 24 * u, Math.atan2(sh.y - el2.y, sh.x - el2.x), Math.atan2(wr.y - el2.y, wr.x - el2.x), ca, 2.2 * u);
+      if (st.ov.labels) tag('리드팔 ' + Math.round(ang) + '°', el2.x + 12 * u, el2.y, ca, 'left');
+
+      // 체중 위치
+      var tA = P(d[m.trail + 'An']), lA = P(d[lead + 'An']);
+      line(tA, lA, 'rgba(140,200,255,0.45)', 2 * u, []);
+      var wt = m.v.wI;
+      var wx = tA.x + (lA.x - tA.x) * wt, wy = tA.y;
+      circle({ x: wx, y: wy }, 7 * u, '#ffffff', 'rgba(47,224,173,0.95)', 1.6 * u, []);
+      if (st.ov.labels) tag('체중 ' + Math.round(wt * 100) + '%', wx, wy + 22 * u, wt < TH.weightMin ? '#ff8b9e' : '#8ff0cf', 'center');
+    }
+
+    /* --- 피니시 밸런스 --- */
+    var nearFinish = Math.abs(st.cur - st.phases.finish) <= 3;
+    if (nearFinish) {
+      var lAn = P(d[lead + 'An']);
+      line({ x: lAn.x, y: lAn.y }, { x: lAn.x, y: P(d.head).y }, 'rgba(61,220,150,0.55)', 1.6 * u, [6 * u, 6 * u]);
+      var hp2 = P(d.hipC);
+      if (Math.abs(hp2.x - lAn.x) > 8 * u) {
+        arrow({ x: hp2.x, y: hp2.y }, { x: lAn.x, y: hp2.y }, '#ffc24b', 2.2 * u);
+        if (st.ov.labels) tag('피니시 ' + Math.abs(m.v.finHip).toFixed(1) + 'cm', (hp2.x + lAn.x) / 2, hp2.y - 16 * u, '#ffc24b', 'center');
+      }
+    }
+  }
+
+  function drawAngles(d, A, m) {
+    var u = S();
+    // 손 높이 (어드레스 대비)
+    var handNow = P(d.wrist);
+    circle(handNow, 3.4 * u, null, 'rgba(255,209,102,0.9)', 0, []);
+    // 현재 구간 이름
+    if (st.phases) {
+      var best = PHASES[0], bd = 1e9;
+      for (var i = 0; i < PHASES.length; i++) {
+        var dd = Math.abs(st.phases[PHASES[i]] - st.cur);
+        if (dd < bd) { bd = dd; best = PHASES[i]; }
+      }
+      if (bd <= 3) tag(KO[best], st.W - 12 * u, 26 * u, '#9fe9d4', 'right');
+    }
+  }
+
+  function drawScene() {
+    if (!ctx) return;
+    var W = st.W, H = st.H;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, W, H);
+    if (st.mode === 'video') {
+      if (vid && vid.readyState >= 2) {
+        try { ctx.drawImage(vid, 0, 0, W, H); } catch (e) { ctx.fillStyle = '#05080f'; ctx.fillRect(0, 0, W, H); }
+      } else {
+        ctx.fillStyle = '#05080f';
+        ctx.fillRect(0, 0, W, H);
+      }
+    } else if (st.mode === 'demo') {
+      drawDemoBG(W, H);
+    } else {
+      ctx.fillStyle = '#05080f';
+      ctx.fillRect(0, 0, W, H);
+      return;
+    }
+    if (!st.frames.length || !st.phases) return;
+    var f = st.frames[st.cur];
+    var A = st.frames[st.phases.address];
+    if (!f || !f.d || !A || !A.d) return;
+    var m = st.analysis;
+    if (!m) return;
+    if (st.ov.reference) drawReferenceLayer(f.d, A.d, m);
+    if (st.ov.reference) drawPlaneLayer(f.d, A.d, m);
+    if (st.ov.skeleton) drawSkeleton(f.d);
+    if (st.ov.correction) drawCorrectionLayer(f.d, A.d, m);
+    if (st.ov.labels) drawAngles(f.d, A.d, m);
+  }
+
+  /* ------------------------------ 부트 ------------------------------ */
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+
+  // 테스트/디버깅용
+  window.__golf = {
+    st: st, init: init, analysis: function () { return st.analysis; },
+    setView: setView, setHand: setHand, startDemo: startDemo, scrubTo: scrubTo,
+    drawScene: drawScene, assignPhase: assignPhase, exportShot: exportShot,
+    paintTabs: paintTabs, analyze: analyze
+  };
+})();
+</script>
+</body>
+</html>
