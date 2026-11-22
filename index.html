@@ -346,6 +346,52 @@ footer { text-align: center; font-size: 10.5px; color: #4b5a74; padding: 6px 0 1
 }
 .cmp-save .btn { width: 100%; }
 .cmp-hint { margin: 0; font-size: 10.5px; line-height: 1.55; color: var(--dim); }
+
+/* ---------- 내 스윙 보관함 ---------- */
+.hist { margin-top: 10px; }
+.hist-toggle {
+  display: flex; align-items: center; gap: 7px; width: 100%;
+  appearance: none; border: 1px solid var(--line2); background: #0c1626;
+  color: var(--text); font: inherit; font-size: 12.5px; font-weight: 800;
+  border-radius: 12px; padding: 0 12px; min-height: 42px; cursor: pointer; text-align: left;
+}
+.hist-toggle .hi { font-size: 14px; line-height: 1; }
+.hist-toggle em {
+  font-style: normal; font-size: 11px; font-weight: 800; color: #062b22;
+  background: var(--accent); border-radius: 999px; padding: 2px 8px;
+}
+.hist-toggle .chev { margin-left: auto; color: var(--dim); font-size: 11px; transition: transform .15s ease; }
+.hist-toggle.open { background: linear-gradient(180deg, #12303c, #0d2027); border-color: #2b6d6a; }
+.hist-toggle.open .chev { transform: rotate(180deg); }
+.hist-save { margin: 7px 2px 0; font-size: 11px; font-weight: 700; color: #7fe0c4; line-height: 1.45; }
+.hist-save.warn { color: var(--warn); }
+.hist-save[hidden] { display: none; }
+.hist-panel { margin-top: 8px; padding: 8px; border: 1px solid var(--line); border-radius: 12px; background: #0a1220; }
+.hist-panel[hidden] { display: none; }
+.hist-empty { margin: 3px 2px; font-size: 11.5px; line-height: 1.5; color: var(--muted); }
+.hist-empty[hidden] { display: none; }
+.hist-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.hist-item {
+  display: flex; align-items: stretch; gap: 0; overflow: hidden;
+  border: 1px solid var(--line); border-radius: 11px; background: #0d1727;
+}
+.hist-item.on { border-color: #2f7d67; background: #0f201c; }
+.hist-item.armed { border-color: var(--bad); }
+.hist-open {
+  flex: 1; min-width: 0; text-align: left; appearance: none; border: 0; background: transparent;
+  color: inherit; font: inherit; padding: 8px 10px; cursor: pointer;
+  display: flex; flex-direction: column; gap: 2px;
+}
+.hist-open .hn { font-size: 12.5px; font-weight: 800; color: var(--text); }
+.hist-open .hm { font-size: 10.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.hist-open .hf { font-size: 10px; color: var(--dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+.hist-del {
+  flex: none; appearance: none; border: 0; border-left: 1px solid var(--line);
+  background: #121d2e; color: var(--bad); font: inherit; font-size: 11px; font-weight: 800;
+  padding: 0 10px; cursor: pointer;
+}
+.hist-item.armed .hist-del { background: var(--bad); color: #2b0710; }
+.hist-total { margin: 8px 2px 0; font-size: 10px; color: var(--dim); }
 </style>
 </head>
 <body>
@@ -376,6 +422,18 @@ footer { text-align: center; font-size: 10.5px; color: #4b5a74; padding: 6px 0 1
         </div>
         <label class="btn file">영상 올리기<input id="fileInput" type="file" accept="video/*" hidden></label>
         <button class="btn" id="demoBtn" type="button">데모 스윙</button>
+      </div>
+
+      <div class="hist">
+        <button class="hist-toggle" id="histToggle" type="button" aria-expanded="false" aria-controls="histPanel">
+          <span class="hi" aria-hidden="true">🗂</span><b>내 스윙 보관함</b><em id="histCount">0</em><span class="chev" aria-hidden="true">▾</span>
+        </button>
+        <p class="hist-save" id="histSave" hidden></p>
+        <div class="hist-panel" id="histPanel" hidden>
+          <p class="hist-empty" id="histEmpty">아직 보관한 스윙이 없습니다. 영상을 올려 분석하면 자동으로 보관됩니다.</p>
+          <ul class="hist-list" id="histList"></ul>
+          <p class="hist-total" id="histTotal">이 브라우저(기기)에만 저장됩니다 · 최근 15개까지 보관</p>
+        </div>
       </div>
 
       <div class="trim" id="trimRow" hidden>
@@ -1872,6 +1930,8 @@ var GolfPros = (function () {
     analysis: null, W: 640, H: 853, aspect: 0.75,
     demoScene: null, busy: false, analyzing: false, engine: 'idle', trim: { a: 0, b: 0, dur: 0 },
     seekToken: 0,
+    srcBlob: null, srcBuf: null, srcMime: 'video/mp4', srcName: '',
+    savedId: null, savedAt: 0, hist: [], histConfirm: null, histSuppress: false,
     cmp: { on: false, refId: 'balance', ref: null, k: 0, p: 0, playing: false, saved: [] }
   };
 
@@ -1915,7 +1975,9 @@ var GolfPros = (function () {
       cmpCard: $('cmpCard'), proBtn: $('proBtn'), proSelect: $('proSelect'), proDel: $('proDel'),
       proNote: $('proNote'), cmpA: $('cmpA'), cmpB: $('cmpB'), cmpBTag: $('cmpBTag'),
       cmpPhases: $('cmpPhases'), cmpPlay: $('cmpPlay'), cmpRange: $('cmpRange'), cmpLabel: $('cmpLabel'),
-      cmpTable: $('cmpTable'), proName: $('proName'), proSaveBtn: $('proSaveBtn'), proSaveHint: $('proSaveHint')
+      cmpTable: $('cmpTable'), proName: $('proName'), proSaveBtn: $('proSaveBtn'), proSaveHint: $('proSaveHint'),
+      histToggle: $('histToggle'), histCount: $('histCount'), histSave: $('histSave'),
+      histPanel: $('histPanel'), histEmpty: $('histEmpty'), histList: $('histList'), histTotal: $('histTotal')
     };
     cvs = el.canvas; ctx = cvs.getContext('2d');
     vid = el.video;
@@ -1926,6 +1988,7 @@ var GolfPros = (function () {
     EMPTY_HTML = el.stageEmpty ? el.stageEmpty.innerHTML : '';
     bind();
     initCmp();
+    histInit();
     paintViewHint();
     paintOvs();
     chip('대기', '');
@@ -2011,6 +2074,8 @@ var GolfPros = (function () {
     }
     if (el.cmpPlay) el.cmpPlay.addEventListener('click', cmpPlayToggle);
     if (el.proSaveBtn) el.proSaveBtn.addEventListener('click', saveCurrentAsPro);
+    if (el.histToggle) el.histToggle.addEventListener('click', toggleHist);
+    if (el.histList) el.histList.addEventListener('click', onHistClick);
     window.addEventListener('resize', layoutStage);
     if (window.visualViewport) window.visualViewport.addEventListener('resize', layoutStage);
     if (vid) {
@@ -2045,12 +2110,17 @@ var GolfPros = (function () {
     if (h !== 'left' && h !== 'right') return;
     if (st.hand === h) return;
     st.hand = h;
+    paintHand();
+    if (st.frames.length && st.phases) analyze();
+  }
+
+  function paintHand() {
+    if (!el.handSeg) return;
     var btns = el.handSeg.querySelectorAll('[data-hand]');
     for (var i = 0; i < btns.length; i++) {
-      if (btns[i].getAttribute('data-hand') === h) btns[i].classList.add('on');
+      if (btns[i].getAttribute('data-hand') === st.hand) btns[i].classList.add('on');
       else btns[i].classList.remove('on');
     }
-    if (st.frames.length && st.phases) analyze();
   }
 
   function paintOvs() {
@@ -2140,6 +2210,11 @@ var GolfPros = (function () {
     stopPlay();
     st.mode = 'video'; st.frames = []; st.phases = null; st.analysis = null;
     st.cur = 0; st.demoScene = null;
+    st.srcBlob = file; st.srcBuf = null;
+    st.srcMime = (file && file.type) ? file.type : 'video/mp4';
+    st.srcName = (file && file.name) ? file.name : '';
+    st.savedId = null; st.savedAt = 0;
+    setHistSave('');
     if (EMPTY_HTML) el.stageEmpty.innerHTML = EMPTY_HTML;
     show(el.stageEmpty, false);
     show(el.stageBadge, true); setText(el.stageBadge, '불러오는 중');
@@ -2309,6 +2384,8 @@ var GolfPros = (function () {
     st.mode = 'demo';
     st.busy = false;
     lockUI(false);
+    st.srcBlob = null; st.srcBuf = null; st.savedId = null; st.savedAt = 0;
+    setHistSave('');
     if (EMPTY_HTML) el.stageEmpty.innerHTML = EMPTY_HTML;
     show(el.stageEmpty, false);
     show(el.trimRow, false);
@@ -2346,6 +2423,7 @@ var GolfPros = (function () {
     if (st.mode === 'video') scrubTo(st.cur);
     else { updateFrameUI(); drawScene(); }
     if (st.cmp && st.cmp.on) { renderCmpTable(); drawCompare(); }
+    histQueueSave();
   }
 
   function renderSummary(m) {
@@ -3339,6 +3417,365 @@ var GolfPros = (function () {
     note('저장한 비교 기준 스윙을 삭제했습니다.');
   }
 
+  /* ======================= 내 스윙 보관함 (IndexedDB) =======================
+   * 영상 원본(ArrayBuffer) + 좌표/구간/점수를 IndexedDB 에 보관한다.
+   * localStorage 는 큰 영상 blob 을 담을 수 없어서 IndexedDB 를 쓴다.
+   * 영상은 ArrayBuffer 로 저장하고 불러올 때 new Blob([buf],{type}) 로 되살린다
+   * (iOS Safari 구버전에서도 안전한 방식). 용량이 모자라면 좌표·점수만 보관한다.
+   * ======================================================================== */
+  var IDB_NAME = 'swingcheck.history.v1', IDB_STORE = 'swings', IDB_VER = 1;
+  var HIST_MAX = 15;                       // 최근 15개까지
+  var HIST_MAX_BYTES = 60 * 1024 * 1024;   // 영상 원본 1개 최대 60MB
+  var idbDb = null, idbOpening = null, histChain = null;
+
+  function idbSupported() { return !!(window.indexedDB && window.indexedDB.open); }
+
+  function idbOpen() {
+    if (idbDb) return Promise.resolve(idbDb);
+    if (idbOpening) return idbOpening;
+    idbOpening = new Promise(function (resolve, reject) {
+      if (!idbSupported()) { reject(new Error('indexeddb 없음')); return; }
+      var req;
+      try { req = window.indexedDB.open(IDB_NAME, IDB_VER); } catch (e) { reject(e); return; }
+      req.onupgradeneeded = function () {
+        try {
+          var db = req.result;
+          if (db && db.objectStoreNames && !db.objectStoreNames.contains(IDB_STORE)) {
+            var os = db.createObjectStore(IDB_STORE, { keyPath: 'id' });
+            try { os.createIndex('createdAt', 'createdAt'); } catch (e) {}
+          }
+        } catch (e) {}
+      };
+      req.onsuccess = function () { idbDb = req.result; resolve(idbDb); };
+      req.onerror = function () { reject(req.error || new Error('indexeddb 열기 실패')); };
+      req.onblocked = function () { reject(new Error('indexeddb 대기')); };
+    });
+    idbOpening.then(null, function () { idbOpening = null; });
+    return idbOpening;
+  }
+
+  function idbRun(mode, fn) {
+    return idbOpen().then(function (db) {
+      return new Promise(function (resolve, reject) {
+        var tx, out;
+        try { tx = db.transaction(IDB_STORE, mode); } catch (e) { reject(e); return; }
+        tx.oncomplete = function () {
+          try { resolve(out && typeof out === 'object' && ('result' in out) ? out.result : out); }
+          catch (e) { resolve(undefined); }
+        };
+        tx.onerror = function () { reject(tx.error || new Error('저장 실패')); };
+        tx.onabort = function () { reject(tx.error || new Error('저장 중단')); };
+        try { out = fn(tx.objectStore(IDB_STORE)); }
+        catch (e) { try { tx.abort(); } catch (e2) {} reject(e); }
+      });
+    });
+  }
+
+  function blobToBuffer(blob) {
+    return new Promise(function (resolve, reject) {
+      if (!blob) { resolve(null); return; }
+      try {
+        if (window.FileReader) {
+          var fr = new FileReader();
+          fr.onload = function () { resolve(fr.result); };
+          fr.onerror = function () { reject(fr.error || new Error('읽기 실패')); };
+          fr.readAsArrayBuffer(blob);
+        } else if (blob.arrayBuffer) {
+          blob.arrayBuffer().then(resolve, reject);
+        } else { resolve(null); }
+      } catch (e) { reject(e); }
+    });
+  }
+
+  function pad2(n) { return (n < 10 ? '0' : '') + n; }
+  function stamp(ms) {
+    var d = new Date(ms || Date.now());
+    return (d.getMonth() + 1) + '/' + d.getDate() + ' ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+  }
+  function histNameOf(rec) {
+    var score = (rec.report && rec.report.overall != null) ? ' · ' + rec.report.overall + '점' : '';
+    return stamp(rec.createdAt) + ' · ' + (rec.view === 'face' ? '정면' : '측면') + score;
+  }
+  function fmtBytes(n) {
+    if (!n) return '';
+    if (n >= 1024 * 1024 * 1024) return (n / (1024 * 1024 * 1024)).toFixed(1) + 'GB';
+    if (n >= 1024 * 1024) return Math.round(n / (1024 * 1024)) + 'MB';
+    return Math.max(1, Math.round(n / 1024)) + 'KB';
+  }
+  function copyRec(rec, buf) {
+    var o = {};
+    for (var k in rec) if (Object.prototype.hasOwnProperty.call(rec, k)) o[k] = rec[k];
+    if (buf) o.video = buf;
+    o.noVideo = !buf;
+    return o;
+  }
+
+  function histRecord() {
+    if (!st.frames.length || !st.phases || !st.analysis) return null;
+    var now = Date.now();
+    var rec = {
+      id: st.savedId || ('h' + now + '-' + Math.random().toString(36).slice(2, 6)),
+      createdAt: st.savedAt || now,
+      updatedAt: now,
+      view: st.view, hand: st.hand,
+      aspect: st.W / st.H, W: st.W, H: st.H,
+      frames: packFrames(st.frames),
+      phases: {
+        address: st.phases.address, top: st.phases.top, downswing: st.phases.downswing,
+        impact: st.phases.impact, follow: st.phases.follow, finish: st.phases.finish
+      },
+      report: {
+        overall: st.analysis.overall, grade: st.analysis.grade, headline: st.analysis.headline || ''
+      },
+      mimeType: st.srcMime || 'video/mp4',
+      fileName: st.srcName || '',
+      dur: st.frames.length ? st.frames[st.frames.length - 1].t : 0
+    };
+    rec.name = histNameOf(rec);
+    return rec;
+  }
+
+  function histQueueSave() {
+    if (st.histSuppress || st.mode !== 'video') return;
+    if (!st.frames.length || !st.phases || !st.analysis) return;
+    histSaveNow().then(null, function () {});
+  }
+
+  function histSaveNow() {
+    if (!idbSupported() || st.mode !== 'video') return Promise.resolve(null);
+    var rec = histRecord();
+    if (!rec) return Promise.resolve(null);
+    var srcBlob = st.srcBlob, srcBuf = st.srcBuf;
+    if (!histChain) histChain = Promise.resolve();
+    var run = histChain.then(function () { return histPersist(rec, srcBlob, srcBuf); });
+    histChain = run.then(function () {}, function () {});
+    return run;
+  }
+
+  function histPersist(rec, srcBlob, srcBuf) {
+    var buf = srcBuf || null;
+    var warning = '';
+    var ready = (buf && typeof buf.byteLength === 'number')
+      ? Promise.resolve(buf)
+      : blobToBuffer(srcBlob).then(null, function () { return null; });
+    return ready.then(function (b) {
+      buf = b && typeof b.byteLength === 'number' ? b : null;
+      if (buf && buf.byteLength > HIST_MAX_BYTES) { buf = null; warning = 'size'; }
+      if (st.srcBlob === srcBlob && buf) st.srcBuf = buf;
+      return idbRun('readwrite', function (os) { return os.put(copyRec(rec, buf)); }).then(null, function (e) {
+        if (!buf) throw e;
+        warning = 'quota';                 // 용량 부족 → 영상 원본 없이 좌표·점수만
+        return idbRun('readwrite', function (os) { return os.put(copyRec(rec, null)); });
+      });
+    }).then(function () {
+      st.savedId = rec.id; st.savedAt = rec.createdAt;
+      return pruneHist(rec.id).then(function () { return histLoad(true); });
+    }).then(function () {
+      var why = warning === 'quota'
+        ? '저장 공간이 부족해 영상 원본은 빼고 좌표·점수만 보관했습니다.'
+        : (warning === 'size' ? '영상이 ' + fmtBytes(HIST_MAX_BYTES) + '를 넘어 원본은 빼고 좌표·점수만 보관했습니다.' : '');
+      setHistSave('보관함에 저장됨 · ' + rec.name + (why ? ' (' + why + ')' : ''), why ? 'warn' : '');
+      return rec.id;
+    }, function () {
+      setHistSave('보관함에 저장하지 못했습니다. 저장 공간을 확인해 주세요.', 'warn');
+      return null;
+    });
+  }
+
+  function pruneHist(keepId) {
+    return idbRun('readonly', function (os) { return os.getAll(); }).then(function (all) {
+      all = all || [];
+      if (all.length <= HIST_MAX) return;
+      all.sort(function (a, b) { return (b.createdAt || 0) - (a.createdAt || 0); });
+      var chain = Promise.resolve();
+      for (var i = HIST_MAX; i < all.length; i++) {
+        if (all[i].id === keepId) continue;
+        (function (id) {
+          chain = chain.then(function () {
+            return idbRun('readwrite', function (os) { return os['delete'](id); }).then(null, function () {});
+          });
+        })(all[i].id);
+      }
+      return chain;
+    }, function () {});
+  }
+
+  function histLoad(paint) {
+    return idbRun('readonly', function (os) { return os.getAll(); }).then(function (all) {
+      all = all || [];
+      all.sort(function (a, b) { return (b.createdAt || 0) - (a.createdAt || 0); });
+      st.hist = all;
+      if (paint !== false) paintHist();
+      return all;
+    }, function () {
+      st.hist = [];
+      if (paint !== false) paintHist();
+      return [];
+    });
+  }
+
+  function histInit() {
+    if (!idbSupported()) {
+      if (el.histCount) setText(el.histCount, '0');
+      if (el.histTotal) setText(el.histTotal, '이 브라우저에서는 보관함을 쓸 수 없습니다. 영상은 분석한 뒤 다시 올려야 합니다.');
+      return;
+    }
+    histLoad(true);
+  }
+
+  function setHistSave(text, cls) {
+    if (!el.histSave) return;
+    if (!text) { show(el.histSave, false); setText(el.histSave, ''); return; }
+    show(el.histSave, true);
+    setText(el.histSave, text);
+    if (el.histSave.classList) {
+      if (cls) el.histSave.classList.add(cls); else el.histSave.classList.remove('warn');
+    }
+  }
+
+  function paintHist() {
+    if (el.histCount) setText(el.histCount, String(st.hist.length));
+    if (!el.histList) return;
+    var html = '', bytes = 0;
+    for (var i = 0; i < st.hist.length; i++) {
+      var r = st.hist[i];
+      if (r.video && r.video.byteLength) bytes += r.video.byteLength;
+      var meta = [stamp(r.createdAt), r.view === 'face' ? '정면' : '측면', r.hand === 'left' ? '왼손' : '오른손'];
+      meta.push((r.report && r.report.overall != null) ? (r.report.overall + '점 ' + (r.report.grade || '')) : '점수 없음');
+      if (r.dur) meta.push(r.dur.toFixed(1) + '초');
+      if (!r.video) meta.push('영상 원본 없음');
+      var armed = (r.id === st.histConfirm);
+      html += '<li class="hist-item' + (r.id === st.savedId ? ' on' : '') + (armed ? ' armed' : '') + '">' +
+        '<button class="hist-open" type="button" data-open="' + escapeHtml(r.id) + '">' +
+          '<span class="hn">' + escapeHtml(histNameOf(r)) + '</span>' +
+          '<span class="hm">' + escapeHtml(meta.join(' · ')) + '</span>' +
+          (r.fileName ? '<span class="hf">' + escapeHtml(r.fileName) + '</span>' : '') +
+        '</button>' +
+        '<button class="hist-del" type="button" data-del="' + escapeHtml(r.id) + '">' + (armed ? '정말 삭제' : '삭제') + '</button>' +
+        '</li>';
+    }
+    el.histList.innerHTML = html;
+    show(el.histEmpty, st.hist.length === 0);
+    if (el.histTotal) {
+      setText(el.histTotal, '이 브라우저(기기)에만 저장됩니다 · 최근 ' + HIST_MAX + '개까지 보관' +
+        (bytes ? ' · 영상 ' + fmtBytes(bytes) : ''));
+    }
+  }
+
+  function toggleHist() {
+    if (!el.histPanel) return;
+    var open = el.histPanel.hasAttribute('hidden');
+    show(el.histPanel, open);
+    if (el.histToggle) {
+      el.histToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+      if (open) el.histToggle.classList.add('open'); else el.histToggle.classList.remove('open');
+    }
+    if (open) histLoad(true);
+  }
+
+  function onHistClick(e) {
+    var t = e && e.target;
+    var del = (t && t.closest) ? t.closest('[data-del]') : null;
+    if (del) { histDelete(del.getAttribute('data-del')); return; }
+    var op = (t && t.closest) ? t.closest('[data-open]') : null;
+    if (op) { st.histConfirm = null; openHist(op.getAttribute('data-open')); }
+  }
+
+  function histDelete(id) {
+    if (!id) return;
+    if (st.histConfirm !== id) {
+      st.histConfirm = id;
+      paintHist();
+      note('한 번 더 누르면 보관함에서 완전히 삭제됩니다.');
+      return;
+    }
+    st.histConfirm = null;
+    idbRun('readwrite', function (os) { return os['delete'](id); }).then(function () {
+      if (st.savedId === id) { st.savedId = null; st.savedAt = 0; setHistSave(''); }
+      return histLoad(true);
+    }).then(function () {
+      note('보관함에서 삭제했습니다.');
+    }, function () {
+      note('삭제하지 못했습니다. 잠시 후 다시 시도해 주세요.');
+      paintHist();
+    });
+  }
+
+  function openHist(id) {
+    var rec = null, i;
+    for (i = 0; i < st.hist.length; i++) if (st.hist[i].id === id) rec = st.hist[i];
+    if (!rec) {
+      // 목록이 아직 로드되지 않았으면 한 번 불러와서 다시 시도
+      histLoad(false).then(function (all) {
+        for (var j = 0; j < all.length; j++) if (all[j].id === id) { openHist(id); return; }
+        note('보관함 항목을 찾을 수 없습니다.');
+      });
+      return false;
+    }
+    if (st.busy || st.analyzing) { note('분석이 끝난 뒤 보관함을 열 수 있습니다.'); return false; }
+    stopPlay();
+    st.histSuppress = true;
+    try {
+      st.mode = 'video';
+      st.demoScene = null;
+      st.frames = []; st.phases = null; st.analysis = null; st.cur = 0;
+      if (EMPTY_HTML) el.stageEmpty.innerHTML = EMPTY_HTML;
+      show(el.stageEmpty, false);
+      st.view = rec.view === 'face' ? 'face' : 'dtl';
+      st.hand = rec.hand === 'left' ? 'left' : 'right';
+      paintViewHint(); paintHand();
+      st.savedId = rec.id; st.savedAt = rec.createdAt;
+      st.srcMime = rec.mimeType || 'video/mp4';
+      st.srcName = rec.fileName || '';
+      st.srcBuf = (rec.video && typeof rec.video.byteLength === 'number') ? rec.video : null;
+      st.srcBlob = null;
+      if (st.srcBuf) {
+        try {
+          var blob = new Blob([st.srcBuf], { type: st.srcMime });
+          st.srcBlob = blob;
+          if (vid && vid.src && vid.src.indexOf('blob:') === 0) URL.revokeObjectURL(vid.src);
+          if (vid) {
+            vid.src = URL.createObjectURL(blob); vid.load();
+            var wantId = rec.id;
+            vid.addEventListener('loadeddata', function onceReady() {
+              vid.removeEventListener('loadeddata', onceReady);
+              if (st.savedId === wantId) drawScene();
+            });
+          }
+        } catch (e) { st.srcBlob = null; }
+      } else if (vid) {
+        try {
+          if (vid.src && vid.src.indexOf('blob:') === 0) URL.revokeObjectURL(vid.src);
+          vid.removeAttribute('src'); vid.load();
+        } catch (e) {}
+      }
+      setStageSize(rec.W || 640, rec.H || 853);
+      st.frames = unpackFrames(rec.frames || [], rec.aspect || (st.W / st.H));
+      st.phases = rec.phases || null;
+      if (!st.frames.length || !st.phases) throw new Error('보관 데이터가 손상되어 열 수 없습니다.');
+      st.cur = st.phases.address;
+      show(el.trimRow, false);
+      setText(el.stageBadge, '보관함 · ' + stamp(rec.createdAt));
+      lockUI(false);
+      analyze();
+      st.histSuppress = false;
+      updateFrameUI();
+      drawScene();
+      paintHist();
+      if (el.histPanel) show(el.histPanel, false);
+      if (el.histToggle) {
+        el.histToggle.classList.remove('open');
+        el.histToggle.setAttribute('aria-expanded', 'false');
+      }
+      note('보관함에서 불러왔습니다. 다시 분석하지 않아도 재생·구간 이동·프로 비교를 바로 쓸 수 있습니다.');
+      return true;
+    } catch (e) {
+      st.histSuppress = false;
+      note(e && e.message ? e.message : '보관함 항목을 열지 못했습니다.');
+      return false;
+    }
+  }
+
   /* ------------------------------ 부트 ------------------------------ */
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();
@@ -3349,6 +3786,11 @@ var GolfPros = (function () {
     setView: setView, setHand: setHand, startDemo: startDemo, scrubTo: scrubTo,
     drawScene: drawScene, assignPhase: assignPhase, exportShot: exportShot,
     paintTabs: paintTabs, analyze: analyze,
+    hist: {
+      toggle: toggleHist, open: openHist, del: histDelete, save: histSaveNow, load: histLoad,
+      reload: function () { idbDb = null; idbOpening = null; return histLoad(true); },
+      state: function () { return { list: st.hist, savedId: st.savedId, savedAt: st.savedAt, confirm: st.histConfirm, name: st.hist.length ? histNameOf(st.hist[0]) : '' }; }
+    },
     cmp: {
       on: setCmpOn, select: selectPro, draw: drawCompare, table: renderCmpTable,
       save: saveCurrentAsPro, del: deletePro, play: cmpPlayToggle, stop: stopCmp,
