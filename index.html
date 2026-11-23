@@ -566,6 +566,7 @@ footer { text-align: center; font-size: 10.5px; color: #4b5a74; padding: 6px 0 1
 .traj-legend { display: flex; gap: 10px; padding: 2px 2px 4px; font-size: 9.5px; color: var(--dim); }
 .traj-legend i { display: inline-block; width: 9px; height: 3px; border-radius: 2px; margin-right: 3px; vertical-align: middle; }
 .traj-legend .lg-ref { background: #34d399; }
+.traj-legend .lg-path { background: #e9f0ff; }
 .traj-legend .lg-dev { background: #f97316; }
 .traj-legend .lg-hot { background: #ef4444; }
 .traj-body { display: grid; gap: 8px; }
@@ -3689,7 +3690,7 @@ var GolfPros = (function () {
       if (!p) { prev = null; continue; }
       if (prev) {
         var dv = Math.max(Math.abs(dev[prev.i] || 0), Math.abs(dev[p.i] || 0));
-        var col = prev.i < ph.top ? 'rgba(52,211,153,0.45)' : (dv > hp.tolHardPct ? '#ef4444' : (dv > hp.tolPct ? '#f97316' : '#34d399'));
+        var col = prev.i < ph.top ? 'rgba(233,240,255,0.42)' : (dv > hp.tolHardPct ? '#ef4444' : (dv > hp.tolPct ? '#f97316' : '#e9f0ff'));
         svg += '<line x1="' + pxRound(X(prev)) + '" y1="' + pxRound(Y(prev)) + '" x2="' + pxRound(X(p)) +
           '" y2="' + pxRound(Y(p)) + '" stroke="' + col + '" stroke-width="2.1" stroke-linecap="round"/>';
       }
@@ -3703,7 +3704,7 @@ var GolfPros = (function () {
     });
     svg += '</svg>';
     return '<div class="traj-fig"><div class="figcap">' + escapeHtml(label) + '<em>' + escapeHtml('전체 궤적') + '</em></div>' + svg +
-      '<p class="traj-legend"><span><i class="lg-ref"></i>기준 궤도</span><span><i class="lg-dev"></i>벗어남</span><span><i class="lg-hot"></i>큰 이탈</span></p></div>';
+      '<p class="traj-legend"><span><i class="lg-ref"></i>기준 궤도</span><span><i class="lg-path"></i>내 궤적</span><span><i class="lg-dev"></i>벗어남</span><span><i class="lg-hot"></i>큰 이탈</span></p></div>';
   }
 
   function renderTraj(m) {
