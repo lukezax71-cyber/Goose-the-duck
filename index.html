@@ -4660,10 +4660,8 @@ var GolfPros = (function () {
     }
 
     /* --- 실제 손 궤적 (어드레스 → 현재 프레임, 이후는 흐리게) --- */
-    /* 비교 화면에서는 지금 지나고 있는 구간만 그린다(백스윙 꼬리·아직 안 간 구간은 생략). */
-    var segFrom = cmpSimple
-      ? (st.cur >= ph.follow ? ph.follow : (st.cur >= ph.impact ? ph.impact : ph.top)) - 2
-      : -1;
+    /* 비교 화면에서는 지나온 구간(탑→지금)만 그린다(백스윙 꼬리·아직 안 간 구간은 생략). */
+    var segFrom = cmpSimple ? Math.max(0, ph.top - 2) : -1;
     var from = null;
     for (var i = 0; i < hp.pts.length; i++) {
       var p = hp.pts[i];
