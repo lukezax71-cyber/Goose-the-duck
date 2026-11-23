@@ -442,12 +442,18 @@ footer { text-align: center; font-size: 10.5px; color: #4b5a74; padding: 6px 0 1
 }
 .slot.on .sv { color: #9fe9d4; }
 .slot-hint { margin: 7px 2px 0; font-size: 10.5px; line-height: 1.5; color: var(--dim); }
+.slot-clear {
+  margin-top: 6px; width: 100%; appearance: none; border: 1px dashed var(--line2);
+  background: transparent; color: var(--muted); font: inherit; font-size: 11px; font-weight: 700;
+  border-radius: 10px; padding: 7px 10px; cursor: pointer;
+}
+.slot-clear[hidden] { display: none; }
 
 /* ---------- 두 시점(DTL + Face-on) ---------- */
 .dual-stage { margin-top: 8px; }
 .dual-stage[hidden] { display: none; }
-.dual-pair { display: grid; grid-template-columns: 1fr; gap: 8px; }
-@media (min-width: 620px) { .dual-pair { grid-template-columns: 1fr 1fr; } }
+.dual-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+@media (min-width: 620px) { .dual-pair { grid-template-columns: 1fr 1fr; gap: 8px; } }
 .dual-pane { position: relative; border-radius: 12px; overflow: hidden; border: 1px solid #12202f; background: #04070d; }
 .dual-pane canvas { display: block; width: 100%; height: auto; }
 .dual-edit { margin-top: 10px; padding: 10px; border: 1px dashed var(--line2); border-radius: 12px; background: #0b1321; }
@@ -595,6 +601,7 @@ footer { text-align: center; font-size: 10.5px; color: #4b5a74; padding: 6px 0 1
           <input id="fileB" type="file" accept="video/*" hidden>
         </label>
       </div>
+      <button class="slot-clear" id="clearB" type="button" hidden>정면 영상 빼고 측면만 보기</button>
       <p class="slot-hint" id="slotHint">한 영상만 올리면 그 시점만 분석하고, 두 영상을 올리면 6단계를 맞춰 나란히 재생하며 통합 리포트를 보여 줍니다.</p>
 
       <div class="hist">
@@ -2583,7 +2590,7 @@ var GolfPros = (function () {
       videoB: $('videoB'),
       stageEmpty: $('stageEmpty'), stageBadge: $('stageBadge'),
       fileB: $('fileB'), slotA: $('slotA'), slotB: $('slotB'), slotAName: $('slotAName'), slotBName: $('slotBName'),
-      slotHint: $('slotHint'), dualDemoBtn: $('dualDemoBtn'),
+      slotHint: $('slotHint'), dualDemoBtn: $('dualDemoBtn'), clearB: $('clearB'),
       dualStage: $('dualStage'), dualA: $('dualA'), dualB: $('dualB'), dualPhases: $('dualPhases'),
       dualPlay: $('dualPlay'), dualRange: $('dualRange'), dualLabel: $('dualLabel'),
       dualEdit: $('dualEdit'), editSeg: $('editSeg'), dualFrame: $('dualFrame'), dualFrameLabel: $('dualFrameLabel'),
@@ -2654,6 +2661,7 @@ var GolfPros = (function () {
       if (f) loadSlot('b', f);
     });
     if (el.dualDemoBtn) el.dualDemoBtn.addEventListener('click', startDemoDual);
+    if (el.clearB) el.clearB.addEventListener('click', function () { clearSlotB(); });
     if (el.dualPlay) el.dualPlay.addEventListener('click', dualPlayToggle);
     if (el.dualRange) el.dualRange.addEventListener('input', function () {
       dualScrub((parseInt(el.dualRange.value, 10) || 0) / 100);
@@ -2872,6 +2880,27 @@ var GolfPros = (function () {
     var nameEl = track === 'b' ? el.slotBName : el.slotAName;
     if (box && box.classList) { if (on) box.classList.add('on'); else box.classList.remove('on'); }
     if (nameEl) setText(nameEl, label || '선택 안 함');
+    if (track === 'b' && el.clearB) show(el.clearB, !!on);
+  }
+
+  /** 정면 영상을 빼고 측면만 다시 본다 */
+  function clearSlotB() {
+    if (!st.b.frames.length && !st.b.srcName) return;
+    stopDualPlay();
+    resetTrackB();
+    st.b.srcBlob = null; st.b.srcBuf = null; st.b.srcName = '';
+    if (vidB) {
+      try {
+        if (vidB.src && vidB.src.indexOf('blob:') === 0) URL.revokeObjectURL(vidB.src);
+        vidB.removeAttribute('src'); vidB.load();
+      } catch (e) {}
+    }
+    markSlot('b', '선택 안 함', false);
+    st.dual = false; st.showEdit = false;
+    st.sync.k = 0; st.sync.p = 0;
+    analyze();
+    renderMode(); drawScene();
+    note('정면 영상을 빼고 측면 영상만으로 다시 분석했습니다.');
   }
 
   function resetTrackA() {
@@ -3229,6 +3258,7 @@ var GolfPros = (function () {
     var a = C.computeMetrics(st.frames, st.phases, 'dtl', st.hand);
     var b = C.computeMetrics(st.b.frames, st.b.phases, 'face', st.hand);
     st.analysisA = a; st.analysisB = b;
+    st.b.analysis = b;
     if (!a || !b) {
       var only = a || b;
       st.analysis = only;
