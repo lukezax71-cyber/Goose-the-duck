@@ -1203,7 +1203,7 @@ var GolfCore = (function () {
     var grade = overall >= 86 ? 'A' : (overall >= 72 ? 'B' : (overall >= 58 ? 'C' : 'D'));
     var issues = checks.filter(function (c) { return c.score < 72; }).sort(function (a, b) { return a.score - b.score; });
     var headline = issues.length
-      ? issues[0].label + '이(가) 가장 보완이 필요합니다(' + issues[0].src + ' · ' + issues[0].score + '점)'
+      ? '가장 보완이 필요한 항목은 ' + issues[0].label + '(' + issues[0].src + ' ' + issues[0].score + '점)입니다'
       : '두 시점 모두 균형 잡힌 스윙입니다. 지금 리듬을 유지하세요';
 
     // 통합 계측값 — 항목별로 그 시점의 값을 쓴다
