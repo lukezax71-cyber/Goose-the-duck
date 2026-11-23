@@ -327,8 +327,24 @@ footer { text-align: center; font-size: 10.5px; color: #4b5a74; padding: 6px 0 1
 }
 .cmp-note { margin: 8px 2px 0; font-size: 11px; line-height: 1.6; color: var(--dim); }
 .cmp-sub { margin: 5px 2px 0; font-size: 10.5px; line-height: 1.55; color: var(--dim); }
-.cmp-grid { display: grid; grid-template-columns: 1fr; gap: 8px; margin-top: 10px; }
-@media (min-width: 620px) { .cmp-grid { grid-template-columns: 1fr 1fr; } }
+.cmp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 8px; align-items: start; }
+@media (min-width: 620px) { .cmp-grid { gap: 8px; } }
+.cmp-eye { display: flex; align-items: center; gap: 8px; margin-top: 9px; flex-wrap: wrap; }
+.cmp-legend { display: flex; gap: 4px; flex-wrap: wrap; min-width: 0; flex: 1 1 auto; }
+.cmp-legend[hidden] { display: none; }
+.cmp-legend span {
+  display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;
+  font-size: 10px; font-weight: 700; color: var(--muted);
+  border: 1px solid var(--line); border-radius: 999px; padding: 3px 7px; background: #0b1421;
+}
+.cmp-legend i { width: 12px; height: 3px; border-radius: 2px; display: inline-block; }
+.cmp-legend .lg-spine { background: repeating-linear-gradient(90deg, var(--accent) 0 4px, transparent 4px 7px); }
+.cmp-legend .lg-hip { background: linear-gradient(90deg, var(--accent2), #eaf4ff); }
+.cmp-legend .lg-path { background: linear-gradient(90deg, #eaf4ff 0 55%, #f97316 55% 100%); }
+.cmp-eye #cmpOvBtn { flex: none; min-height: 30px; font-size: 10.5px; padding: 0 9px; margin-left: auto; }
+.cmp-eye-hint { margin: 5px 2px 0; font-size: 10px; line-height: 1.5; color: var(--dim); }
+.cmp-eye-hint[hidden] { display: none; }
+.cmp-h3 { margin: 14px 0 0; font-size: 12px; font-weight: 800; color: var(--muted); }
 .cmp-pane {
   position: relative; border-radius: 12px; overflow: hidden;
   border: 1px solid #12202f; background: #04070d;
@@ -372,6 +388,29 @@ footer { text-align: center; font-size: 10.5px; color: #4b5a74; padding: 6px 0 1
 }
 .cmp-save .btn { width: 100%; }
 .cmp-hint { margin: 0; font-size: 10.5px; line-height: 1.55; color: var(--dim); }
+
+/* 바뀐 점 요약 — 두 영상 아래에서 항목별로 한 줄씩 */
+.cmp-chg { display: grid; gap: 4px; margin-top: 6px; }
+.chg-head { margin: 0 0 1px; font-size: 12px; font-weight: 800; color: var(--text); line-height: 1.45; }
+.chg-sub { margin: 0 0 3px; font-size: 10.5px; line-height: 1.5; color: var(--muted); }
+.chg-row {
+  display: grid; grid-template-columns: 14px minmax(58px, .8fr) 1.4fr 40px; gap: 5px; align-items: center;
+  padding: 6px 8px; border-radius: 9px; background: #0b1421; font-size: 11px;
+}
+.chg-row > span { min-width: 0; }
+.chg-row.head { background: none; padding: 0 8px 1px; font-size: 9.5px; color: var(--dim); font-weight: 700; }
+.chg-row .chg-badge { font-size: 10px; font-weight: 900; text-align: center; color: var(--dim); }
+.chg-row .chg-lab { color: var(--text); font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chg-row.head .chg-lab { color: var(--dim); }
+.chg-row .chg-val { color: var(--muted); font-variant-numeric: tabular-nums; font-size: 10.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.chg-row .chg-score { text-align: right; font-variant-numeric: tabular-nums; font-weight: 800; font-size: 10.5px; color: var(--dim); }
+.chg-row.better .chg-badge, .chg-row.better .chg-score { color: var(--good); }
+.chg-row.worse .chg-badge, .chg-row.worse .chg-score { color: var(--bad); }
+.chg-row.same .chg-lab { color: var(--muted); }
+@media (max-width: 380px) {
+  .chg-row { grid-template-columns: 12px minmax(50px, .9fr) 1.3fr 34px; font-size: 10.5px; }
+  .chg-row .chg-val { font-size: 10px; }
+}
 
 /* ---------- 내 스윙 보관함 ---------- */
 .hist { margin-top: 10px; }
@@ -767,6 +806,16 @@ footer { text-align: center; font-size: 10.5px; color: #4b5a74; padding: 6px 0 1
       <p class="cmp-sub">KLPGA 프로 기준, 저장한 프로 스윙, 그리고 내 스윙 보관함의 과거 내 스윙과 6구간을 맞춰 나란히 비교합니다.</p>
       <p class="cmp-note" id="proNote">기준 스윙을 불러오는 중…</p>
 
+      <div class="cmp-eye">
+        <div class="cmp-legend" id="cmpLegend">
+          <span><i class="lg-spine"></i>스파인각</span>
+          <span><i class="lg-hip"></i>골반 움직임</span>
+          <span><i class="lg-path"></i>스윙 궤도</span>
+        </div>
+        <button class="btn mini ghost" id="cmpOvBtn" type="button" aria-pressed="false">전체 표시</button>
+      </div>
+      <p class="cmp-eye-hint" id="cmpEyeHint">초록 점선 = 어드레스 기준 · 흰 선 = 지금 · 주황·빨강 = 기준에서 벗어난 부분</p>
+
       <div class="cmp-grid">
         <div class="cmp-pane">
           <span class="cmp-tag">내 스윙</span>
@@ -785,7 +834,10 @@ footer { text-align: center; font-size: 10.5px; color: #4b5a74; padding: 6px 0 1
         <span class="fnum" id="cmpLabel">–</span>
       </div>
 
-      <h3>수치 비교</h3>
+      <h3 class="cmp-h3">바뀐 점</h3>
+      <div class="cmp-chg" id="cmpChange"></div>
+
+      <h3 class="cmp-h3">수치 비교</h3>
       <div class="cmp-table" id="cmpTable"></div>
 
       <div class="cmp-save">
@@ -2328,6 +2380,102 @@ var GolfCore = (function () {
     return { d: d, better: better };
   }
 
+  /* ================= 두 스윙의 항목별 변화 요약 =================
+   * 지금 스윙(cur)과 비교 기준(ref — 과거 내 스윙 또는 프로 기준)의 항목을
+   * 나란히 놓고 '무엇이 좋아지고 무엇이 달라졌는지'를 한눈에 읽게 만든다.
+   * 화면과 무관하게 계산만 하므로 DOM 없이 시험할 수 있다.
+   * ============================================================== */
+  var CMP_ITEMS = [
+    { id: 'overall', label: '총점', unit: '점' },
+    { id: 'tempo', label: '템포', unit: ':1' },
+    { id: 'spine', label: '스파인각', unit: '°' },
+    { id: 'clear', label: '골반 클리어', unit: '°' },
+    { id: 'sway', label: '골반 이동', unit: 'cm' },
+    { id: 'pathDown', label: '다운 궤도', unit: '%' },
+    { id: 'release', label: '임팩트 후 궤도', unit: '%' },
+    { id: 'arcFin', label: '피니시 아크', unit: '°' },
+    { id: 'head', label: '머리 흔들림', unit: 'cm' },
+    { id: 'weight', label: '체중 이동', unit: '%' }
+  ];
+  var CMP_TOL = 4;      // 항목 점수 차이가 이보다 작으면 '비슷'으로 본다
+
+  function cmpCheckMap(m) {
+    var out = {}, arr = (m && m.checks) || [];
+    for (var i = 0; i < arr.length; i++) if (arr[i] && arr[i].id) out[arr[i].id] = arr[i];
+    return out;
+  }
+
+  /**
+   * cur(지금) ↔ ref(기준) 항목별 변화.
+   * rows[i] = {id, label, prev, cur, prevScore, curScore, d, verdict, mark}
+   * verdict: better | worse | same — 항목 점수(100점 만점) 차이로 판정한다.
+   */
+  function compareSwings(cur, ref) {
+    if (!cur || !ref) return null;
+    var A = cmpCheckMap(ref), B = cmpCheckMap(cur);
+    var rows = [], i;
+    for (i = 0; i < CMP_ITEMS.length; i++) {
+      var it = CMP_ITEMS[i], a, b, d, verdict;
+      if (it.id === 'overall') {
+        if (!isNum(cur.overall) || !isNum(ref.overall)) continue;
+        a = { value: ref.overall + '점', score: ref.overall };
+        b = { value: cur.overall + '점', score: cur.overall };
+        d = cur.overall - ref.overall;
+        verdict = d > 0 ? 'better' : (d < 0 ? 'worse' : 'same');
+      } else {
+        a = A[it.id]; b = B[it.id];
+        if (!a || !b || !isNum(a.score) || !isNum(b.score)) continue;
+        d = Math.round(b.score - a.score);
+        verdict = d >= CMP_TOL ? 'better' : (d <= -CMP_TOL ? 'worse' : 'same');
+      }
+      rows.push({
+        id: it.id, label: it.label, prev: String(a.value), cur: String(b.value),
+        prevScore: a.score, curScore: b.score, d: d, verdict: verdict,
+        mark: verdict === 'better' ? '▲' : (verdict === 'worse' ? '▼' : '·')
+      });
+    }
+
+    var better = [], worse = [];
+    for (i = 0; i < rows.length; i++) {
+      if (rows[i].id === 'overall') continue;
+      if (rows[i].verdict === 'better') better.push(rows[i]);
+      else if (rows[i].verdict === 'worse') worse.push(rows[i]);
+    }
+    better.sort(function (x, y) { return y.d - x.d; });
+    worse.sort(function (x, y) { return x.d - y.d; });
+
+    var ov = null;
+    for (i = 0; i < rows.length; i++) if (rows[i].id === 'overall') { ov = rows[i]; break; }
+    var dOv = ov ? ov.d : null;
+    var headline;
+    if (ov) {
+      headline = '총점 ' + ov.prevScore + ' → ' + ov.curScore + '점';
+      if (dOv) headline += ' (' + (dOv > 0 ? '+' : '−') + Math.abs(dOv) + '점)';
+    } else headline = '항목 비교';
+    if (better.length) headline += ' · 좋아짐 ' + better.length + '개';
+    if (worse.length) headline += ' · 주의 ' + worse.length + '개';
+    if (!better.length && !worse.length && rows.length) headline += ' · 큰 변화 없음';
+
+    var detail, parts = [];
+    if (!rows.length) {
+      detail = '두 스윙의 항목 값을 계산할 수 없습니다.';
+    } else {
+      if (better.length) {
+        parts.push('가장 좋아진 항목: ' + better[0].label + ' (' + better[0].prev + ' → ' + better[0].cur + ')');
+      }
+      if (worse.length) {
+        parts.push('가장 나빠진 항목: ' + worse[0].label + ' (' + worse[0].prev + ' → ' + worse[0].cur + ')');
+      }
+      detail = parts.length ? parts.join(' · ') : '항목 점수가 기준과 거의 같습니다.';
+    }
+
+    return {
+      rows: rows, better: better, worse: worse,
+      same: rows.length - better.length - worse.length - (ov ? 1 : 0),
+      headline: headline, detail: detail, dOverall: dOv
+    };
+  }
+
   /**
    * 한 사람의 날짜별 추이.
    * entries: [{id, golfer, createdAt, overall, tempoRatio, metrics:{plane,xf,spine,head,weight}}]
@@ -2487,6 +2635,9 @@ var GolfCore = (function () {
     fmtDayShort: fmtDayShort,
     bandDist: bandDist,
     metricTrend: metricTrend,
+    CMP_ITEMS: CMP_ITEMS,
+    CMP_TOL: CMP_TOL,
+    compareSwings: compareSwings,
     buildTrend: buildTrend,
     chartLayout: chartLayout,
     phaseCoaching: phaseCoaching,
@@ -2847,7 +2998,7 @@ var GolfPros = (function () {
     golfer: C.DEFAULT_GOLFER, golfers: [], histFilter: null, trendKey: 'overall',
     dual: false, analysisA: null, analysisB: null, b: null, editTrack: 'a', showEdit: false,
     sync: { k: 0, p: 0, playing: false, timer: 0, token: 0 },
-    cmp: { on: false, refId: 'balance', ref: null, k: 0, p: 0, playing: false, saved: [] }
+    cmp: { on: false, refId: 'balance', ref: null, k: 0, p: 0, playing: false, simple: true, saved: [] }
   };
 
   /** 시점별 트랙(정면) 기본 상태 — 측면은 기존 st 를 그대로 쓴다 */
@@ -2909,6 +3060,8 @@ var GolfPros = (function () {
       proNote: $('proNote'), cmpA: $('cmpA'), cmpB: $('cmpB'), cmpBTag: $('cmpBTag'),
       cmpPhases: $('cmpPhases'), cmpPlay: $('cmpPlay'), cmpRange: $('cmpRange'), cmpLabel: $('cmpLabel'),
       cmpTable: $('cmpTable'), proName: $('proName'), proSaveBtn: $('proSaveBtn'), proSaveHint: $('proSaveHint'),
+      cmpLegend: $('cmpLegend'), cmpOvBtn: $('cmpOvBtn'), cmpChange: $('cmpChange'),
+      cmpEyeHint: $('cmpEyeHint'),
       histToggle: $('histToggle'), histCount: $('histCount'), histSave: $('histSave'),
       histPanel: $('histPanel'), histEmpty: $('histEmpty'), histList: $('histList'), histTotal: $('histTotal'),
       histFilter: $('histFilter'), histNewRow: $('histNewRow'), histNewInput: $('histNewInput'), histNewSave: $('histNewSave'),
@@ -3035,6 +3188,7 @@ var GolfPros = (function () {
       });
     }
     if (el.cmpPlay) el.cmpPlay.addEventListener('click', cmpPlayToggle);
+    if (el.cmpOvBtn) el.cmpOvBtn.addEventListener('click', function () { setCmpSimple(!(st.cmp.simple !== false)); });
     if (el.proSaveBtn) el.proSaveBtn.addEventListener('click', saveCurrentAsPro);
     if (el.histToggle) el.histToggle.addEventListener('click', toggleHist);
     if (el.histList) el.histList.addEventListener('click', onHistClick);
@@ -3046,6 +3200,7 @@ var GolfPros = (function () {
     if (el.golferNewSave) el.golferNewSave.addEventListener('click', function () { addGolferFrom(el.golferNewInput, el.golferNewRow); });
     if (el.histNewSave) el.histNewSave.addEventListener('click', function () { addGolferFrom(el.histNewInput, el.histNewRow); });
     window.addEventListener('resize', layoutStage);
+    window.addEventListener('resize', function () { if (st.cmp && st.cmp.on) drawCompare(); });
     if (window.visualViewport) window.visualViewport.addEventListener('resize', layoutStage);
     if (vid) {
       vid.addEventListener('ended', function () { if (st.playing) stopPlay(); });
@@ -3575,7 +3730,7 @@ var GolfPros = (function () {
     paintTabs();
     if (st.mode === 'video') scrubTo(st.cur);
     else { updateFrameUI(); drawScene(); }
-    if (st.cmp && st.cmp.on) { renderCmpTable(); drawCompare(); }
+    if (st.cmp && st.cmp.on) { renderCmpTable(); renderCmpChange(); drawCompare(); }
     histQueueSave();
   }
 
@@ -3605,7 +3760,7 @@ var GolfPros = (function () {
     renderMode();
     updateDualUI();
     drawDual();
-    if (st.cmp && st.cmp.on) { renderCmpTable(); drawCompare(); }
+    if (st.cmp && st.cmp.on) { renderCmpTable(); renderCmpChange(); drawCompare(); }
     histQueueSave();
   }
 
@@ -4204,6 +4359,11 @@ var GolfPros = (function () {
   function S() { return st.H / 853; }          // 크기 스케일
   function P(p) { return { x: p.x * st.H, y: p.y * st.H }; } // 높이 단위 → 픽셀
 
+  /* 비교 화면은 두 영상을 나란히 놓아 캔버스가 좁게 보인다.
+     같은 화면에서 그린 선이 실제로 몇 px 로 보이는지에 맞춰 굵기를 키운다. */
+  var cmpSimple = false, cmpMul = 1;
+  function pwMul() { return cmpSimple ? (1 + (cmpMul - 1) * 0.55) : 1; }
+
   function rgba(hex, a) {
     var h = hex.replace('#', '');
     var r = parseInt(h.substring(0, 2), 16), g = parseInt(h.substring(2, 4), 16), b = parseInt(h.substring(4, 6), 16);
@@ -4461,7 +4621,7 @@ var GolfPros = (function () {
   /* 기준 궤도 통로: 두 기준점을 잇는 직선 + 허용 폭(초록 반투명 띠) */
   function drawCorridor(a, b, tolPx, i0, i1) {
     if (!a || !b || st.cur < i0 - 1) return;
-    var u = S();
+    var u = S() * pwMul();
     var pa = pathPx(a), pb = pathPx(b);
     var dx = pb.x - pa.x, dy = pb.y - pa.y, L = Math.sqrt(dx * dx + dy * dy);
     if (L < 1) return;
@@ -4475,6 +4635,7 @@ var GolfPros = (function () {
     var hp = m && m.path;
     if (!hp || !hp.pts || !hp.ref || !st.phases) return;
     var u = S(), H = st.H, ph = st.phases;
+    var uw = u * pwMul();                       // 비교 화면에서 좌우로 좁아질 때 굵기를 보정
     var tolPx = Math.max(3 * u, hp.tolPct / 100 * hp.s2 * H);
     var hardPx = Math.max(tolPx, hp.tolHardPct / 100 * hp.s2 * H);
 
@@ -4509,8 +4670,8 @@ var GolfPros = (function () {
       var ahead = i > st.cur;                                    // 아직 지나지 않은 구간
       ctx.save();
       ctx.globalAlpha = ahead ? 0.30 : 1;
-      line(a, b, COL.halo, (ahead ? 4.6 : 7.4) * u, []);
-      line(a, b, col, (ahead ? 2.2 : 4.2) * u, []);
+      line(a, b, COL.halo, (ahead ? 4.6 : 7.4) * uw, []);
+      line(a, b, col, (ahead ? 2.2 : 4.2) * uw, []);
       ctx.restore();
       from = p;
     }
@@ -4523,7 +4684,7 @@ var GolfPros = (function () {
     for (var mk = 0; mk < marks.length; mk++) {
       var mi = ph[marks[mk].k], mp = hp.pts[mi];
       if (!mp || mi > st.cur + 2) continue;
-      circle(pathPx(mp), 3.4 * u, COL.halo, marks[mk].c, 1 * u, []);
+      circle(pathPx(mp), 3.4 * uw, COL.halo, marks[mk].c, 1 * uw, []);
     }
 
     /* --- 벗어난 곳 강조: 구간별 가장 크게 벗어난 한 점 (수치 표시 ON 일 때 값도) --- */
@@ -4548,8 +4709,8 @@ var GolfPros = (function () {
       if (!w || Math.abs(w.v) <= hp.tolPct || !hp.pts[w.i]) continue;
       var wp = pathPx(hp.pts[w.i]);
       var wc = Math.abs(w.v) > hp.tolHardPct ? COL.devHot : COL.dev;
-      circle(wp, 4.6 * u, COL.halo, wc, 1.2 * u, []);
-      if (st.ov.labels) tag(o.name + ' ' + (w.v >= 0 ? '+' : '') + Math.round(w.v) + '%', wp.x + 10 * u, wp.y - 16 * u, wc, 'left');
+      circle(wp, 4.6 * uw, COL.halo, wc, 1.2 * uw, []);
+      if (st.ov.labels && !cmpSimple) tag(o.name + ' ' + (w.v >= 0 ? '+' : '') + Math.round(w.v) + '%', wp.x + 10 * u, wp.y - 16 * u, wc, 'left');
     }
   }
 
@@ -4694,6 +4855,11 @@ var GolfPros = (function () {
     if (!f || !f.d || !A || !A.d) return;
     var m = st.analysis;
     if (!m) return;
+    if (cmpSimple) {
+      /* 비교 화면: 스파인각 · 골반 움직임 · 스윙 궤도 3가지만 */
+      drawCompareThree(f.d, A.d, m);
+      return;
+    }
     if (st.ov.reference) drawReferenceLayer(f.d, A.d, m);
     if (st.ov.skeleton) drawSkeleton(f.d);
     if (st.ov.trajectory) drawHandPath(f.d, A.d, m);
@@ -4806,7 +4972,9 @@ var GolfPros = (function () {
       st.cmp.ref = GolfPros.make(st.cmp.refId, st.view);
       paintProNote();
       renderCmpTable();
+      renderCmpChange();
     }
+    paintCmpOvBtn();
   }
 
   function refreshProSelect(pref) {
@@ -4887,6 +5055,7 @@ var GolfPros = (function () {
     if (el.proSelect) el.proSelect.value = value;
     paintProNote();
     renderCmpTable();
+    renderCmpChange();
     drawCompare();
   }
 
@@ -4937,12 +5106,13 @@ var GolfPros = (function () {
     var saved = {
       ctx: ctx, W: st.W, H: st.H, frames: st.frames, phases: st.phases, cur: st.cur,
       analysis: st.analysis, demoScene: st.demoScene, mode: st.mode, view: st.view, hand: st.hand,
-      aspect: st.aspect, vid: vid
+      aspect: st.aspect, vid: vid, simple: cmpSimple, mul: cmpMul
     };
     ctx = c;
     st.W = cv.width; st.H = cv.height; st.aspect = cv.width / cv.height;
     st.frames = o.frames; st.phases = o.phases; st.cur = o.cur; st.analysis = o.analysis;
     st.demoScene = o.demoScene || null; st.mode = o.mode || 'demo'; st.view = o.view; st.hand = o.hand;
+    cmpSimple = !!o.simple; cmpMul = o.mul || 1;
     if ('video' in o) vid = o.video;
     try {
       drawScene();
@@ -4950,8 +5120,77 @@ var GolfPros = (function () {
       ctx = saved.ctx; st.W = saved.W; st.H = saved.H; st.frames = saved.frames; st.phases = saved.phases;
       st.cur = saved.cur; st.analysis = saved.analysis; st.demoScene = saved.demoScene;
       st.mode = saved.mode; st.view = saved.view; st.hand = saved.hand; st.aspect = saved.aspect;
-      vid = saved.vid;
+      vid = saved.vid; cmpSimple = saved.simple; cmpMul = saved.mul;
     }
+  }
+
+  /* 캔버스가 화면에서 얼마나 작게 보이는지 — 선 굵기 보정 배율 */
+  function cmpMulFor(cv) {
+    var css = cv && cv.clientWidth ? cv.clientWidth : 0;
+    if (!css) return 2.8;                       // 측정할 수 없으면 폰 두 분할 기준
+    return clamp(cv.width / css, 1, 6);
+  }
+
+  /* ===================== 비교 화면 전용: 3종만 =====================
+   * 두 영상 위에 스파인각 · 골반 움직임 · 스윙 궤도만 남긴다.
+   * 초록 점선 = 어드레스 기준, 흰 선 = 지금, 주황·빨강 = 기준에서 벗어난 부분.
+   * 나머지 스켈레톤·수치 상자는 그리지 않고, 몸 위치를 알 정도의 흐린 윤곽만 둔다.
+   * ============================================================== */
+  function drawCompareThree(d, A, m) {
+    var u = S() * cmpMul;
+    function lw(k) { return Math.max(1, k * u); }
+    var dash = [lw(6), lw(5)];
+
+    /* 0) 아주 흐린 몸 윤곽 */
+    var bones = [
+      ['lSh', 'rSh'], ['lSh', 'lEl'], ['lEl', 'lWr'], ['rSh', 'rEl'], ['rEl', 'rWr'],
+      ['lSh', 'hipC'], ['rSh', 'hipC'], ['lHip', 'rHip'], ['lHip', 'lKn'], ['lKn', 'lAn'],
+      ['rHip', 'rKn'], ['rKn', 'rAn'], ['lAn', 'lToe'], ['rAn', 'rToe'], ['nose', 'earC']
+    ];
+    ctx.save();
+    ctx.lineCap = 'round';
+    for (var i = 0; i < bones.length; i++) {
+      var ba = d[bones[i][0]], bb = d[bones[i][1]];
+      if (!ba || !bb) continue;
+      line(P(ba), P(bb), 'rgba(212,232,240,0.24)', lw(2.0), []);
+    }
+    ctx.restore();
+
+    /* 1) 스파인각 — 어드레스 척추선(초록 점선) vs 지금 척추선 */
+    var refSp = ext(P(A.hipC), P(A.sh), 0.40, 0.28);
+    stroke(refSp[0], refSp[1], COL.ref, lw(1.7), dash);
+    var live = m.live ? m.live(d) : null;
+    var dSp = live ? (live.bend - m.v.spineBendA) : (d.spineAngle2 - A.spineAngle2);
+    var aSp = Math.abs(dSp);
+    var cSp = aSp <= 4 ? 'rgba(236,244,255,0.95)' : (aSp > TH.spineChange ? COL.devHot : COL.dev);
+    var nowSp = ext(P(d.hipC), P(d.sh), 0.34, 0.20);
+    stroke(nowSp[0], nowSp[1], cSp, lw(2.6), []);
+    // 두 선이 벌어진 각도(기준선 → 지금 선)
+    var hA = P(A.hipC), hN = P(d.hipC);
+    var a0 = Math.atan2(P(A.sh).y - hA.y, P(A.sh).x - hA.x);
+    var a1 = Math.atan2(P(d.sh).y - hN.y, P(d.sh).x - hN.x);
+    while (a1 - a0 > Math.PI) a1 -= Math.PI * 2;
+    while (a1 - a0 < -Math.PI) a1 += Math.PI * 2;
+    var rArc = Math.max(lw(24), Math.sqrt(Math.pow(P(d.sh).x - hN.x, 2) + Math.pow(P(d.sh).y - hN.y, 2)) * 0.5);
+    arcAt(hN, rArc, Math.min(a0, a1), Math.max(a0, a1), rgba(cSp, 0.85), lw(1.6));
+    circle(hN, lw(2.6), null, cSp, 0, []);
+
+    /* 2) 골반 움직임 — 어드레스 골반선(초록 점선)과 지금 골반선(흰), 좌우 이동 화살표 */
+    var aL = P(A.lHip), aR = P(A.rHip), nL = P(d.lHip), nR = P(d.rHip);
+    line(aL, aR, rgba(COL.ref, 0.55), lw(1.7), dash);
+    line({ x: hA.x, y: hA.y - lw(30) }, { x: hA.x, y: hA.y + lw(22) }, COL.refSoft, lw(1.4), [lw(5), lw(6)]);
+    line(nL, nR, 'rgba(236,244,255,0.92)', lw(2.6), []);
+    var hipCm = live ? live.hipLat : (d.hipC.x - A.hipC.x) / Math.max(0.02, A.shWidth) * 45;
+    if (Math.abs(hipCm) > 1.0) {
+      var aHip = Math.abs(hipCm);
+      var cHip = aHip > TH.sway ? COL.devHot : (aHip > 2.2 ? COL.dev : 'rgba(236,244,255,0.7)');
+      arrow({ x: hA.x, y: hA.y }, { x: hN.x, y: hA.y }, cHip, lw(2.0));
+      line(hN, { x: hN.x, y: hA.y }, rgba(cHip, 0.45), lw(1.3), [lw(4), lw(4)]);
+    }
+    circle(hN, lw(2.4), null, COL.refSoft, 0, []);
+
+    /* 3) 스윙 궤도 — 기준 궤도(초록 점선) + 내 손 궤적(흰) + 이탈(주황·빨강) */
+    drawHandPath(d, A, m);
   }
 
   function clearCompareCanvas(cv, c) {
@@ -4976,13 +5215,16 @@ var GolfPros = (function () {
       }
       var ia = cmpFrameIndex(st.frames, st.phases, st.cmp.k, st.cmp.p);
       var ib = cmpFrameIndex(ref.frames, ref.phases, st.cmp.k, st.cmp.p);
+      var simple = st.cmp.simple !== false;
       drawInto(el.cmpA, cmpCtxA, {
         frames: st.frames, phases: st.phases, analysis: st.analysis, cur: ia,
-        mode: 'demo', demoScene: st.demoScene, view: st.view, hand: st.hand
+        mode: 'demo', demoScene: st.demoScene, view: st.view, hand: st.hand,
+        simple: simple, mul: cmpMulFor(el.cmpA)
       });
       drawInto(el.cmpB, cmpCtxB, {
         frames: ref.frames, phases: ref.phases, analysis: ref.analysis, cur: ib,
-        mode: 'demo', demoScene: ref.demoScene, view: ref.view, hand: ref.hand
+        mode: 'demo', demoScene: ref.demoScene, view: ref.view, hand: ref.hand,
+        simple: simple, mul: cmpMulFor(el.cmpB)
       });
       setText(el.cmpLabel, 'F' + ia + ' / F' + ib);
     } finally {
@@ -5028,6 +5270,53 @@ var GolfPros = (function () {
     el.cmpTable.innerHTML = html;
   }
 
+  function paintCmpOvBtn() {
+    var simple = st.cmp.simple !== false;
+    if (el.cmpOvBtn) {
+      setText(el.cmpOvBtn, simple ? '전체 표시' : '3종만 보기');
+      el.cmpOvBtn.setAttribute('aria-pressed', simple ? 'false' : 'true');
+    }
+    show(el.cmpLegend, simple);
+    show(el.cmpEyeHint, simple);
+  }
+
+  /** 비교 화면 표시 전환 — 3종(기본) ↔ 전체 오버레이 */
+  function setCmpSimple(on) {
+    st.cmp.simple = !!on;
+    paintCmpOvBtn();
+    drawCompare();
+    return st.cmp.simple;
+  }
+
+  /** 항목별로 바뀐 점 — 지금 스윙 ↔ 비교 기준 */
+  function renderCmpChange() {
+    if (!el.cmpChange) return;
+    var mine = st.analysis, ref = st.cmp.ref && st.cmp.ref.analysis;
+    if (!mine || !ref) {
+      el.cmpChange.innerHTML = '<p class="cmp-hint">내 스윙을 먼저 분석하면 기준 스윙과 항목별로 무엇이 달라졌는지 보여 줍니다.</p>';
+      return;
+    }
+    var sum = C.compareSwings(mine, ref);
+    if (!sum || !sum.rows.length) {
+      el.cmpChange.innerHTML = '<p class="cmp-hint">두 스윙의 항목 값을 계산할 수 없습니다. 구간을 다시 맞춘 뒤 비교해 주세요.</p>';
+      return;
+    }
+    var past = !!(st.cmp.ref && st.cmp.ref.past);
+    var html = '<p class="chg-head">' + escapeHtml(sum.headline) + '</p>' +
+      '<p class="chg-sub">' + escapeHtml(sum.detail) + '</p>' +
+      '<div class="chg-row head"><span class="chg-badge"></span><span class="chg-lab">항목</span>' +
+      '<span class="chg-val">' + (past ? '이전' : '기준') + ' → 지금</span><span class="chg-score">점수</span></div>';
+    for (var i = 0; i < sum.rows.length; i++) {
+      var r = sum.rows[i];
+      var dTxt = r.d === 0 ? '0' : ((r.d > 0 ? '+' : '−') + Math.abs(r.d));
+      html += '<div class="chg-row ' + r.verdict + '"><span class="chg-badge">' + r.mark + '</span>' +
+        '<span class="chg-lab">' + escapeHtml(r.label) + '</span>' +
+        '<span class="chg-val">' + escapeHtml(r.prev) + ' → ' + escapeHtml(r.cur) + '</span>' +
+        '<span class="chg-score">' + dTxt + '</span></div>';
+    }
+    el.cmpChange.innerHTML = html;
+  }
+
   function setCmpOn(on) {
     st.cmp.on = !!on;
     show(el.cmpCard, st.cmp.on);
@@ -5036,6 +5325,8 @@ var GolfPros = (function () {
       if (!st.cmp.ref) selectPro('p:' + (st.cmp.refId || 'balance'));
       renderCmpPhases();
       renderCmpTable();
+      renderCmpChange();
+      paintCmpOvBtn();
       drawCompare();
       if (el.cmpCard && el.cmpCard.scrollIntoView) {
         try { el.cmpCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch (e) { }
@@ -6106,6 +6397,7 @@ var GolfPros = (function () {
     cmp: {
       on: setCmpOn, select: selectPro, draw: drawCompare, table: renderCmpTable,
       save: saveCurrentAsPro, del: deletePro, play: cmpPlayToggle, stop: stopCmp,
+      change: renderCmpChange, simple: setCmpSimple,
       state: function () { return st.cmp; }
     }
   };
