@@ -389,9 +389,10 @@ footer { text-align: center; font-size: 10.5px; color: #4b5a74; padding: 6px 0 1
 .hist-empty[hidden] { display: none; }
 .hist-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
 .hist-item {
-  display: flex; align-items: stretch; gap: 0; overflow: hidden;
+  display: block; overflow: hidden;
   border: 1px solid var(--line); border-radius: 11px; background: #0d1727;
 }
+.hist-top { display: flex; align-items: stretch; }
 .hist-item.on { border-color: #2f7d67; background: #0f201c; }
 .hist-item.armed { border-color: var(--bad); }
 .hist-open {
@@ -416,7 +417,92 @@ footer { text-align: center; font-size: 10.5px; color: #4b5a74; padding: 6px 0 1
 .hist-hint { margin: 8px 2px 0; font-size: 10px; line-height: 1.5; color: var(--dim); }
 .hist-hint b { color: #7fe0c4; }
 .hist-item.armed .hist-del { background: var(--bad); color: #2b0710; }
+.hist-go { display: flex; align-items: center; gap: 5px; padding: 4px 8px 5px; border-top: 1px solid var(--line); background: #0b1524; }
+.hist-go-k { font-size: 10px; line-height: 1; opacity: .85; flex: none; }
+.hist-go-sel {
+  -webkit-appearance: none; appearance: none; flex: 0 1 auto; max-width: 62%;
+  background: #0f1b2b; border: 1px solid var(--line); border-radius: 8px;
+  color: #cfe0f5; font: inherit; font-size: 10.5px; font-weight: 700; padding: 4px 18px 4px 7px;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='8' height='5'><path d='M0 0l4 5 4-5z' fill='%238fa2c2'/></svg>");
+  background-repeat: no-repeat; background-position: right 6px center;
+}
 .hist-total { margin: 8px 2px 0; font-size: 10px; color: var(--dim); }
+
+/* ---------- 골퍼(사람) 선택 ---------- */
+.golfer { display: flex; align-items: center; gap: 7px; margin-top: 11px; }
+.golfer .gk { font-size: 11.5px; font-weight: 800; color: var(--muted); flex: none; }
+.golfer select {
+  -webkit-appearance: none; appearance: none; flex: 1; min-width: 0;
+  background: #0b1421 url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6'><path d='M0 0l5 6 5-6z' fill='%238fa2c2'/></svg>") no-repeat right 10px center;
+  color: var(--text); border: 1px solid var(--line2); border-radius: 10px;
+  padding: 10px 26px 10px 10px; font: inherit; font-size: 12.5px; font-weight: 700;
+}
+.golfer .btn.mini { flex: none; }
+.golfer-new { display: flex; gap: 6px; margin-top: 7px; }
+.golfer-new[hidden] { display: none; }
+.golfer-new input {
+  flex: 1; min-width: 0; background: #0b1421; border: 1px solid var(--line2); border-radius: 10px;
+  color: var(--text); padding: 9px 10px; font: inherit; font-size: 12px;
+}
+.golfer-new .btn { flex: none; }
+.golfer-note { margin: 6px 2px 0; font-size: 10.5px; line-height: 1.5; color: var(--dim); }
+
+/* ---------- 보관함 사람 필터 ---------- */
+.hist-filter { display: flex; gap: 6px; overflow-x: auto; padding: 2px 1px 6px; scrollbar-width: none; }
+.hist-filter::-webkit-scrollbar { display: none; }
+.gchip {
+  flex: none; appearance: none; cursor: pointer; font: inherit;
+  display: inline-flex; align-items: center; gap: 5px;
+  border: 1px solid var(--line2); background: #0b1421; color: var(--muted);
+  border-radius: 999px; padding: 6px 11px; font-size: 11.5px; font-weight: 800;
+}
+.gchip em {
+  font-style: normal; font-size: 10px; font-weight: 800; color: var(--muted);
+  background: #16233a; border-radius: 999px; padding: 1px 6px;
+}
+.gchip.on { background: linear-gradient(180deg, #1d4238, #14312a); border-color: #2f7d67; color: #ccfff0; }
+.gchip.on em { background: #2fe0ad; color: #062b22; }
+.gchip.add { color: #7fe0c4; border-style: dashed; }
+
+/* ---------- 날짜별 변화(추이) ---------- */
+.trend {
+  margin: 4px 0 9px; padding: 10px 10px 11px; border-radius: 12px;
+  border: 1px solid #1d3a3c; background: linear-gradient(180deg, #0c1a1f, #0a141c);
+}
+.trend[hidden] { display: none; }
+.trend-head { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.trend-head h3 { margin: 0; font-size: 12px; font-weight: 800; color: var(--text); }
+.trend-head h3 b { color: var(--accent); }
+.trend-meta { margin-left: auto; font-size: 10px; color: var(--dim); text-align: right; }
+.seg.tiny { grid-template-columns: 1fr 1fr; width: 124px; margin-top: 8px; padding: 3px; }
+.seg.tiny button { min-height: 26px; font-size: 11px; padding: 3px 4px; border-radius: 8px; }
+.trend-chart { margin-top: 8px; }
+.trend-chart svg, .tsvg { display: block; width: 100%; height: auto; }
+.tgrid { stroke: rgba(143, 162, 194, 0.16); stroke-width: 1; }
+.tylab { fill: #7d8fae; font-size: 9px; font-weight: 700; }
+.txlab { fill: #8fa2c2; font-size: 9.5px; font-weight: 700; }
+.tval { fill: #d9fff5; font-size: 9.5px; font-weight: 800; }
+.tline { fill: none; stroke: var(--accent); stroke-width: 2.2; stroke-linejoin: round; stroke-linecap: round; }
+.tdot { fill: #06231c; stroke: var(--accent); stroke-width: 2; }
+.trend-none { margin: 6px 2px; font-size: 10.5px; line-height: 1.55; color: var(--muted); }
+.trend-none[hidden] { display: none; }
+.trend-table { display: grid; gap: 6px; margin-top: 8px; }
+.tday { padding: 8px 9px; border-radius: 10px; background: #0a1420; border: 1px solid #172436; }
+.tday.now { border-color: #2b6d5e; background: #0c1c1c; }
+.tday-h { display: flex; align-items: baseline; gap: 6px; }
+.tday-h b { font-size: 11.5px; font-weight: 800; color: var(--text); font-variant-numeric: tabular-nums; }
+.tday-h em { font-style: normal; font-size: 9.5px; font-weight: 700; color: var(--muted); }
+.tday-h .tnow { font-size: 9px; font-weight: 800; color: #06231c; background: var(--accent); border-radius: 999px; padding: 1px 6px; }
+.tday-h .tscore { margin-left: auto; font-size: 15px; font-weight: 900; color: var(--text); font-variant-numeric: tabular-nums; }
+.tday-h .tscore u { text-decoration: none; font-size: 10px; font-weight: 800; color: var(--muted); margin-left: 1px; }
+.tday-s { display: flex; align-items: baseline; gap: 5px; margin-top: 2px; font-size: 10.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.tday-m { display: flex; flex-wrap: wrap; gap: 3px 8px; margin-top: 5px; font-size: 10px; color: var(--dim); }
+.tmet { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.tmet i, .tday-h i, .tday-s i { font-style: normal; margin-left: 2px; font-weight: 800; }
+.delta i { font-style: normal; }
+.dup, .mtw { color: #ff647d; }
+.ddn, .mtb { color: #35d68c; }
+.dflat, .mtf { color: var(--dim); }
 </style>
 </head>
 <body>
@@ -440,6 +526,17 @@ footer { text-align: center; font-size: 10.5px; color: #4b5a74; padding: 6px 0 1
       </div>
       <p class="hint" id="viewHint">측면(Down-the-Line): 골프공 뒤에서 촬영. 스윙 플레인·오버 더 톱·얼리 익스텐션 판정에 유리합니다.</p>
 
+      <div class="golfer">
+        <span class="gk">👤 골퍼</span>
+        <select id="golferSelect" aria-label="골퍼(사람)"></select>
+        <button class="btn mini ghost" id="golferAdd" type="button">＋ 새 사람</button>
+      </div>
+      <div class="golfer-new" id="golferNewRow" hidden>
+        <input id="golferNewInput" type="text" maxlength="12" placeholder="이름 (예: 켈리)" aria-label="새 골퍼 이름">
+        <button class="btn mini" id="golferNewSave" type="button">추가</button>
+      </div>
+      <p class="golfer-note" id="golferNote">저장되는 스윙은 이 사람 이름으로 보관되고, 보관함에서 사람별 · 날짜별 변화를 볼 수 있습니다.</p>
+
       <div class="row">
         <div class="seg small" id="handSeg" aria-label="스윙 손">
           <button class="on" type="button" data-hand="right">오른손</button>
@@ -455,10 +552,28 @@ footer { text-align: center; font-size: 10.5px; color: #4b5a74; padding: 6px 0 1
         </button>
         <p class="hist-save" id="histSave" hidden></p>
         <div class="hist-panel" id="histPanel" hidden>
+          <div class="hist-filter" id="histFilter" aria-label="골퍼별 보기"></div>
+          <div class="golfer-new" id="histNewRow" hidden>
+            <input id="histNewInput" type="text" maxlength="12" placeholder="새 사람 이름" aria-label="새 골퍼 이름">
+            <button class="btn mini" id="histNewSave" type="button">추가</button>
+          </div>
+          <div class="trend" id="trendBox" hidden>
+            <div class="trend-head">
+              <h3>날짜별 변화 · <b id="trendName">나</b></h3>
+              <span class="trend-meta" id="trendMeta"></span>
+            </div>
+            <div class="seg tiny" id="trendSeg" aria-label="추이 그래프 항목">
+              <button class="on" type="button" data-tkey="overall">총점</button>
+              <button type="button" data-tkey="tempo">템포</button>
+            </div>
+            <div class="trend-chart" id="trendChart"></div>
+            <p class="trend-none" id="trendNote" hidden></p>
+            <div class="trend-table" id="trendTable"></div>
+          </div>
           <p class="hist-empty" id="histEmpty">아직 보관한 스윙이 없습니다. 영상을 올려 분석하면 자동으로 보관됩니다.</p>
           <ul class="hist-list" id="histList"></ul>
-          <p class="hist-hint">항목의 <b>비교</b>를 누르면 그 스윙을 기준으로 지금 스윙과 나란히 비교합니다.</p>
-          <p class="hist-total" id="histTotal">이 브라우저(기기)에만 저장됩니다 · 최근 15개까지 보관</p>
+          <p class="hist-hint">사람 칩을 고르면 그 사람의 날짜별 변화가 위에 나타납니다. 항목의 <b>비교</b>를 누르면 그 스윙을 기준으로 지금 스윙과 나란히 비교하고, 항목의 👤 선택기로 그 스윙의 사람을 바꿀 수 있습니다.</p>
+          <p class="hist-total" id="histTotal">이 브라우저(기기)에만 저장됩니다 · 최근 40개까지 보관</p>
         </div>
       </div>
 
@@ -1642,6 +1757,179 @@ var GolfCore = (function () {
 
   }
 
+  /* ======================= 골퍼(사람) · 날짜별 추이 =======================
+   * 저장 기록에는 golfer 이름을 함께 남긴다. 사람 구분은 순수 문자열 기준으로
+   * 정규화하고, 날짜별 변화는 (사람 → 날짜 → 그날 마지막 스윙) 순서로 묶어
+   * 직전 날짜 대비 증감과 '나아졌는지'를 계산한다. DOM 의존 없음.
+   * ===================================================================== */
+  var DEFAULT_GOLFER = '나';     // 사람을 고르지 않은 기록(예전 기록 포함)의 기본값
+  var GOLFER_MAX = 12;           // 이름 길이 상한
+
+  function p2(n) { return (n < 10 ? '0' : '') + n; }
+
+  /** 사람 이름 정규화 — 공백/제어문자 정리, 빈 값은 기본 '나', 길이 상한 */
+  function normalizeGolfer(v) {
+    if (v === null || v === undefined) return DEFAULT_GOLFER;
+    var s = String(v).replace(/[\u0000-\u001f\u007f\u00a0]/g, ' ').replace(/\s+/g, ' ').trim();
+    if (!s) return DEFAULT_GOLFER;
+    return s.length > GOLFER_MAX ? s.slice(0, GOLFER_MAX) : s;
+  }
+
+  /** 기록의 사람 — golfer 필드가 없는 예전 기록은 기본('나')으로 읽는다 */
+  function golferOf(rec) {
+    return normalizeGolfer(rec && rec.golfer);
+  }
+
+  /** 로컬 날짜 키 YYYY-MM-DD */
+  function dayKey(ms) {
+    var t = (typeof ms === 'number' && isFinite(ms)) ? ms : Date.now();
+    var d = new Date(t);
+    if (!isFinite(d.getTime())) d = new Date();
+    return d.getFullYear() + '-' + p2(d.getMonth() + 1) + '-' + p2(d.getDate());
+  }
+
+  function fmtDay(day) { return String(day || '').replace(/-/g, '.'); }
+  function fmtDayShort(day) {
+    var p = String(day || '').split('-');
+    return p.length === 3 ? (Number(p[1]) + '.' + p[2]) : String(day || '');
+  }
+
+  /** 기록 목록의 사람별 묶음 — 최근에 쓴 사람이 먼저, 기본('나')은 맨 앞 */
+  function golferTabs(recs) {
+    var map = {}, out = [], i, r, g;
+    for (i = 0; i < (recs || []).length; i++) {
+      r = recs[i];
+      if (!r) continue;
+      g = golferOf(r);
+      if (!map[g]) { map[g] = { name: g, count: 0, latest: 0 }; out.push(map[g]); }
+      map[g].count++;
+      if (isNum(r.createdAt) && r.createdAt > map[g].latest) map[g].latest = r.createdAt;
+    }
+    out.sort(function (a, b) {
+      if (a.name === DEFAULT_GOLFER && b.name !== DEFAULT_GOLFER) return -1;
+      if (b.name === DEFAULT_GOLFER && a.name !== DEFAULT_GOLFER) return 1;
+      if (a.latest !== b.latest) return b.latest - a.latest;
+      return a.name < b.name ? -1 : (a.name > b.name ? 1 : 0);
+    });
+    return out;
+  }
+
+  // 날짜별 표에 보여 줄 핵심 지표 (모두 '작을수록 좋음' 또는 권장 범위)
+  var TREND_METRICS = [
+    { key: 'plane', label: '플레인', unit: '%', better: 'low' },
+    { key: 'xf', label: 'X-factor', unit: '°', band: [38, 58] },
+    { key: 'spine', label: '척추', unit: '°', better: 'low' },
+    { key: 'head', label: '머리', unit: 'cm', better: 'low' },
+    { key: 'weight', label: '체중', unit: '%', band: [60, 90] }
+  ];
+
+  function bandDist(v, band) {
+    if (!isNum(v) || !band) return 0;
+    return v < band[0] ? band[0] - v : (v > band[1] ? v - band[1] : 0);
+  }
+
+  /** 지표 변화 — 값 차이와 '나아짐/나빠짐' 판정 */
+  function metricTrend(meta, prev, cur) {
+    if (!isNum(prev) || !isNum(cur)) return null;
+    var d = Math.round((cur - prev) * 10) / 10;
+    var better;
+    if (Math.abs(d) < 0.05) better = 'same';
+    else if (meta && meta.band) better = bandDist(cur, meta.band) < bandDist(prev, meta.band) ? 'better' : 'worse';
+    else if (meta && meta.higherBetter) better = d > 0 ? 'better' : 'worse';
+    else better = d < 0 ? 'better' : 'worse';
+    return { d: d, better: better };
+  }
+
+  /**
+   * 한 사람의 날짜별 추이.
+   * entries: [{id, golfer, createdAt, overall, tempoRatio, metrics:{plane,xf,spine,head,weight}}]
+   * 같은 날 여러 스윙은 그날의 마지막(최신) 스윙을 대표로 쓰고 count 에 건수를 남긴다.
+   */
+  function buildTrend(entries, golfer) {
+    var g = normalizeGolfer(golfer);
+    var list = [], i, j, e;
+    for (i = 0; i < (entries || []).length; i++) {
+      e = entries[i];
+      if (!e) continue;
+      if (normalizeGolfer(e.golfer) !== g) continue;
+      list.push(e);
+    }
+    list.sort(function (a, b) { return (a.createdAt || 0) - (b.createdAt || 0); });
+
+    var rows = [], byDay = {};
+    for (i = 0; i < list.length; i++) {
+      e = list[i];
+      var day = e.day || dayKey(e.createdAt);
+      var row = byDay[day];
+      if (!row) {
+        row = byDay[day] = { day: day, at: e.createdAt || 0, count: 0, overall: null, tempoRatio: null, metrics: {} };
+        rows.push(row);
+      }
+      row.count++;
+      row.at = e.createdAt || row.at;
+      if (isNum(e.overall)) row.overall = e.overall;
+      if (isNum(e.tempoRatio)) row.tempoRatio = e.tempoRatio;
+      if (e.metrics) for (var k in e.metrics) if (isNum(e.metrics[k])) row.metrics[k] = e.metrics[k];
+    }
+    rows.sort(function (a, b) { return a.at - b.at; });
+
+    for (i = 0; i < rows.length; i++) {
+      var prev = i > 0 ? rows[i - 1] : null;
+      var d = { overall: null, tempoRatio: null, metrics: {} };
+      if (prev && isNum(rows[i].overall) && isNum(prev.overall)) d.overall = rows[i].overall - prev.overall;
+      if (prev && isNum(rows[i].tempoRatio) && isNum(prev.tempoRatio)) d.tempoRatio = Math.round((rows[i].tempoRatio - prev.tempoRatio) * 100) / 100;
+      for (j = 0; j < TREND_METRICS.length; j++) {
+        var mt = TREND_METRICS[j];
+        d.metrics[mt.key] = metricTrend(mt, prev && prev.metrics[mt.key], rows[i].metrics[mt.key]);
+      }
+      rows[i].d = d;
+    }
+
+    var summary = null;
+    if (rows.length) {
+      var first = rows[0], last = rows[rows.length - 1], best = null, worst = null;
+      for (i = 0; i < rows.length; i++) {
+        if (!isNum(rows[i].overall)) continue;
+        if (!best || rows[i].overall > best.overall) best = { day: rows[i].day, overall: rows[i].overall };
+        if (!worst || rows[i].overall < worst.overall) worst = { day: rows[i].day, overall: rows[i].overall };
+      }
+      summary = {
+        golfer: g, swings: list.length, days: rows.length,
+        firstDay: first.day, lastDay: last.day,
+        firstOverall: first.overall, lastOverall: last.overall,
+        dOverall: (rows.length > 1 && isNum(last.overall) && isNum(first.overall)) ? last.overall - first.overall : null,
+        best: best, worst: worst
+      };
+    } else {
+      summary = { golfer: g, swings: 0, days: 0, firstDay: null, lastDay: null, firstOverall: null, lastOverall: null, dOverall: null, best: null, worst: null };
+    }
+    return { golfer: g, rows: rows, summary: summary };
+  }
+
+  /**
+   * 추이 그래프 좌표 — 값 배열을 SVG 좌표로 옮긴다.
+   * pad = {l, r, t, b}. 값이 하나면 가운데, 모두 같으면 위아래로 여유를 준다.
+   */
+  function chartLayout(values, w, h, pad) {
+    pad = pad || { l: 0, r: 0, t: 0, b: 0 };
+    var vals = [], i;
+    for (i = 0; i < (values || []).length; i++) if (isNum(values[i])) vals.push(values[i]);
+    if (!vals.length) return null;
+    var min = Math.min.apply(null, vals), max = Math.max.apply(null, vals);
+    if (max - min < 1e-6) { min = min - 1; max = max + 1; }
+    var span = max - min;
+    min = min - span * 0.18; max = max + span * 0.18;
+    var iw = Math.max(1, w - pad.l - pad.r), ih = Math.max(1, h - pad.t - pad.b);
+    var n = values.length, pts = [];
+    for (i = 0; i < n; i++) {
+      var v = isNum(values[i]) ? values[i] : null;
+      var x = pad.l + (n <= 1 ? iw / 2 : iw * i / (n - 1));
+      var y = v === null ? null : pad.t + ih * (1 - (v - min) / (max - min));
+      pts.push({ i: i, v: v, x: Math.round(x * 10) / 10, y: v === null ? null : Math.round(y * 10) / 10 });
+    }
+    return { min: min, max: max, span: max - min, pts: pts, w: w, h: h, pad: pad };
+  }
+
   /* --------------------------- 구간별 코칭 문장 --------------------------- */
   function phaseCoaching(m, ph) {
     if (!m) return [];
@@ -1696,6 +1984,19 @@ var GolfCore = (function () {
     computeTempo: computeTempo,
     tempoVerdict: tempoVerdict,
     fmtRatio: fmtRatio,
+    DEFAULT_GOLFER: DEFAULT_GOLFER,
+    GOLFER_MAX: GOLFER_MAX,
+    TREND_METRICS: TREND_METRICS,
+    normalizeGolfer: normalizeGolfer,
+    golferOf: golferOf,
+    golferTabs: golferTabs,
+    dayKey: dayKey,
+    fmtDay: fmtDay,
+    fmtDayShort: fmtDayShort,
+    bandDist: bandDist,
+    metricTrend: metricTrend,
+    buildTrend: buildTrend,
+    chartLayout: chartLayout,
     phaseCoaching: phaseCoaching,
     armAngle2: armAngle2,
     helpers: {
@@ -2051,6 +2352,7 @@ var GolfPros = (function () {
     seekToken: 0,
     srcBlob: null, srcBuf: null, srcMime: 'video/mp4', srcName: '',
     savedId: null, savedAt: 0, hist: [], histConfirm: null, histSuppress: false,
+    golfer: C.DEFAULT_GOLFER, golfers: [], histFilter: null, trendKey: 'overall',
     cmp: { on: false, refId: 'balance', ref: null, k: 0, p: 0, playing: false, saved: [] }
   };
 
@@ -2097,6 +2399,11 @@ var GolfPros = (function () {
       cmpTable: $('cmpTable'), proName: $('proName'), proSaveBtn: $('proSaveBtn'), proSaveHint: $('proSaveHint'),
       histToggle: $('histToggle'), histCount: $('histCount'), histSave: $('histSave'),
       histPanel: $('histPanel'), histEmpty: $('histEmpty'), histList: $('histList'), histTotal: $('histTotal'),
+      histFilter: $('histFilter'), histNewRow: $('histNewRow'), histNewInput: $('histNewInput'), histNewSave: $('histNewSave'),
+      trendBox: $('trendBox'), trendName: $('trendName'), trendMeta: $('trendMeta'), trendSeg: $('trendSeg'),
+      trendChart: $('trendChart'), trendTable: $('trendTable'), trendNote: $('trendNote'),
+      golferSelect: $('golferSelect'), golferAdd: $('golferAdd'), golferNewRow: $('golferNewRow'),
+      golferNewInput: $('golferNewInput'), golferNewSave: $('golferNewSave'), golferNote: $('golferNote'),
       tempoBox: $('tempoBox'), tempoRatio: $('tempoRatio'), tempoDetail: $('tempoDetail'), tempoVerdict: $('tempoVerdict')
     };
     cvs = el.canvas; ctx = cvs.getContext('2d');
@@ -2108,6 +2415,7 @@ var GolfPros = (function () {
     EMPTY_HTML = el.stageEmpty ? el.stageEmpty.innerHTML : '';
     bind();
     initCmp();
+    initGolfer();
     histInit();
     paintViewHint();
     paintOvs();
@@ -2196,6 +2504,13 @@ var GolfPros = (function () {
     if (el.proSaveBtn) el.proSaveBtn.addEventListener('click', saveCurrentAsPro);
     if (el.histToggle) el.histToggle.addEventListener('click', toggleHist);
     if (el.histList) el.histList.addEventListener('click', onHistClick);
+    if (el.histList) el.histList.addEventListener('change', onHistChange);
+    if (el.histFilter) el.histFilter.addEventListener('click', onHistFilterClick);
+    if (el.trendSeg) el.trendSeg.addEventListener('click', onTrendSegClick);
+    if (el.golferSelect) el.golferSelect.addEventListener('change', onGolferSelectChange);
+    if (el.golferAdd) el.golferAdd.addEventListener('click', function () { showGolferNew(el.golferNewRow, el.golferNewInput); });
+    if (el.golferNewSave) el.golferNewSave.addEventListener('click', function () { addGolferFrom(el.golferNewInput, el.golferNewRow); });
+    if (el.histNewSave) el.histNewSave.addEventListener('click', function () { addGolferFrom(el.histNewInput, el.histNewRow); });
     window.addEventListener('resize', layoutStage);
     if (window.visualViewport) window.visualViewport.addEventListener('resize', layoutStage);
     if (vid) {
@@ -3264,7 +3579,8 @@ var GolfPros = (function () {
     return {
       id: rec.id, name: rec.name, frames: frames, phases: rec.phases, analysis: m,
       demoScene: null, view: rec.view || 'dtl', hand: rec.hand || 'right', saved: true,
-      past: !!past, tag: past ? ('과거 · ' + stamp(rec.createdAt)) : null,
+      golfer: C.golferOf(rec),
+      past: !!past, tag: past ? ('과거 · ' + C.golferOf(rec) + ' · ' + stamp(rec.createdAt)) : null,
       tempo: histTempo(rec),
       note: past
         ? '내 스윙 보관함에 저장해 둔 과거 스윙입니다. 그때 찍은 좌표·구간으로 다시 그려 지금 스윙과 나란히 비교합니다.'
@@ -3306,8 +3622,14 @@ var GolfPros = (function () {
     }
     var pasts = [];
     for (i = 0; i < st.hist.length; i++) if (st.hist[i].id !== st.savedId) pasts.push(st.hist[i]);
+    // 지금 고른 사람의 과거 스윙을 먼저 — 같은 사람끼리 비교하기 쉽게
+    pasts.sort(function (a, b) {
+      var an = C.golferOf(a) === st.golfer ? 0 : 1, bn = C.golferOf(b) === st.golfer ? 0 : 1;
+      if (an !== bn) return an - bn;
+      return (b.createdAt || 0) - (a.createdAt || 0);
+    });
     if (pasts.length) {
-      html += '<optgroup label="내 스윙 보관함 (과거 내 스윙)">';
+      html += '<optgroup label="내 스윙 보관함 (사람별 · 과거 내 스윙)">';
       for (i = 0; i < pasts.length; i++) {
         html += '<option value="h:' + escapeHtml(pasts[i].id) + '">' + escapeHtml(histRefLabel(pasts[i])) + '</option>';
       }
@@ -3328,10 +3650,13 @@ var GolfPros = (function () {
     }
   }
 
-  /** 비교 선택지에 쓰는 과거 스윙 이름 */
+  /** 비교 선택지에 쓰는 과거 스윙 이름 — 사람 · 날짜 · 시점 · 점수 · 템포 */
   function histRefLabel(rec) {
     var tm = histTempo(rec);
-    return '[과거 내 스윙] ' + histNameOf(rec) + (tm && tm.ratio ? ' · 템포 ' + C.fmtRatio(tm.ratio) + ':1' : '');
+    var score = (rec.report && rec.report.overall != null) ? ' · ' + rec.report.overall + '점' : '';
+    return '[과거 · ' + C.golferOf(rec) + '] ' + stamp(rec.createdAt) + ' · ' +
+      (rec.view === 'face' ? '정면' : '측면') + score +
+      (tm && tm.ratio ? ' · 템포 ' + C.fmtRatio(tm.ratio) + ':1' : '');
   }
 
   function selectPro(value) {
@@ -3592,6 +3917,147 @@ var GolfPros = (function () {
     note('저장한 비교 기준 스윙을 삭제했습니다.');
   }
 
+  /* ======================== 골퍼(사람) 선택 · 배정 ========================
+   * 저장 기록마다 golfer 이름을 남긴다. 이름 목록은 localStorage 에 두고
+   * 기록에만 남아 있는 이름도 함께 보인다. 사람이 바뀌면 지금 열어 둔
+   * 스윙(보관 중인 영상)의 이름도 바로 바꿔 준다.
+   * ===================================================================== */
+  var GO_KEY = 'swingcheck.golfers.v1', GO_CUR = 'swingcheck.golfer.cur.v1';
+
+  function goPush(name) {
+    var n = C.normalizeGolfer(name), i;
+    for (i = 0; i < st.golfers.length; i++) if (st.golfers[i] === n) return n;
+    st.golfers.push(n);
+    return n;
+  }
+
+  function goLoad() {
+    var list = [], cur = '';
+    try {
+      var raw = window.localStorage ? window.localStorage.getItem(GO_KEY) : null;
+      var v = raw ? JSON.parse(raw) : [];
+      if (Object.prototype.toString.call(v) === '[object Array]') list = v;
+      cur = (window.localStorage && window.localStorage.getItem(GO_CUR)) || '';
+    } catch (e) { list = []; cur = ''; }
+    st.golfers = [];
+    for (var i = 0; i < list.length; i++) goPush(list[i]);
+    st.golfer = C.normalizeGolfer(cur || C.DEFAULT_GOLFER);
+    goPush(st.golfer);
+  }
+
+  function goSave() {
+    try {
+      if (!window.localStorage) return;
+      window.localStorage.setItem(GO_KEY, JSON.stringify(st.golfers));
+      window.localStorage.setItem(GO_CUR, st.golfer);
+    } catch (e) {}
+  }
+
+  /** 선택기에 보일 사람 — 기본('나') → 저장해 둔 사람 → 기록에 남은 사람 */
+  function goAll() {
+    var out = [C.DEFAULT_GOLFER], i;
+    function push(n) {
+      n = C.normalizeGolfer(n);
+      for (var k = 0; k < out.length; k++) if (out[k] === n) return;
+      out.push(n);
+    }
+    for (i = 0; i < st.golfers.length; i++) push(st.golfers[i]);
+    push(st.golfer);
+    for (i = 0; i < st.hist.length; i++) push(C.golferOf(st.hist[i]));
+    return out;
+  }
+
+  function initGolfer() {
+    goLoad();
+    paintGolfer();
+  }
+
+  function paintGolfer() {
+    if (!el.golferSelect) return;
+    var list = goAll(), html = '', i;
+    for (i = 0; i < list.length; i++) {
+      html += '<option value="' + escapeHtml(list[i]) + '"' + (list[i] === st.golfer ? ' selected' : '') + '>' +
+        escapeHtml(list[i]) + '</option>';
+    }
+    el.golferSelect.innerHTML = html;
+    el.golferSelect.value = st.golfer;
+    if (el.golferAdd) el.golferAdd.disabled = list.length >= 12;
+  }
+
+  /** 현재 골퍼 바꾸기 — 열어 둔 스윙(보관 중)은 이 사람으로 다시 배정 */
+  function setGolfer(name, opts) {
+    var g = C.normalizeGolfer(name);
+    st.golfer = g;
+    goPush(g);
+    goSave();
+    paintGolfer();
+    var o = opts || {};
+    if (!o.quiet && el.golferNote) setText(el.golferNote, '새 스윙은 ‘' + g + '’(으)로 보관됩니다.');
+    if (!o.noReassign && st.mode === 'video' && st.savedId) histSetGolfer(st.savedId, g, { quiet: true });
+    return g;
+  }
+
+  function onGolferSelectChange() {
+    if (!el.golferSelect) return;
+    setGolfer(el.golferSelect.value);
+    note('골퍼를 ‘' + st.golfer + '’(으)로 바꿨습니다. 지금 열어 둔 스윙도 이 이름으로 보관됩니다.');
+  }
+
+  function showGolferNew(row, input) {
+    if (!row) return;
+    var open = row.hasAttribute('hidden');
+    show(row, open);
+    if (open && input && input.focus) { try { input.focus(); } catch (e) {} }
+  }
+
+  function addGolferFrom(input, row) {
+    var v = input && input.value ? String(input.value) : '';
+    if (!v.trim()) {
+      note('새 골퍼 이름을 입력해 주세요.');
+      if (input && input.focus) { try { input.focus(); } catch (e) {} }
+      return null;
+    }
+    var g = setGolfer(v);
+    if (input) input.value = '';
+    if (row) show(row, false);
+    var forId = st.histNewFor;
+    st.histNewFor = null;
+    if (forId) {
+      histSetGolfer(forId, g, { quiet: true }).then(function () {
+        note('‘' + g + '’(을)를 추가하고 보관 항목의 골퍼로 지정했습니다.');
+      });
+      return g;
+    }
+    note('골퍼 ‘' + g + '’을(를) 골랐습니다. 새로 저장되는 스윙은 이 이름으로 보관됩니다.');
+    return g;
+  }
+
+  /** 보관 항목의 사람 바꾸기 */
+  function histSetGolfer(id, name, opts) {
+    var rec = histFind(id), o = opts || {};
+    if (!rec) return Promise.resolve(false);
+    var g = C.normalizeGolfer(name);
+    if (C.golferOf(rec) === g) {
+      if (!o.quiet) note('이미 ‘' + g + '’(으)로 보관된 스윙입니다.');
+      return Promise.resolve(true);
+    }
+    rec.golfer = g;
+    rec.updatedAt = Date.now();
+    goPush(g);
+    if (st.savedId === id) { st.golfer = g; }
+    goSave();
+    paintGolfer();
+    paintHist();
+    refreshProSelect();
+    return idbRun('readwrite', function (os) { return os.put(rec); }).then(function () {
+      if (!o.quiet) note('보관 항목의 골퍼를 ‘' + g + '’(으)로 바꿨습니다.');
+      return histLoad(true).then(function () { return true; });
+    }, function () {
+      note('골퍼를 바꾸지 못했습니다. 잠시 후 다시 시도해 주세요.');
+      return histLoad(true).then(function () { return false; });
+    });
+  }
+
   /* ======================= 내 스윙 보관함 (IndexedDB) =======================
    * 영상 원본(ArrayBuffer) + 좌표/구간/점수를 IndexedDB 에 보관한다.
    * localStorage 는 큰 영상 blob 을 담을 수 없어서 IndexedDB 를 쓴다.
@@ -3599,7 +4065,7 @@ var GolfPros = (function () {
    * (iOS Safari 구버전에서도 안전한 방식). 용량이 모자라면 좌표·점수만 보관한다.
    * ======================================================================== */
   var IDB_NAME = 'swingcheck.history.v1', IDB_STORE = 'swings', IDB_VER = 1;
-  var HIST_MAX = 15;                       // 최근 15개까지
+  var HIST_MAX = 40;                       // 사람별 추이를 위해 최근 40개까지
   var HIST_MAX_BYTES = 60 * 1024 * 1024;   // 영상 원본 1개 최대 60MB
   var idbDb = null, idbOpening = null, histChain = null;
 
@@ -3686,6 +4152,262 @@ var GolfPros = (function () {
     for (var i = 0; i < st.hist.length; i++) if (st.hist[i].id === id) return st.hist[i];
     return null;
   }
+
+  /* ------------------------- 날짜별 추이(사람별) ------------------------- */
+  function num(v) { return typeof v === 'number' && isFinite(v); }
+
+  /** 분석 결과에서 추이용 지표만 뽑는다 */
+  function analysisMetrics(m) {
+    if (!m || !m.v) return null;
+    var v = m.v;
+    return {
+      overall: m.overall,
+      plane: C.r1(Math.abs(v.pathDev)),
+      planeDiff: C.r1(v.planeDiff),
+      xf: Math.round(v.xf),
+      spine: C.r1(Math.abs(v.spineChangeI)),
+      head: C.r1(v.headDrift),
+      weight: Math.round(v.wI * 100),
+      tempoRatio: (m.tempo && num(m.tempo.ratio)) ? m.tempo.ratio : null
+    };
+  }
+
+  var metricsCache = {};
+
+  /** 기록의 지표 — 예전 기록(metrics 없음)은 보관한 좌표·구간으로 다시 계산한다 */
+  function recMetrics(rec) {
+    if (!rec) return null;
+    if (rec.metrics && num(rec.metrics.overall)) return rec.metrics;
+    var key = rec.id + '@' + (rec.updatedAt || rec.createdAt || 0);
+    if (metricsCache[key] !== undefined) return metricsCache[key];
+    var out = null;
+    try {
+      var frames = unpackFrames(rec.frames || [], rec.aspect || 0.75);
+      if (frames.length) {
+        var m = C.computeMetrics(frames, rec.phases, rec.view || 'dtl', rec.hand || 'right');
+        if (m) out = analysisMetrics(m);
+      }
+    } catch (e) { out = null; }
+    if (!out) {
+      var tm0 = histTempo(rec);
+      out = {
+        overall: (rec.report && num(rec.report.overall)) ? rec.report.overall : null,
+        tempoRatio: tm0 && num(tm0.ratio) ? tm0.ratio : null
+      };
+    }
+    metricsCache[key] = out;
+    return out;
+  }
+
+  function trendEntries(list) {
+    var out = [], i;
+    for (i = 0; i < (list || []).length; i++) {
+      var r = list[i];
+      var mt = recMetrics(r);
+      if (!mt || !num(mt.overall)) continue;
+      var tm = histTempo(r);
+      out.push({
+        id: r.id, golfer: C.golferOf(r), createdAt: r.createdAt || 0, day: C.dayKey(r.createdAt),
+        overall: mt.overall,
+        tempoRatio: (tm && num(tm.ratio)) ? tm.ratio : (num(mt.tempoRatio) ? mt.tempoRatio : null),
+        metrics: { plane: mt.plane, xf: mt.xf, spine: mt.spine, head: mt.head, weight: mt.weight }
+      });
+    }
+    return out;
+  }
+
+  function pxRound(v) { return Math.round(v * 10) / 10; }
+
+  /** 날짜별 꾸러미 표 — 최근 날짜가 위 */
+  function trendTable(rows) {
+    var html = '', i, j;
+    for (i = rows.length - 1; i >= 0; i--) {
+      var r = rows[i], d = r.d || { overall: null, tempoRatio: null, metrics: {} };
+      var last = (i === rows.length - 1);
+      html += '<div class="tday' + (last ? ' now' : '') + '">' +
+        '<div class="tday-h"><b>' + C.fmtDay(r.day) + '</b>' +
+          (r.count > 1 ? '<em>' + r.count + '건</em>' : '') +
+          (last ? '<span class="tnow">최근</span>' : '') +
+          '<span class="tscore">' + (num(r.overall) ? Math.round(r.overall) : '–') + '<u>점</u>' +
+          deltaTag(d.overall, '', 0) + '</span></div>' +
+        '<div class="tday-s"><span>템포 ' + (num(r.tempoRatio) ? C.fmtRatio(r.tempoRatio) + ' : 1' : '–') + '</span>' +
+          deltaTag(d.tempoRatio, '', 1) + '</div>' +
+        '<div class="tday-m">' + trendMetricTags(r, d) + '</div>' +
+        '</div>';
+    }
+    return html;
+  }
+
+  function deltaTag(v, unit, digits) {
+    if (!num(v)) return '';
+    var a = Math.abs(v);
+    var s = digits === 1 ? String(Math.round(a * 10) / 10) : String(Math.round(a));
+    if (Number(s) === 0) return '<i class="dflat">–</i>';
+    return '<i class="' + (v > 0 ? 'dup' : 'ddn') + '">' + (v > 0 ? '▲' : '▼') + s + (unit || '') + '</i>';
+  }
+
+  function trendMetricTags(r, d) {
+    var out = '', j;
+    for (j = 0; j < C.TREND_METRICS.length; j++) {
+      var mt = C.TREND_METRICS[j];
+      var v = r.metrics ? r.metrics[mt.key] : null;
+      if (!num(v)) continue;
+      var dt = d && d.metrics ? d.metrics[mt.key] : null;
+      var arrow = '';
+      if (dt && num(dt.d)) {
+        var cls = dt.better === 'better' ? 'mtb' : (dt.better === 'worse' ? 'mtw' : 'mtf');
+        var ad = Math.abs(dt.d);
+        arrow = '<i class="' + cls + '">' + (ad < 0.05 ? '–' : (dt.d > 0 ? '▲' : '▼') + (Math.round(ad * 10) / 10)) + '</i>';
+      }
+      out += '<span class="tmet">' + mt.label + ' ' + (Math.round(v * 10) / 10) + mt.unit + arrow + '</span>';
+    }
+    return out;
+  }
+
+  /** 날짜별 변화 그래프 (SVG 문자열) */
+  function trendSvg(rows, key) {
+    var W = 360, H = 178, pad = { l: 34, r: 12, t: 22, b: 28 };
+    var vals = [], i;
+    for (i = 0; i < rows.length; i++) vals.push(key === 'tempo' ? rows[i].tempoRatio : rows[i].overall);
+    var lay = C.chartLayout(vals, W, H, pad);
+    if (!lay) return '<p class="trend-none">표시할 값이 없습니다.</p>';
+    function fv(v) {
+      return key === 'tempo' ? (Math.round(v * 10) / 10).toFixed(1) : String(Math.round(v));
+    }
+    var unit = key === 'tempo' ? ':1' : '';
+    var ih = H - pad.t - pad.b;
+    var lvl = [lay.max, (lay.max + lay.min) / 2, lay.min];
+    var grid = '';
+    for (i = 0; i < lvl.length; i++) {
+      var gy = pxRound(pad.t + ih * (1 - (lvl[i] - lay.min) / (lay.max - lay.min)));
+      grid += '<line x1="' + pad.l + '" y1="' + gy + '" x2="' + (W - pad.r) + '" y2="' + gy + '" class="tgrid"/>' +
+        '<text x="' + (pad.l - 5) + '" y="' + (gy + 3) + '" class="tylab" text-anchor="end">' + fv(lvl[i]) + '</text>';
+    }
+    var pts = [], line = '', dots = '', xlab = '', step = Math.max(1, Math.ceil(rows.length / 6));
+    for (i = 0; i < lay.pts.length; i++) {
+      var p = lay.pts[i];
+      if (p.y === null) continue;
+      pts.push(p);
+      line += (line ? ' L' : 'M') + p.x + ' ' + p.y;
+      dots += '<circle cx="' + p.x + '" cy="' + p.y + '" r="3.4" class="tdot"/>';
+      if (rows.length <= 7 || i === 0 || i === lay.pts.length - 1) {
+        dots += '<text x="' + p.x + '" y="' + (p.y - 8) + '" class="tval" text-anchor="middle">' + fv(p.v) + unit + '</text>';
+      }
+      if (i % step === 0 || i === lay.pts.length - 1) {
+        xlab += '<text x="' + p.x + '" y="' + (H - 8) + '" class="txlab" text-anchor="middle">' + C.fmtDayShort(rows[i].day) + '</text>';
+      }
+    }
+    var area = '';
+    if (pts.length) {
+      area = 'M' + pts[0].x + ' ' + (H - pad.b) + ' L' + pts[0].x + ' ' + pts[0].y;
+      for (i = 1; i < pts.length; i++) area += ' L' + pts[i].x + ' ' + pts[i].y;
+      area += ' L' + pts[pts.length - 1].x + ' ' + (H - pad.b) + ' Z';
+    }
+    var label = (st.histFilter || '') + ' 날짜별 ' + (key === 'tempo' ? '템포' : '총점') + ' 변화';
+    return '<svg viewBox="0 0 ' + W + ' ' + H + '" class="tsvg" role="img" aria-label="' + escapeHtml(label) + '">' +
+      '<defs><linearGradient id="tfill" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop offset="0" stop-color="#2fe0ad" stop-opacity="0.30"/><stop offset="1" stop-color="#2fe0ad" stop-opacity="0"/></linearGradient></defs>' +
+      grid +
+      (area ? '<path d="' + area + '" fill="url(#tfill)" stroke="none"/>' : '') +
+      (line ? '<path d="' + line + '" class="tline"/>' : '') +
+      dots + xlab + '</svg>';
+  }
+
+  function paintTrendSeg() {
+    if (!el.trendSeg) return;
+    var btns = el.trendSeg.querySelectorAll('[data-tkey]');
+    for (var i = 0; i < btns.length; i++) {
+      if (btns[i].getAttribute('data-tkey') === st.trendKey) btns[i].classList.add('on');
+      else btns[i].classList.remove('on');
+    }
+  }
+
+  function onTrendSegClick(e) {
+    var b = e && e.target && e.target.closest ? e.target.closest('[data-tkey]') : null;
+    if (!b) return;
+    st.trendKey = b.getAttribute('data-tkey') === 'tempo' ? 'tempo' : 'overall';
+    paintTrend();
+  }
+
+  function paintTrend() {
+    if (!el.trendBox) return;
+    var g = st.histFilter;
+    if (!g) { show(el.trendBox, false); return; }
+    show(el.trendBox, true);
+    var tr = C.buildTrend(trendEntries(st.hist), g);
+    var sum = tr.summary, rows = tr.rows;
+    setText(el.trendName, g);
+    setText(el.trendMeta, '');
+    paintTrendSeg();
+    if (el.trendChart) el.trendChart.innerHTML = '';
+    if (el.trendTable) el.trendTable.innerHTML = '';
+    if (!rows.length) {
+      if (el.trendNote) {
+        show(el.trendNote, true);
+        setText(el.trendNote, '‘' + g + '’(으)로 보관된 스윙이 아직 없습니다. 영상을 올려 이 사람을 고르면 날짜별 변화가 여기에 쌓입니다.');
+      }
+      return;
+    }
+    var meta = '스윙 ' + sum.swings + '건 · 날짜 ' + sum.days + '일';
+    if (sum.best && num(sum.best.overall)) meta += ' · 최고 ' + Math.round(sum.best.overall) + '점(' + C.fmtDayShort(sum.best.day) + ')';
+    setText(el.trendMeta, meta);
+    if (el.trendChart) el.trendChart.innerHTML = trendSvg(rows, st.trendKey);
+    if (el.trendTable) el.trendTable.innerHTML = trendTable(rows);
+    if (el.trendNote) {
+      show(el.trendNote, true);
+      if (rows.length === 1) {
+        setText(el.trendNote, '아직 1일치 기록입니다. 다음 스윙을 저장하면 이 날짜를 기준으로 변화(▲/▼)가 표시됩니다.');
+      } else {
+        var sd = sum.dOverall;
+        var txt = C.fmtDay(sum.firstDay) + ' → ' + C.fmtDay(sum.lastDay) +
+          (num(sd) ? ' · 총점 ' + (sd >= 0 ? '+' : '−') + Math.abs(Math.round(sd)) + '점' : '') +
+          ' · 같은 날 여러 스윙은 그날 마지막 스윙을 대표로 씁니다.';
+        setText(el.trendNote, txt);
+      }
+    }
+  }
+
+  function paintHistFilter() {
+    if (!el.histFilter) return;
+    var tabs = C.golferTabs(st.hist), html = '', i;
+    html += '<button type="button" class="gchip' + (st.histFilter ? '' : ' on') + '" data-gf="__all">전체<em>' + st.hist.length + '</em></button>';
+    for (i = 0; i < tabs.length; i++) {
+      html += '<button type="button" class="gchip' + (st.histFilter === tabs[i].name ? ' on' : '') + '" data-gf="' +
+        escapeHtml(tabs[i].name) + '">' + escapeHtml(tabs[i].name) + '<em>' + tabs[i].count + '</em></button>';
+    }
+    html += '<button type="button" class="gchip add" data-gf="__new">＋ 새 사람</button>';
+    el.histFilter.innerHTML = html;
+  }
+
+  function onHistFilterClick(e) {
+    var b = e && e.target && e.target.closest ? e.target.closest('[data-gf]') : null;
+    if (!b) return;
+    var v = b.getAttribute('data-gf');
+    if (v === '__new') { st.histNewFor = null; showGolferNew(el.histNewRow, el.histNewInput); return; }
+    st.histFilter = (v === '__all') ? null : C.normalizeGolfer(v);
+    st.histConfirm = null;
+    paintHist();
+  }
+
+  /** 보관 항목의 골퍼 선택기 변경 */
+  function onHistChange(e) {
+    var t = e && e.target;
+    if (!t || !t.getAttribute) return;
+    var id = t.getAttribute('data-go');
+    if (!id) return;
+    if (t.value === '__new') {
+      st.histNewFor = id;
+      showGolferNew(el.histNewRow, el.histNewInput);
+      return;
+    }
+    histSetGolfer(id, t.value);
+  }
+
+  function histEmptyText() {
+    if (!st.hist.length) return '아직 보관한 스윙이 없습니다. 영상을 올려 분석하면 자동으로 보관됩니다.';
+    if (st.histFilter) return '‘' + st.histFilter + '’(으)로 보관된 스윙이 없습니다. 다른 사람을 고르거나 영상을 올려 저장해 주세요.';
+    return '보관한 스윙이 없습니다.';
+  }
   function fmtBytes(n) {
     if (!n) return '';
     if (n >= 1024 * 1024 * 1024) return (n / (1024 * 1024 * 1024)).toFixed(1) + 'GB';
@@ -3707,6 +4429,7 @@ var GolfPros = (function () {
       id: st.savedId || ('h' + now + '-' + Math.random().toString(36).slice(2, 6)),
       createdAt: st.savedAt || now,
       updatedAt: now,
+      golfer: C.normalizeGolfer(st.golfer),
       view: st.view, hand: st.hand,
       aspect: st.W / st.H, W: st.W, H: st.H,
       frames: packFrames(st.frames),
@@ -3716,8 +4439,10 @@ var GolfPros = (function () {
       },
       report: {
         overall: st.analysis.overall, grade: st.analysis.grade, headline: st.analysis.headline || '',
-        tempo: (st.analysis.tempo ? st.analysis.tempo.ratio : null)
+        tempo: (st.analysis.tempo ? st.analysis.tempo.ratio : null),
+        golfer: C.normalizeGolfer(st.golfer)
       },
+      metrics: analysisMetrics(st.analysis),
       tempo: (st.analysis.tempo ? {
         backswingSec: st.analysis.tempo.backswingSec,
         downswingSec: st.analysis.tempo.downswingSec,
@@ -3766,6 +4491,7 @@ var GolfPros = (function () {
       });
     }).then(function () {
       st.savedId = rec.id; st.savedAt = rec.createdAt;
+      if (st.histFilter && st.histFilter !== C.golferOf(rec)) st.histFilter = C.golferOf(rec);
       return pruneHist(rec.id).then(function () { return histLoad(true); });
     }).then(function () {
       var why = warning === 'quota'
@@ -3834,33 +4560,56 @@ var GolfPros = (function () {
 
   function paintHist() {
     if (el.histCount) setText(el.histCount, String(st.hist.length));
+    paintGolfer();
+    paintHistFilter();
+    paintTrend();
     if (!el.histList) return;
-    var html = '', bytes = 0;
-    for (var i = 0; i < st.hist.length; i++) {
-      var r = st.hist[i];
+    var html = '', bytes = 0, i, j, r, meta, opts, names = goAll(), list = [];
+    for (i = 0; i < st.hist.length; i++) {
+      r = st.hist[i];
       if (r.video && r.video.byteLength) bytes += r.video.byteLength;
-      var meta = [stamp(r.createdAt), r.view === 'face' ? '정면' : '측면', r.hand === 'left' ? '왼손' : '오른손'];
+      if (st.histFilter && C.golferOf(r) !== st.histFilter) continue;
+      list.push(r);
+    }
+    for (i = 0; i < list.length; i++) {
+      r = list[i];
+      meta = [stamp(r.createdAt), r.view === 'face' ? '정면' : '측면', r.hand === 'left' ? '왼손' : '오른손'];
       meta.push((r.report && r.report.overall != null) ? (r.report.overall + '점 ' + (r.report.grade || '')) : '점수 없음');
       var tm = histTempo(r);
       if (tm && tm.ratio) meta.push('템포 ' + C.fmtRatio(tm.ratio) + ':1');
       if (r.dur) meta.push(r.dur.toFixed(1) + '초');
       if (!r.video) meta.push('영상 원본 없음');
       var armed = (r.id === st.histConfirm);
+      var gNow = C.golferOf(r);
+      opts = '';
+      for (j = 0; j < names.length; j++) {
+        opts += '<option value="' + escapeHtml(names[j]) + '"' + (names[j] === gNow ? ' selected' : '') + '>' +
+          escapeHtml(names[j]) + '</option>';
+      }
+      opts += '<option value="__new">＋ 새 사람…</option>';
       html += '<li class="hist-item' + (r.id === st.savedId ? ' on' : '') + (armed ? ' armed' : '') + '">' +
-        '<button class="hist-open" type="button" data-open="' + escapeHtml(r.id) + '">' +
-          '<span class="hn">' + escapeHtml(histNameOf(r)) + '</span>' +
-          '<span class="hm">' + escapeHtml(meta.join(' · ')) + '</span>' +
-          (r.fileName ? '<span class="hf">' + escapeHtml(r.fileName) + '</span>' : '') +
-        '</button>' +
-        '<button class="hist-cmp" type="button" data-cmp="' + escapeHtml(r.id) + '" title="이 스윙을 기준으로 지금 스윙과 비교">비교</button>' +
-        '<button class="hist-del" type="button" data-del="' + escapeHtml(r.id) + '">' + (armed ? '정말 삭제' : '삭제') + '</button>' +
+        '<div class="hist-top">' +
+          '<button class="hist-open" type="button" data-open="' + escapeHtml(r.id) + '">' +
+            '<span class="hn">' + escapeHtml(histNameOf(r)) + '</span>' +
+            '<span class="hm">' + escapeHtml(meta.join(' · ')) + '</span>' +
+            (r.fileName ? '<span class="hf">' + escapeHtml(r.fileName) + '</span>' : '') +
+          '</button>' +
+          '<button class="hist-cmp" type="button" data-cmp="' + escapeHtml(r.id) + '" title="이 스윙을 기준으로 지금 스윙과 비교">비교</button>' +
+          '<button class="hist-del" type="button" data-del="' + escapeHtml(r.id) + '">' + (armed ? '정말 삭제' : '삭제') + '</button>' +
+        '</div>' +
+        '<div class="hist-go">' +
+          '<span class="hist-go-k" aria-hidden="true">👤</span>' +
+          '<select class="hist-go-sel" data-go="' + escapeHtml(r.id) + '" aria-label="이 스윙의 골퍼">' + opts + '</select>' +
+        '</div>' +
         '</li>';
     }
     el.histList.innerHTML = html;
-    show(el.histEmpty, st.hist.length === 0);
+    show(el.histEmpty, list.length === 0);
+    if (list.length === 0) setText(el.histEmpty, histEmptyText());
     if (el.histTotal) {
       setText(el.histTotal, '이 브라우저(기기)에만 저장됩니다 · 최근 ' + HIST_MAX + '개까지 보관' +
-        (bytes ? ' · 영상 ' + fmtBytes(bytes) : ''));
+        (bytes ? ' · 영상 ' + fmtBytes(bytes) : '') +
+        (st.histFilter ? ' · ‘' + st.histFilter + '’ ' + list.length + '개 보기' : ''));
     }
   }
 
@@ -3964,6 +4713,8 @@ var GolfPros = (function () {
       st.view = rec.view === 'face' ? 'face' : 'dtl';
       st.hand = rec.hand === 'left' ? 'left' : 'right';
       paintViewHint(); paintHand();
+      st.golfer = C.golferOf(rec);
+      goPush(st.golfer); goSave(); paintGolfer();
       st.savedId = rec.id; st.savedAt = rec.createdAt;
       st.srcMime = rec.mimeType || 'video/mp4';
       st.srcName = rec.fileName || '';
@@ -4008,7 +4759,7 @@ var GolfPros = (function () {
         el.histToggle.classList.remove('open');
         el.histToggle.setAttribute('aria-expanded', 'false');
       }
-      note('보관함에서 불러왔습니다. 다시 분석하지 않아도 재생·구간 이동·프로·과거 비교를 바로 쓸 수 있습니다.');
+      note('보관함에서 불러왔습니다. ‘' + C.golferOf(rec) + '’ 스윙입니다. 다시 분석하지 않아도 재생·구간 이동·프로·과거 비교를 바로 쓸 수 있습니다.');
       return true;
     } catch (e) {
       st.histSuppress = false;
@@ -4029,15 +4780,28 @@ var GolfPros = (function () {
     paintTabs: paintTabs, analyze: analyze,
     hist: {
       toggle: toggleHist, open: openHist, del: histDelete, save: histSaveNow, load: histLoad,
-      compare: histCompare,
+      compare: histCompare, setGolfer: histSetGolfer,
+      filter: function (name) {
+        st.histFilter = name ? C.normalizeGolfer(name) : null;
+        paintHist();
+        return st.histFilter;
+      },
+      trendKey: function (k) { st.trendKey = k === 'tempo' ? 'tempo' : 'overall'; paintTrend(); return st.trendKey; },
+      trend: function (name) { return C.buildTrend(trendEntries(st.hist), name || st.histFilter || C.DEFAULT_GOLFER); },
+      metrics: recMetrics,
       reload: function () { idbDb = null; idbOpening = null; return histLoad(true); },
       state: function () {
         return {
           list: st.hist, savedId: st.savedId, savedAt: st.savedAt, confirm: st.histConfirm,
           name: st.hist.length ? histNameOf(st.hist[0]) : '',
+          filter: st.histFilter,
           tempo: function (id) { var r = histFind(id); return r ? histTempo(r) : null; }
         };
       }
+    },
+    golfer: {
+      set: setGolfer, add: addGolferFrom, list: goAll,
+      current: function () { return st.golfer; }
     },
     cmp: {
       on: setCmpOn, select: selectPro, draw: drawCompare, table: renderCmpTable,
