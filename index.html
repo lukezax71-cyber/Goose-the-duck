@@ -4660,11 +4660,18 @@ var GolfPros = (function () {
     }
 
     /* --- 실제 손 궤적 (어드레스 → 현재 프레임, 이후는 흐리게) --- */
+    /* 비교 화면에서는 지금 지나고 있는 구간만 그린다(백스윙 꼬리·아직 안 간 구간은 생략). */
+    var segFrom = cmpSimple
+      ? (st.cur >= ph.follow ? ph.follow : (st.cur >= ph.impact ? ph.impact : ph.top)) - 2
+      : -1;
     var from = null;
     for (var i = 0; i < hp.pts.length; i++) {
       var p = hp.pts[i];
       if (!p) { from = null; continue; }
       if (from === null) { from = p; continue; }
+      if (cmpSimple) {
+        if (p.i < segFrom || from.i > st.cur + 1) { from = p; continue; }
+      }
       var a = pathPx(from), b = pathPx(p);
       var col = colorOf(from.i, p.i);
       var ahead = i > st.cur;                                    // 아직 지나지 않은 구간
@@ -4684,6 +4691,7 @@ var GolfPros = (function () {
     for (var mk = 0; mk < marks.length; mk++) {
       var mi = ph[marks[mk].k], mp = hp.pts[mi];
       if (!mp || mi > st.cur + 2) continue;
+      if (cmpSimple && mi < segFrom) continue;
       circle(pathPx(mp), 3.4 * uw, COL.halo, marks[mk].c, 1 * uw, []);
     }
 
@@ -5152,8 +5160,9 @@ var GolfPros = (function () {
     for (var i = 0; i < bones.length; i++) {
       var ba = d[bones[i][0]], bb = d[bones[i][1]];
       if (!ba || !bb) continue;
-      line(P(ba), P(bb), 'rgba(212,232,240,0.24)', lw(2.0), []);
+      line(P(ba), P(bb), 'rgba(212,232,240,0.34)', lw(2.0), []);
     }
+    if (d.head && d.headR) circle(P(d.head), d.headR * st.H, 'rgba(212,232,240,0.30)', null, lw(1.8), []);
     ctx.restore();
 
     /* 1) 스파인각 — 어드레스 척추선(초록 점선) vs 지금 척추선 */
