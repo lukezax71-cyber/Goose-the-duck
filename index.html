@@ -5028,7 +5028,8 @@ var GolfPros = (function () {
       line += (line ? ' L' : 'M') + p.x + ' ' + p.y;
       dots += '<circle cx="' + p.x + '" cy="' + p.y + '" r="3.4" class="tdot"/>';
       if (rows.length <= 7 || i === 0 || i === lay.pts.length - 1) {
-        dots += '<text x="' + p.x + '" y="' + (p.y - 8) + '" class="tval" text-anchor="middle">' + fv(p.v) + unit + '</text>';
+        var ly = (p.y - 8 < pad.t + 9) ? (p.y + 15) : (p.y - 8);
+        dots += '<text x="' + p.x + '" y="' + ly + '" class="tval" text-anchor="middle">' + fv(p.v) + unit + '</text>';
       }
       if (i % step === 0 || i === lay.pts.length - 1) {
         xlab += '<text x="' + p.x + '" y="' + (H - 8) + '" class="txlab" text-anchor="middle">' + C.fmtDayShort(rows[i].day) + '</text>';
