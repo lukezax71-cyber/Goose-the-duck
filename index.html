@@ -4464,22 +4464,10 @@ var GolfPros = (function () {
     var pa = pathPx(a), pb = pathPx(b);
     var dx = pb.x - pa.x, dy = pb.y - pa.y, L = Math.sqrt(dx * dx + dy * dy);
     if (L < 1) return;
-    var nx = -dy / L, ny = dx / L;
-    if (tolPx > 1) {
-      ctx.save();
-      ctx.beginPath();
-      ctx.moveTo(pa.x + nx * tolPx, pa.y + ny * tolPx);
-      ctx.lineTo(pb.x + nx * tolPx, pb.y + ny * tolPx);
-      ctx.lineTo(pb.x - nx * tolPx, pb.y - ny * tolPx);
-      ctx.lineTo(pa.x - nx * tolPx, pa.y - ny * tolPx);
-      ctx.closePath();
-      ctx.fillStyle = 'rgba(52,211,153,0.13)';
-      ctx.fill();
-      ctx.restore();
-    }
-    // 기준선(초록 점선) — 양 끝을 조금 늘려 손이 지나갈 방향을 보여 준다
+    // 기준선(초록 점선) — 양 끝을 조금 늘려 손이 지나갈 방향을 보여 준다.
+    // 띠(면)는 칠하지 않는다: 폰 화면에서 선이 겹치면 읽기 어려워서 색만으로 벗어남을 알린다.
     var e = ext(pa, pb, 0.05, 0.10);
-    stroke(e[0], e[1], COL.ref, 2.1 * u, [9 * u, 6 * u]);
+    stroke(e[0], e[1], COL.ref, 2.2 * u, [9 * u, 6 * u]);
   }
 
   function drawHandPath(d, A, m) {
