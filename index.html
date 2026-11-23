@@ -16,6 +16,11 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>
+.offscreen {
+  position: fixed; left: -10px; bottom: 0; width: 2px; height: 2px;
+  opacity: 0.01; pointer-events: none; z-index: -1;
+}
+
 :root {
   --bg: #060a12;
   --bg2: #0a1120;
