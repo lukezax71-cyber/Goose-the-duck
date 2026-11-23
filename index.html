@@ -4293,6 +4293,8 @@ var GolfPros = (function () {
     devHot: '#ef4444',                    // 뚜렷한 벗어남(빨강)
     body: 'rgba(212,232,240,0.66)',       // 중립 스켈레톤
     bodySoft: 'rgba(212,232,240,0.26)',
+    path: 'rgba(236,244,255,0.92)',       // 내 손 궤적(중립 흰색) — 초록 기준선과 구분
+    pathBack: 'rgba(236,244,255,0.40)',
     halo: 'rgba(2,8,12,0.5)'              // 밝은 영상 위에서도 보이게 하는 어두운 받침
   };
 
@@ -4471,13 +4473,13 @@ var GolfPros = (function () {
       ctx.lineTo(pb.x - nx * tolPx, pb.y - ny * tolPx);
       ctx.lineTo(pa.x - nx * tolPx, pa.y - ny * tolPx);
       ctx.closePath();
-      ctx.fillStyle = COL.refFill;
+      ctx.fillStyle = 'rgba(52,211,153,0.13)';
       ctx.fill();
       ctx.restore();
     }
     // 기준선(초록 점선) — 양 끝을 조금 늘려 손이 지나갈 방향을 보여 준다
     var e = ext(pa, pb, 0.05, 0.10);
-    stroke(e[0], e[1], COL.ref, 1.7 * u, [8 * u, 6 * u]);
+    stroke(e[0], e[1], COL.ref, 2.1 * u, [9 * u, 6 * u]);
   }
 
   function drawHandPath(d, A, m) {
@@ -4500,11 +4502,11 @@ var GolfPros = (function () {
     (hp.fin.devs || []).forEach(function (o) { dev[o.i] = { v: o.v, seg: 'fin' }; });
     function devOf(i) { return dev[i] ? dev[i].v : 0; }
     function colorOf(i0, i1) {
-      if (i0 < ph.top) return COL.refSoft;                       // 백스윙 = 기준을 만드는 구간(흐린 초록)
+      if (i0 < ph.top) return COL.pathBack;                      // 백스윙은 흐린 흰색
       var dv = Math.max(Math.abs(devOf(i0)), Math.abs(devOf(i1)));
       if (dv > hp.tolHardPct) return COL.devHot;
       if (dv > hp.tolPct) return COL.dev;
-      return COL.ref;
+      return COL.path;                                           // 기준 안 = 흰색(초록 기준선과 구분)
     }
 
     /* --- 실제 손 궤적 (어드레스 → 현재 프레임, 이후는 흐리게) --- */
@@ -4517,9 +4519,9 @@ var GolfPros = (function () {
       var col = colorOf(from.i, p.i);
       var ahead = i > st.cur;                                    // 아직 지나지 않은 구간
       ctx.save();
-      ctx.globalAlpha = ahead ? 0.28 : 1;
-      line(a, b, COL.halo, (ahead ? 3.4 : 5.0) * u, []);
-      line(a, b, col, (ahead ? 1.6 : 2.6) * u, []);
+      ctx.globalAlpha = ahead ? 0.26 : 1;
+      line(a, b, COL.halo, (ahead ? 3.8 : 6.0) * u, []);
+      line(a, b, col, (ahead ? 1.8 : 3.2) * u, []);
       ctx.restore();
       from = p;
     }
