@@ -5017,8 +5017,10 @@ var GolfPros = (function () {
     var grid = '';
     for (i = 0; i < lvl.length; i++) {
       var gy = pxRound(pad.t + ih * (1 - (lvl[i] - lay.min) / (lay.max - lay.min)));
-      grid += '<line x1="' + pad.l + '" y1="' + gy + '" x2="' + (W - pad.r) + '" y2="' + gy + '" class="tgrid"/>' +
-        '<text x="' + (pad.l - 5) + '" y="' + (gy + 3) + '" class="tylab" text-anchor="end">' + fv(lvl[i]) + '</text>';
+      grid += '<line x1="' + pad.l + '" y1="' + gy + '" x2="' + (W - pad.r) + '" y2="' + gy + '" class="tgrid"/>';
+      if (rows.length >= 3) {
+        grid += '<text x="' + (pad.l - 5) + '" y="' + (gy + 3) + '" class="tylab" text-anchor="end">' + fv(lvl[i]) + '</text>';
+      }
     }
     var pts = [], line = '', dots = '', xlab = '', step = Math.max(1, Math.ceil(rows.length / 6));
     for (i = 0; i < lay.pts.length; i++) {
