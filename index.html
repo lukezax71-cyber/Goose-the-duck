@@ -4467,7 +4467,7 @@ var GolfPros = (function () {
     // 기준선(초록 점선) — 양 끝을 조금 늘려 손이 지나갈 방향을 보여 준다.
     // 띠(면)는 칠하지 않는다: 폰 화면에서 선이 겹치면 읽기 어려워서 색만으로 벗어남을 알린다.
     var e = ext(pa, pb, 0.05, 0.10);
-    stroke(e[0], e[1], COL.ref, 2.2 * u, [9 * u, 6 * u]);
+    stroke(e[0], e[1], COL.ref, 2.4 * u, [9 * u, 6 * u]);
   }
 
   function drawHandPath(d, A, m) {
@@ -4507,9 +4507,9 @@ var GolfPros = (function () {
       var col = colorOf(from.i, p.i);
       var ahead = i > st.cur;                                    // 아직 지나지 않은 구간
       ctx.save();
-      ctx.globalAlpha = ahead ? 0.26 : 1;
-      line(a, b, COL.halo, (ahead ? 3.8 : 6.0) * u, []);
-      line(a, b, col, (ahead ? 1.8 : 3.2) * u, []);
+      ctx.globalAlpha = ahead ? 0.30 : 1;
+      line(a, b, COL.halo, (ahead ? 4.6 : 7.4) * u, []);
+      line(a, b, col, (ahead ? 2.2 : 4.2) * u, []);
       ctx.restore();
       from = p;
     }
