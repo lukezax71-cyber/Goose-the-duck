@@ -286,7 +286,7 @@ input[type=range]:disabled { opacity: .45; }
 .check.bad { border-left-color: var(--bad); }
 .ch-head { display: flex; align-items: baseline; gap: 8px; }
 .ch-head b { font-size: 12.5px; font-weight: 800; }
-.ch-head .val { margin-left: auto; font-size: 13px; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--text); }
+.ch-head .val { margin-left: auto; font-size: 13px; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--text); white-space: nowrap; }
 .check.good .val { color: var(--good); }
 .check.warn .val { color: var(--warn); }
 .check.bad .val { color: var(--bad); }
@@ -2024,7 +2024,7 @@ var GolfCore = (function () {
     }
     checks.push({
       id: 'release', short: '릴리스 궤도', label: '임팩트 후 궤도 (임팩트→팔로우)',
-      value: po ? '이탈 ' + po.meanDev + '%' + (pull === null ? '' : ' · ' + (pull < -3 ? '당김 ' : (pull > 3 ? '밀림 ' : '거리 ')) + Math.abs(pull) + '%') : '–',
+      value: po ? '이탈 ' + po.meanDev + '%' : '–',
       score: postPathScore, tip: postPathTip,
       hint: po ? '평균 이탈 ' + po.meanDev + '% · 최대 ' + po.maxDev + '% · 어깨-손 거리 임팩트→팔로우 ' +
         (pull === null ? '3D 없음' : (pull >= 0 ? '+' : '') + pull + '%') + ' · 리드팔꿈치 ' + Math.round(leadElbowFollow) + '°' : '궤적 계산 불가'
@@ -2054,7 +2054,7 @@ var GolfCore = (function () {
     }
     checks.push({
       id: 'arcFin', short: '피니시 아크', label: '팔로우~피니시 궤도·아크',
-      value: fn ? '아크 ' + fn.thruSpan + '° · 역행 ' + fn.rev + '회' : '–',
+      value: fn ? '아크 ' + fn.thruSpan + '°' : '–',
       score: arcScore, tip: arcTip,
       hint: fn ? '스루 원호 ' + fn.thruSpan + '° · 방향 역행 ' + fn.rev + '회 · 프레임당 최대 ' + Math.round(fn.maxStep) +
         '° · 곡률 ' + fn.devMax + '% · 양손 높이 ' + (finHandUp >= 0 ? '어깨 위 ' : '어깨 아래 ') + Math.abs(r1(finHandUp)) + 'cm' : '궤적 계산 불가'
