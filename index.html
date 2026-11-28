@@ -12,7 +12,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="스윙 분석">
 <meta name="format-detection" content="telephone=no">
-<meta name="app-build" content="v10-ios-memory">
+<meta name="app-build" content="v11-ios-memory-drills">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" type="image/png" href="icon-192.png">
@@ -297,6 +297,35 @@ input[type=range]:disabled { opacity: .45; }
 .check.bad .ch-bar i { background: var(--bad); }
 .ch-tip { margin: 0; font-size: 11.5px; line-height: 1.62; color: #c4d3ea; }
 .ch-hint { margin: 6px 0 0; font-size: 10.5px; color: var(--dim); }
+
+/* ---------- 우선 교정 3가지 ---------- */
+.fix-sub { margin: 0 0 10px; font-size: 11px; line-height: 1.6; color: var(--dim); }
+.fix-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.fix-item { padding: 12px; border-radius: 13px; background: #0c1523; border: 1px solid var(--line); border-left: 3px solid var(--line2); }
+.fix-item.warn { border-left-color: var(--warn); }
+.fix-item.bad { border-left-color: var(--bad); }
+.fix-item.good { border-left-color: var(--good); }
+.fix-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.fix-rank { flex: none; width: 20px; height: 20px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 900; color: #08111d; background: var(--accent); }
+.fix-item.warn .fix-rank { background: var(--warn); }
+.fix-item.bad .fix-rank { background: var(--bad); }
+.fix-top b { font-size: 12.5px; font-weight: 800; }
+.fix-src { font-size: 9.5px; font-weight: 800; letter-spacing: .02em; color: var(--accent2); border: 1px solid rgba(69,184,255,.35);
+  border-radius: 6px; padding: 1px 5px; }
+.fix-val { margin-left: auto; font-size: 12.5px; font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--text); }
+.fix-item.warn .fix-val { color: var(--warn); }
+.fix-item.bad .fix-val { color: var(--bad); }
+.fix-why { margin: 7px 0 0; font-size: 11.5px; line-height: 1.62; color: #c4d3ea; }
+.fix-drill { margin-top: 9px; padding: 9px 11px; border-radius: 10px; background: #0a1220; border: 1px solid var(--line2); }
+.fix-drill-h { display: flex; align-items: baseline; gap: 6px; margin-bottom: 5px; }
+.fix-drill-h em { font-style: normal; font-size: 9.5px; font-weight: 800; color: var(--accent); letter-spacing: .04em; }
+.fix-drill-h b { font-size: 11.5px; font-weight: 800; color: var(--text); }
+.fix-drill ol { margin: 0; padding-left: 15px; }
+.fix-drill li { font-size: 11px; line-height: 1.65; color: #b9c8de; margin: 2px 0; }
+.fix-feel, .fix-rep { margin: 8px 0 0; font-size: 10.8px; line-height: 1.6; color: var(--muted); }
+.fix-feel b, .fix-rep b { color: var(--text); font-weight: 800; margin-right: 5px; }
+.fix-feel { margin: 8px 0 0; font-size: 10.8px; line-height: 1.6; color: var(--muted); }
 
 /* ---------- help ---------- */
 .help ul { margin: 0; padding-left: 17px; }
@@ -865,6 +894,12 @@ footer { text-align: center; font-size: 10.5px; color: #4b5a74; padding: 6px 0 1
       <div class="bars" id="bars"></div>
     </section>
 
+    <section class="card" id="fixCard" hidden>
+      <h2>지금 먼저 고칠 3가지 <span class="h2sub">연습 드릴까지</span></h2>
+      <p class="fix-sub" id="fixSub">점수가 낮은 항목부터 순서대로, 바로 해 볼 수 있는 교정법입니다.</p>
+      <ol class="fix-list" id="fixList"></ol>
+    </section>
+
     <section class="card" id="trajCard" hidden>
       <h2>궤도 분석 <span class="h2sub">다운스윙 → 임팩트 → 피니시</span></h2>
       <div class="traj-diagrams" id="trajDiagrams"></div>
@@ -1267,6 +1302,210 @@ var GolfCore = (function () {
     if (!m || !m.checks) return null;
     for (var i = 0; i < m.checks.length; i++) if (m.checks[i].id === id) return m.checks[i];
     return null;
+  }
+
+  /* ------------------------------------------------------------------
+   * 우선 교정 3가지 — 항목별 구체적 교정법(연습 드릴·체크포인트·감각 큐)
+   * 점수만 낮은 순서가 아니라 가중치(스윙에 미치는 영향)×부족한 정도로
+   * 순서를 매긴다.
+   * ---------------------------------------------------------------- */
+  var FIX_DRILLS = {
+    plane: {
+      name: '겨드랑이 타월 드릴',
+      steps: [
+        '드라이버 그립으로 타월을 양 겨드랑이에 끼우고 어드레스를 잡습니다.',
+        '백스윙 탑에서 반 박자 멈춘 뒤, 타월이 떨어지지 않게 팔을 몸 가까이 붙여 천천히 내립니다.',
+        '임팩트를 지나 손이 허리 높이를 지날 때까지 타월을 유지합니다.'
+      ],
+      feel: '오른팔꿈치가 몸통을 스치는 느낌. 손이 아니라 가슴이 공 쪽으로 돌아 나온다고 생각하세요.',
+      reps: '천천히 10회 × 3세트 → 같은 느낌으로 실제 스윙 5회'
+    },
+    spine: {
+      name: '벽 힙힌지 드릴',
+      steps: [
+        '엉덩이를 벽에서 10cm 떠우고 힙힌지로 어드레스합니다(엉덩이가 벽에 살짝 닿게).',
+        '백스윙~임팩트 동안 엉덩이가 벽에서 떨어지지 않게 유지합니다.',
+        '임팩트 자리에서 3초 멈춰 상체 각도가 어드레스와 같은지 확인합니다.'
+      ],
+      feel: '배에 힘이 들어가고 가슴이 공 위에 덮여 있는 느낌. 일어서려는 순간 엉덩이가 벽을 민다고 생각하세요.',
+      reps: '10회 × 3세트(임팩트 3초 정지)'
+    },
+    head: {
+      name: '시선 고정 드릴',
+      steps: [
+        '공 뒤 30cm 지점에 티나 마커를 세우고 그 점만 봅니다.',
+        '백스윙 탑에서도 시선이 그 점에 남아 있는지 확인합니다.',
+        '임팩트 후 공이 떠난 자리에 1초 더 시선을 두고 피니시로 넘어갑니다.'
+      ],
+      feel: '머리가 작은 상자 안에 있다고 생각하세요. 목이 아니라 가슴이 회전합니다.',
+      reps: '10회 × 3세트, 휴대폰 영상으로 머리 움직임 확인'
+    },
+    xf: {
+      name: '클럽 가슴에 안고 회전',
+      steps: [
+        '클럽을 가슴에 가로로 안고 어드레스합니다.',
+        '골반은 거의 고정한 체 어깨만 돌려 탑을 만듭니다.',
+        '탑에서 2초 멈첬다가 골반부터 돌며 다운스윙합니다.'
+      ],
+      feel: '어깨와 골반 사이가 고무줄처럼 감긴 느낌(X-factor).',
+      reps: '10회 × 2세트'
+    },
+    clear: {
+      name: '스텝 스루 드릴',
+      steps: [
+        '어드레스에서 오른발 뒤꿈치를 살짝 띄워 둡니다.',
+        '임팩트에서 골반이 목표 쪽으로 열리며 배꿍이 목표를 봅니다.',
+        '피니시에서 오른발 뒤꿈치가 완전히 들려 발끝만 땅에 닿게 합니다.'
+      ],
+      feel: '하체가 팔보다 먼저 지나가 팔이 지나갈 길을 만든다고 생각하세요.',
+      reps: '8회 × 3세트'
+    },
+    sway: {
+      name: '오른발 안쪽 모서리 드릴',
+      steps: [
+        '오른발 안쪽 모서리에 체중이 걸리는 감각을 먼저 확인합니다.',
+        '백스윙에서 골반이 오른쪽으로 밀리지 않고 제자리에서 회전하게 합니다.',
+        '벽을 오른쪽에 두고 엉덩이가 벽에서 떨어지지 않는지 봅니다.'
+      ],
+      feel: '오른쪽 허벽지 안쪽에 힘이 걸리는 느낌.',
+      reps: '10회 × 3세트'
+    },
+    posture: {
+      name: '임팩트 3초 정지',
+      steps: [
+        '하프 스윙으로 임팩트 자세에서 3초 멈춥니다.',
+        '가슴이 공 위에 있고 척추 각도가 어드레스와 같은지 확인합니다.',
+        '그 자세에서 팔만 목표 쪽으로 뻗어 팔로우를 만듭니다.'
+      ],
+      feel: '가슴이 공을 덮고 있다는 느낌. 엉덩이가 아니라 가슴이 공쪽으로 움직입니다.',
+      reps: '10회 × 3세트'
+    },
+    lowerBody: {
+      name: '리드발 체중 드릴',
+      steps: [
+        '왼발에 체중 70%를 두고 하프 스윙합니다.',
+        '임팩트에서 왼발 뒤꿈치가 땅에 붙어 있는지 확인합니다.',
+        '피니시에서는 오른발 뒤꿈치만 들리고 왼발은 단단하게 버틸니다.'
+      ],
+      feel: '왼다리에 기둥이 서 있다고 생각하고 그 위로 몸을 올립니다.',
+      reps: '10회 × 2세트'
+    },
+    arm: {
+      name: '왼팔만 스윙',
+      steps: [
+        '왼손 하나로 클럽을 잡고 하프 스윙합니다.',
+        '임팩트에서 왼팔과 클럽이 일직선인지 확인합니다.',
+        '팔로우에서 왼팔이 접히지 않고 목표 쪽으로 길게 뻗게 합니다.'
+      ],
+      feel: '왼팔과 클럽이 하나라는 느낌으로 밀어 줍니다.',
+      reps: '10회 × 2세트 → 양손으로 같은 느낌 5회'
+    },
+    trailArm: {
+      name: '타월 겨드랑이 + 팔꿈치 아래',
+      steps: [
+        '타월을 오른 겨드랑이에 끼고 백스윙합니다.',
+        '탑에서 오른팔꿈치가 90° 안팎으로 접혀 있게 합니다.',
+        '다운스윙에서 오른팔꿈치가 몸통을 스치며 내려옵니다.'
+      ],
+      feel: '오른팔꿈치가 갈비뽈을 훑는다는 느낌.',
+      reps: '10회 × 2세트'
+    },
+    weight: {
+      name: '좌우 체중 스텝',
+      steps: [
+        '어드레스에서 체중을 오른발 60%로 두고 시작합니다.',
+        '백스윙 탑에서 오른발 80%, 임팩트에서 왼발 70%로 옮깁니다.',
+        '피니시에서 왼발 90%까지 옮겨 오른발 뒤꿈치가 완전히 들어 올려집니다.'
+      ],
+      feel: '체중이 뒤에서 앞으로 굴러간다고 생각하세요.',
+      reps: '10회 × 2세트'
+    },
+    ext: {
+      name: '양팔 뻗어 피니시',
+      steps: [
+        '임팩트 후 양팔을 목표 쪽으로 길게 뻗습니다.',
+        '팔꿈치가 굽지 않은 체 3초 유지합니다.',
+        '그 상태에서 피니시 자세로 자연스럽게 올립니다.'
+      ],
+      feel: '클럽 헤드가 목표를 향해 멀리 날아간다는 느낌.',
+      reps: '10회'
+    },
+    finish: {
+      name: '피니시 3초 밸런스',
+      steps: [
+        '풀스윙 후 피니시에서 3초 서 있습니다.',
+        '배꿍이 목표를 향하고 가슴이 정면을 봅니다.',
+        '휘청거리면 스윙 크기를 줄여 다시 합니다.'
+      ],
+      feel: '한 발로 서도 버틸 수 있는 균형.',
+      reps: '10회'
+    },
+    pathDown: {
+      name: '반 박자 멈춤 드릴',
+      steps: [
+        '백스윙 탑에서 1초 멈춥니다.',
+        '손이 아니라 골반 회전으로 다운을 시작합니다.',
+        '손이 몸 가까이(오른 주머니 쪽) 지나 임팩트로 내려옵니다.'
+      ],
+      feel: '클럽이 등 뒤에서 몸에 붙어 내려온다는 느낌.',
+      reps: '10회 × 2세트'
+    },
+    release: {
+      name: '인투인 릴리스 드릴',
+      steps: [
+        '하프 스윙으로 임팩트를 지나 팔로우에서 클럽이 몸 앞을 지나게 합니다.',
+        '어깨-손 거리가 임팩트와 팔로우에서 비슷한지 확인합니다.',
+        '목표 쪽으로 두 팔이 뻗는 느낌으로 마무리합니다.'
+      ],
+      feel: '팔이 몸에서 멀어지지 않고 앞으로 지나간다고 생각하세요.',
+      reps: '10회'
+    },
+    arcFin: {
+      name: '한 손 피니시 드릴',
+      steps: [
+        '왼손만으로 하프 스윙 후 피니시까지 이어 갑니다.',
+        '손이 끊기지 않고 원호를 그리는지 확인합니다.',
+        '오른손을 얹어 같은 궤적으로 5회 반복합니다.'
+      ],
+      feel: '손이 원을 그리며 어깨 위로 올라간다는 느낌.',
+      reps: '5회씩 2세트'
+    },
+    tempo: {
+      name: '3:1 리듬 드릴',
+      steps: [
+        '메트로놈 60bpm으로 백스윙 3박, 다운스윙 1박에 맛춥니다.',
+        '탑에서 멈추지 말고 자연스럽게 전환합니다.',
+        '5회마다 영상으로 비율을 다시 확인합니다.'
+      ],
+      feel: '"천천히-빠!" 하고 소리 내어 리듬을 세어 봅니다.',
+      reps: '10회 × 2세트'
+    }
+  };
+
+  /**
+   * 가장 먼저 고칠 항목 n개. 가중치 × 부족한 정도로 순위를 매긴다.
+   * 항목마다 구체 교정법(FIX_DRILLS)을 함께 준다.
+   */
+  function topFixes(m, n) {
+    var out = [], i;
+    if (!m || !m.checks) return out;
+    for (i = 0; i < m.checks.length; i++) {
+      var c = m.checks[i];
+      if (!c || typeof c.score !== 'number' || !isFinite(c.score)) continue;
+      var w = SCORE_WEIGHTS[c.id] || 1;
+      out.push({
+        id: c.id, label: c.label, short: c.short, value: c.value,
+        score: Math.round(clamp100(c.score)), status: c.status,
+        tip: c.tip, hint: c.hint, src: c.src || null,
+        drill: FIX_DRILLS[c.id] || null,
+        impact: w * (100 - clamp100(c.score))
+      });
+    }
+    out.sort(function (a, b) {
+      if (Math.abs(b.impact - a.impact) > 0.5) return b.impact - a.impact;
+      return a.score - b.score;
+    });
+    return out.slice(0, n || 3);
   }
 
   /**
@@ -2621,6 +2860,8 @@ var GolfCore = (function () {
     combineMetrics: combineMetrics,
     DUAL_SOURCE: DUAL_SOURCE,
     SCORE_WEIGHTS: SCORE_WEIGHTS,
+    FIX_DRILLS: FIX_DRILLS,
+    topFixes: topFixes,
     tempoFromTimes: tempoFromTimes,
     computeTempo: computeTempo,
     tempoVerdict: tempoVerdict,
@@ -3054,6 +3295,7 @@ var GolfPros = (function () {
       markerToggle: $('markerToggle'), markers: $('markers'), markerCur: $('markerCur'), markerBtns: $('markerBtns'),
       summaryCard: $('summaryCard'), scoreRing: $('scoreRing'), scoreNum: $('scoreNum'), gradeLine: $('gradeLine'),
       headline: $('headline'), bars: $('bars'),
+      fixCard: $('fixCard'), fixList: $('fixList'), fixSub: $('fixSub'),
       trajCard: $('trajCard'), trajBody: $('trajBody'), trajDiagrams: $('trajDiagrams'),
       phaseCard: $('phaseCard'), preads: $('preads'),
       checkCard: $('checkCard'), checks: $('checks'),
@@ -3373,18 +3615,24 @@ var GolfPros = (function () {
     updateAngleSeg();
   }
 
+  /** video 요소에 물린 blob URL 을 즉시 해제한다(반복 분석 때 메모리가 쌓이지 않게) */
+  function dropVideoEl(track) {
+    var v = videoOf(track);
+    if (!v) return;
+    try {
+      if (v.src && v.src.indexOf('blob:') === 0) URL.revokeObjectURL(v.src);
+      v.removeAttribute('src');
+      v.load();
+    } catch (e) {}
+  }
+
   /** 정면 영상을 빼고 측면만 다시 본다 */
   function clearSlotB() {
     if (!st.b.frames.length && !st.b.srcName) return;
     stopDualPlay();
     resetTrackB();
     st.b.srcBlob = null; st.b.srcBuf = null; st.b.srcName = '';
-    if (vidB) {
-      try {
-        if (vidB.src && vidB.src.indexOf('blob:') === 0) URL.revokeObjectURL(vidB.src);
-        vidB.removeAttribute('src'); vidB.load();
-      } catch (e) {}
-    }
+    dropVideoEl('b');
     markSlot('b', '선택 안 함', false);
     st.dual = false; st.showEdit = false;
     st.sync.k = 0; st.sync.p = 0;
@@ -3451,7 +3699,7 @@ var GolfPros = (function () {
     setProgress(0.02, (isB ? '정면(Face-on)' : '측면(DTL)') + ' 영상을 여는 중…');
     try {
       if (!videoEl) throw new Error('영상 요소를 찾을 수 없습니다.');
-      if (videoEl.src && videoEl.src.indexOf('blob:') === 0) URL.revokeObjectURL(videoEl.src);
+      dropVideoEl(track);                    // 이전 파일의 URL·디코더를 먼저 놓아 준다
       videoEl.src = URL.createObjectURL(file);
       videoEl.load();
       await once(videoEl, 'loadedmetadata', 8000);
@@ -3597,7 +3845,7 @@ var GolfPros = (function () {
     var valid = 0;
     for (var k = 0; k < frames.length; k++) if (frames[k].d) valid++;
     // 분석용 캔버스는 여기서 바로 놓아 준다(iOS Safari 메모리)
-    try { wk.width = 1; wk.height = 1; } catch (e) {}
+    try { wk.width = 0; wk.height = 0; } catch (e) {}
     st.analyzing = false;
     if (valid < 8) {
       fail((isB ? '정면 영상: ' : '') + '사람의 전신이 보이는 프레임을 8개 이상 찾지 못했습니다. 전신이 나오게 다시 찍어 주세요.');
@@ -3658,6 +3906,7 @@ var GolfPros = (function () {
       setStageSize(st.W, st.H);
       resetTrackB();
       st.b.srcBlob = null; st.b.srcBuf = null; st.b.srcName = '';
+      dropVideoEl('b');
       markSlot('a', st.srcName || '정면 영상', true);
       markSlot('b', '선택 안 함', false);
     }
@@ -3826,6 +4075,7 @@ var GolfPros = (function () {
     }
     paintTempo(m.tempo);
     renderTraj(m);
+    renderFixes(m);
     var html = '';
     for (var i = 0; i < m.checks.length; i++) {
       var c = m.checks[i];
@@ -3945,6 +4195,38 @@ var GolfPros = (function () {
         '<div class="tv">' + vals + '</div></div>';
     }
     el.trajBody.innerHTML = html;
+  }
+
+  /* ---------- 지금 먼저 고칠 3가지 (연습 드릴까지) ---------- */
+  function renderFixes(m) {
+    if (!el.fixCard || !el.fixList) return;
+    var list = (C.topFixes ? C.topFixes(m, 3) : []) || [];
+    if (!list.length) { show(el.fixCard, false); return; }
+    show(el.fixCard, true);
+    var first = list[0];
+    setText(el.fixSub, first.score < 72
+      ? '점수가 낮고 스윙에 미치는 영향이 큰 순서입니다. 1번부터 하나씩, 스윙 찍기 전에 드릴로 몸에 익혀 보세요.'
+      : '지금 스윙은 대체로 안정적입니다. 더 다듬으면 좋은 순서대로 골랐습니다.');
+    var html = '', i, j;
+    for (i = 0; i < list.length; i++) {
+      var f = list[i], d = f.drill;
+      var cls = f.score >= 80 ? 'good' : (f.score >= 58 ? 'warn' : 'bad');
+      html += '<li class="fix-item ' + cls + '">' +
+        '<div class="fix-top"><span class="fix-rank">' + (i + 1) + '</span>' +
+          '<b>' + escapeHtml(f.label) + '</b>' +
+          (f.src ? '<span class="fix-src">' + escapeHtml(f.src) + '</span>' : '') +
+          '<span class="fix-val">' + escapeHtml(f.value || '') + '</span></div>';
+      if (f.tip) html += '<p class="fix-why">' + escapeHtml(f.tip) + '</p>';
+      if (d) {
+        html += '<div class="fix-drill"><div class="fix-drill-h"><em>연습 드릴</em><b>' + escapeHtml(d.name) + '</b></div><ol>';
+        for (j = 0; j < d.steps.length; j++) html += '<li>' + escapeHtml(d.steps[j]) + '</li>';
+        html += '</ol></div>';
+        if (d.feel) html += '<p class="fix-feel"><b>감각 큐</b>' + escapeHtml(d.feel) + '</p>';
+        if (d.reps) html += '<p class="fix-rep"><b>분량</b>' + escapeHtml(d.reps) + '</p>';
+      }
+      html += '</li>';
+    }
+    el.fixList.innerHTML = html;
   }
 
   function renderReadings(m) {
@@ -4129,6 +4411,12 @@ var GolfPros = (function () {
     setText(el.dualLabel, 'F' + ia + ' / F' + ib);
   }
 
+  /** 두 영상 합계가 1080p 한 장을 넘으면 아이폰에서 동시 디코딩이 버거우므로 한쪽을 따라가게 한다 */
+  function dualHeavy() {
+    function px(v) { return (v && v.videoWidth && v.videoHeight) ? v.videoWidth * v.videoHeight : 0; }
+    return (px(vid) + px(vidB)) > 2100000;
+  }
+
   function dualPlayToggle() { if (st.sync.playing) stopDualPlay(); else startDualPlay(); }
 
   function startDualPlay() {
@@ -4154,15 +4442,31 @@ var GolfPros = (function () {
         note('이 기기에서 두 영상을 함께 재생할 수 없어, 분석한 좌표로 이어서 재생합니다. (영상은 구간을 옮길 때 갱신됩니다)');
         startDualFramePlay();
       };
-      var p1 = vid.play(), p2 = vidB.play();
+      var p1 = vid.play();
       if (p1 && p1.catch) p1.catch(fallback);
-      if (p2 && p2.catch) p2.catch(fallback);
+      // 두 영상이 모두 고해상도(1080p 이상)면 동시 디코딩을 피한다 — 정면은 따라가며 seek
+      var heavy = dualHeavy();
+      if (!heavy) {
+        var p2 = vidB.play();
+        if (p2 && p2.catch) p2.catch(fallback);
+      }
+      var lastB = 0;
       var loop = function () {
         if (!st.sync.playing || token !== st.sync.token) return;
         var ca = nearestFrame(st.frames, vid.currentTime);
         var cb = nearestFrame(st.b.frames, vidB.currentTime);
         st.cur = ca; st.b.cur = cb;
         st.sync.p = phaseProgress(st.frames, st.phases, st.sync.k, ca);
+        if (heavy) {
+          var now = Date.now();
+          if (now - lastB > 140) {
+            lastB = now;
+            var want = st.b.frames[syncIndex('b', st.sync.k, st.sync.p)];
+            if (want) { try { vidB.currentTime = want.t; } catch (e) {} }
+            cb = nearestFrame(st.b.frames, vidB.currentTime);
+            st.b.cur = cb;
+          }
+        }
         if (el.dualRange) el.dualRange.value = String(Math.round(clamp(st.sync.p, 0, 1) * 100));
         drawDual();
         setText(el.dualLabel, 'F' + ca + ' / F' + cb);
@@ -6600,6 +6904,7 @@ var GolfPros = (function () {
       } else {
         st.dual = false; st.showEdit = false;
         resetTrackB();
+        dropVideoEl('b');
         markSlot('b', '선택 안 함', false);
         markSlot('a', rec.fileName || '보관함 · ' + viewLabelOf(rec), true);
       }
