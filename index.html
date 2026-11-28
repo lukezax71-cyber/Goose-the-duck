@@ -12,6 +12,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="스윙 분석">
 <meta name="format-detection" content="telephone=no">
+<meta name="app-build" content="v10-ios-memory">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" type="image/png" href="icon-192.png">
@@ -2995,6 +2996,7 @@ var GolfPros = (function () {
     seekToken: 0,
     srcBlob: null, srcBuf: null, srcMime: 'video/mp4', srcName: '',
     savedId: null, savedAt: 0, hist: [], histConfirm: null, histSuppress: false,
+    savedBlobRef: null, savedBlobRefB: null, savedHasVideo: false, savedHasVideoB: false, savedBytes: 0, savedBytesB: 0,
     golfer: C.DEFAULT_GOLFER, golfers: [], histFilter: null, trendKey: 'overall',
     dual: false, analysisA: null, analysisB: null, b: null, editTrack: 'a', showEdit: false,
     sync: { k: 0, p: 0, playing: false, timer: 0, token: 0 },
@@ -3258,6 +3260,17 @@ var GolfPros = (function () {
   }
 
   /* ============================ 스테이지 크기 ============================ */
+  /* iOS Safari 는 캔버스·비디오 메모리에 민감하다. 아이폰 원본(1080p·4K)을 그대로
+     잡지 않고 화면에 보이는 만큼(가로 640px)까지만 쓴다. */
+  var STAGE_MAX_W = 640, STAGE_MAX_H = 1200;
+  function stageDims(w, h) {
+    w = Math.max(1, Math.round(w || 640));
+    h = Math.max(1, Math.round(h || 853));
+    if (w > STAGE_MAX_W) { h = Math.round(h * STAGE_MAX_W / w); w = STAGE_MAX_W; }
+    if (h > STAGE_MAX_H) { w = Math.round(w * STAGE_MAX_H / h); h = STAGE_MAX_H; }
+    return { w: Math.max(1, w), h: Math.max(1, h) };
+  }
+
   function setStageSize(W, H) {
     st.W = W; st.H = H; st.aspect = W / H;
     cvs.width = W; cvs.height = H;
@@ -3291,6 +3304,17 @@ var GolfPros = (function () {
     });
   }
 
+  /** 아이폰·아이패드 사파리인가(WebGL 관련 크래시를 피하려고 추론 방식을 고른다) */
+  function isIOS() {
+    try {
+      var nav = window.navigator || {};
+      var ua = nav.userAgent || '';
+      if (/iPad|iPhone|iPod/.test(ua)) return true;
+      // iPadOS 13+ 는 맥처럼 보인다
+      return /Macintosh/.test(ua) && (nav.maxTouchPoints || 0) > 1;
+    } catch (e) { return false; }
+  }
+
   async function ensureEngine() {
     if (landmarker) return landmarker;
     if (st.engine === 'loading' && seekBusy) { await seekBusy; if (landmarker) return landmarker; }
@@ -3303,7 +3327,9 @@ var GolfPros = (function () {
     if (!window.Vision || !window.Vision.PoseLandmarker) throw new Error('자세 인식 엔진을 불러오지 못했습니다.');
     var fileset = await window.Vision.FilesetResolver.forVisionTasks(CDN + '/wasm');
     var models = [MODEL_LITE, MODEL_FULL];
-    var delegates = ['GPU', 'CPU'];
+    // 아이폰 사파리는 WebGL(GPU) 추론을 쓰다 GPU 프로세스가 죽으면 탭째 재시작된다.
+    // 아이폰에서는 CPU(WASM)를 먼저 쓰고, 실패할 때만 GPU 로 넘어간다.
+    var delegates = isIOS() ? ['CPU', 'GPU'] : ['GPU', 'CPU'];
     var lastErr = null;
     for (var mi = 0; mi < models.length; mi++) {
       for (var di = 0; di < delegates.length; di++) {
@@ -3372,6 +3398,7 @@ var GolfPros = (function () {
     st.mode = 'video';
     st.frames = []; st.phases = null; st.analysis = null; st.analysisA = null;
     st.cur = 0; st.demoScene = null; st.savedId = null; st.savedAt = 0;
+    clearSavedVideoState();
     setHistSave('');
     if (EMPTY_HTML) el.stageEmpty.innerHTML = EMPTY_HTML;
     show(el.stageEmpty, false);
@@ -3383,6 +3410,13 @@ var GolfPros = (function () {
   function resetTrackB() {
     st.b.frames = []; st.b.phases = null; st.b.analysis = null; st.b.cur = 0;
     st.b.demoScene = null; st.b.W = 640; st.b.H = 853; st.b.aspect = 0.75;
+  }
+
+  /** 보관 중이던 스윙과의 연결을 끊을 때(새 영상·데모) 영상 보관 상태도 비운다 */
+  function clearSavedVideoState() {
+    st.savedBlobRef = null; st.savedBlobRefB = null;
+    st.savedHasVideo = false; st.savedHasVideoB = false;
+    st.savedBytes = 0; st.savedBytesB = 0;
   }
 
   function videoOf(track) { return track === 'b' ? vidB : vid; }
@@ -3427,7 +3461,8 @@ var GolfPros = (function () {
       var dur = videoEl.duration;
       if (!isFinite(dur) || dur <= 0) dur = 0;
       if (!isB) {
-        setStageSize(W, H);
+        var sz = stageDims(W, H);
+        setStageSize(sz.w, sz.h);   // 4K 원본을 캔버스 크기로 쓰지 않는다(iOS 메모리)
         st.trim.dur = dur;
         el.trimStart.max = String(Math.max(0.1, dur));
         el.trimEnd.max = String(Math.max(0.1, dur));
@@ -3535,8 +3570,8 @@ var GolfPros = (function () {
     }
     var dur = Math.max(0.2, t1 - t0);
     var n = clamp(Math.round(dur * 15), 24, 110);
-    var W = Math.min(720, videoEl.videoWidth || 640);
-    var H = Math.round(W * (videoEl.videoHeight || 853) / (videoEl.videoWidth || 640));
+    var sz = stageDims(videoEl.videoWidth || 640, videoEl.videoHeight || 853);
+    var W = sz.w, H = sz.h;
     wk.width = W; wk.height = H;
     if (!isB) setStageSize(W, H);
     var aspect = W / H;
@@ -3561,6 +3596,8 @@ var GolfPros = (function () {
     }
     var valid = 0;
     for (var k = 0; k < frames.length; k++) if (frames[k].d) valid++;
+    // 분석용 캔버스는 여기서 바로 놓아 준다(iOS Safari 메모리)
+    try { wk.width = 1; wk.height = 1; } catch (e) {}
     st.analyzing = false;
     if (valid < 8) {
       fail((isB ? '정면 영상: ' : '') + '사람의 전신이 보이는 프레임을 8개 이상 찾지 못했습니다. 전신이 나오게 다시 찍어 주세요.');
@@ -3610,7 +3647,14 @@ var GolfPros = (function () {
       st.srcName = st.b.srcName; st.srcMime = st.b.srcMime;
       st.demoScene = st.b.demoScene;
       st.cur = st.b.cur;
-      if (vid && vidB && vidB.src) { try { vid.src = vidB.src; } catch (e) {} }
+      if (vid && vidB && st.b.srcBlob) {
+        // 같은 blob URL 을 두 video 요소가 함께 쓰면 나중에 하나를 정리할 때 둘 다 끊긴다
+        try {
+          if (vid.src && vid.src.indexOf('blob:') === 0) URL.revokeObjectURL(vid.src);
+          vid.src = URL.createObjectURL(st.b.srcBlob);
+          vid.load();
+        } catch (e) {}
+      }
       setStageSize(st.W, st.H);
       resetTrackB();
       st.b.srcBlob = null; st.b.srcBuf = null; st.b.srcName = '';
@@ -3674,6 +3718,7 @@ var GolfPros = (function () {
     lockUI(false);
     st.srcBlob = null; st.srcBuf = null; st.srcName = ''; st.savedId = null; st.savedAt = 0;
     st.b.srcBlob = null; st.b.srcBuf = null; st.b.srcName = '';
+    clearSavedVideoState();
     setHistSave('');
     if (EMPTY_HTML) el.stageEmpty.innerHTML = EMPTY_HTML;
     show(el.stageEmpty, false);
@@ -3698,6 +3743,7 @@ var GolfPros = (function () {
     st.mode = 'demo'; st.busy = false;
     st.srcBlob = null; st.srcBuf = null; st.srcName = ''; st.savedId = null; st.savedAt = 0;
     st.b.srcBlob = null; st.b.srcBuf = null; st.b.srcName = '';
+    clearSavedVideoState();
     setHistSave('');
     if (EMPTY_HTML) el.stageEmpty.innerHTML = EMPTY_HTML;
     show(el.stageEmpty, false);
@@ -4097,9 +4143,20 @@ var GolfPros = (function () {
       var endT = st.frames[st.phases.finish] ? st.frames[st.phases.finish].t : st.frames[st.frames.length - 1].t;
       try { vid.currentTime = st.frames[ia].t; } catch (e) {}
       try { vidB.currentTime = st.b.frames[ib].t; } catch (e) {}
+      // 아이폰이 두 영상을 동시에 재생하지 못하면(디코더/메모리 한도) 좌표 재생으로 이어 간다
+      var fell = false;
+      var fallback = function () {
+        if (fell || !st.sync.playing || token !== st.sync.token) return;
+        fell = true;
+        try { vid.pause(); } catch (e) {}
+        try { vidB.pause(); } catch (e) {}
+        if (dualRaf) { cancelAnimationFrame(dualRaf); dualRaf = 0; }
+        note('이 기기에서 두 영상을 함께 재생할 수 없어, 분석한 좌표로 이어서 재생합니다. (영상은 구간을 옮길 때 갱신됩니다)');
+        startDualFramePlay();
+      };
       var p1 = vid.play(), p2 = vidB.play();
-      if (p1 && p1.catch) p1.catch(function () {});
-      if (p2 && p2.catch) p2.catch(function () {});
+      if (p1 && p1.catch) p1.catch(fallback);
+      if (p2 && p2.catch) p2.catch(fallback);
       var loop = function () {
         if (!st.sync.playing || token !== st.sync.token) return;
         var ca = nearestFrame(st.frames, vid.currentTime);
@@ -4115,7 +4172,12 @@ var GolfPros = (function () {
       dualRaf = requestAnimationFrame(loop);
       return;
     }
-    // 데모(합성) — 프레임 타이머
+    // 데모(합성)·좌표 재생 — 프레임 타이머
+    startDualFramePlay();
+  }
+
+  function startDualFramePlay() {
+    if (st.sync.timer) { clearInterval(st.sync.timer); st.sync.timer = 0; }
     st.sync.timer = setInterval(function () {
       if (!st.sync.playing) return;
       st.sync.p += 0.06;
@@ -5567,73 +5629,204 @@ var GolfPros = (function () {
   }
 
   /* ======================= 내 스윙 보관함 (IndexedDB) =======================
-   * 영상 원본(ArrayBuffer) + 좌표/구간/점수를 IndexedDB 에 보관한다.
+   * 좌표·구간·점수는 'swings' 저장소, 영상 원본은 'videos' 저장소에 나눠 보관한다.
+   * 목록·추이를 그릴 때 영상 바이트까지 한꺼번에 메모리에 올리면(iOS Safari 는
+   * 탭 메모리 한도가 낮다) WebContent 프로세스가 죽어 "문제가 반복적으로
+   * 발생했습니다" 화면이 뜬다. 그래서 목록은 좌표·점수만 읽고, 영상은 그 스윙을
+   * 열 때 한 건씩 Blob 으로 가져와 video 요소에 물린다.
+   * 예전 기록(영상이 기록 안에 ArrayBuffer 로 들어 있던 것)은 처음 한 번
+   * 한 건씩 'videos' 저장소로 옮긴다.
    * localStorage 는 큰 영상 blob 을 담을 수 없어서 IndexedDB 를 쓴다.
-   * 영상은 ArrayBuffer 로 저장하고 불러올 때 new Blob([buf],{type}) 로 되살린다
-   * (iOS Safari 구버전에서도 안전한 방식). 용량이 모자라면 좌표·점수만 보관한다.
+   * 용량이 모자라면 좌표·점수만 보관한다.
    * ======================================================================== */
-  var IDB_NAME = 'swingcheck.history.v1', IDB_STORE = 'swings', IDB_VER = 1;
+  var IDB_NAME = 'swingcheck.history.v1', IDB_STORE = 'swings', IDB_VID = 'videos', IDB_VER = 2;
   var HIST_MAX = 40;                       // 사람별 추이를 위해 최근 40개까지
   var HIST_MAX_BYTES = 60 * 1024 * 1024;   // 영상 원본 1개 최대 60MB
-  var idbDb = null, idbOpening = null, histChain = null;
+  var VID_MOVED_KEY = 'swingcheck.vidmoved.v2';
+  var idbDb = null, idbOpening = null, idbHasVid = false, histChain = null, histLoading = null;
 
   function idbSupported() { return !!(window.indexedDB && window.indexedDB.open); }
+
+  /** DB 구조: 영상 저장소를 더한다. 기존 기록 값은 건드리지 않는다(옮기기는 한 건씩). */
+  function idbUpgrade(db) {
+    try {
+      if (!db || !db.objectStoreNames) return;
+      if (!db.objectStoreNames.contains(IDB_STORE)) {
+        var os = db.createObjectStore(IDB_STORE, { keyPath: 'id' });
+        try { os.createIndex('createdAt', 'createdAt'); } catch (e) {}
+      }
+      if (!db.objectStoreNames.contains(IDB_VID)) db.createObjectStore(IDB_VID, { keyPath: 'id' });
+    } catch (e) {}
+  }
+
+  function idbOpenVersion(ver) {
+    return new Promise(function (resolve, reject) {
+      if (!idbSupported()) { reject(new Error('indexeddb 없음')); return; }
+      var req, settled = false, blockedTimer = 0;
+      try { req = ver ? window.indexedDB.open(IDB_NAME, ver) : window.indexedDB.open(IDB_NAME); }
+      catch (e) { reject(e); return; }
+      req.onupgradeneeded = function () { idbUpgrade(req.result); };
+      req.onsuccess = function () {
+        var db = req.result;
+        if (settled) { try { db.close(); } catch (e) {} return; }
+        settled = true;
+        if (blockedTimer) { try { window.clearTimeout(blockedTimer); } catch (e) {} blockedTimer = 0; }
+        // 다른 탭·홈 화면 앱이 새 구조로 열려고 하면 이 연결을 비켜 준다
+        try {
+          db.onversionchange = function () {
+            try { db.close(); } catch (e) {}
+            if (idbDb === db) { idbDb = null; idbOpening = null; idbHasVid = false; }
+          };
+        } catch (e) {}
+        resolve(db);
+      };
+      req.onerror = function () {
+        if (settled) return;
+        settled = true;
+        reject(req.error || new Error('indexeddb 열기 실패'));
+      };
+      // 홈 화면 앱과 사파리 탭이 같이 열려 있으면 잠깐 기다린다. 계속 막히면 예전 구조로 연다.
+      req.onblocked = function () {
+        if (blockedTimer) return;
+        blockedTimer = window.setTimeout(function () {
+          if (settled) return;
+          settled = true;
+          reject(new Error('indexeddb 대기'));
+        }, 4000);
+      };
+    });
+  }
 
   function idbOpen() {
     if (idbDb) return Promise.resolve(idbDb);
     if (idbOpening) return idbOpening;
-    idbOpening = new Promise(function (resolve, reject) {
-      if (!idbSupported()) { reject(new Error('indexeddb 없음')); return; }
-      var req;
-      try { req = window.indexedDB.open(IDB_NAME, IDB_VER); } catch (e) { reject(e); return; }
-      req.onupgradeneeded = function () {
-        try {
-          var db = req.result;
-          if (db && db.objectStoreNames && !db.objectStoreNames.contains(IDB_STORE)) {
-            var os = db.createObjectStore(IDB_STORE, { keyPath: 'id' });
-            try { os.createIndex('createdAt', 'createdAt'); } catch (e) {}
-          }
-        } catch (e) {}
-      };
-      req.onsuccess = function () { idbDb = req.result; resolve(idbDb); };
-      req.onerror = function () { reject(req.error || new Error('indexeddb 열기 실패')); };
-      req.onblocked = function () { reject(new Error('indexeddb 대기')); };
+    var p = idbOpenVersion(IDB_VER).then(null, function (e) {
+      return idbOpenVersion(0).then(null, function () { throw e; });
+    }).then(function (db) {
+      idbDb = db;
+      try { idbHasVid = !!(db.objectStoreNames && db.objectStoreNames.contains(IDB_VID)); } catch (err) { idbHasVid = false; }
+      return db;
     });
-    idbOpening.then(null, function () { idbOpening = null; });
+    idbOpening = p.then(null, function (e) { idbOpening = null; throw e; });
     return idbOpening;
   }
 
-  function idbRun(mode, fn) {
+  /** 저장소들을 한 트랜잭션으로. 영상 저장소가 없으면(예전 구조) 그것만 빼고 진행한다. */
+  function idbTx(names, mode, fn) {
     return idbOpen().then(function (db) {
       return new Promise(function (resolve, reject) {
-        var tx, out;
-        try { tx = db.transaction(IDB_STORE, mode); } catch (e) { reject(e); return; }
+        var list = [], i, sw = null, vd = null, out;
+        for (i = 0; i < names.length; i++) {
+          if (names[i] === IDB_VID && !idbHasVid) continue;
+          list.push(names[i]);
+        }
+        if (!list.length) { resolve(null); return; }
+        var tx;
+        try { tx = db.transaction(list, mode); } catch (e) { reject(e); return; }
+        for (i = 0; i < list.length; i++) {
+          var stx = tx.objectStore(list[i]);
+          if (list[i] === IDB_STORE) sw = stx;
+          else if (list[i] === IDB_VID) vd = stx;
+        }
         tx.oncomplete = function () {
           try { resolve(out && typeof out === 'object' && ('result' in out) ? out.result : out); }
           catch (e) { resolve(undefined); }
         };
         tx.onerror = function () { reject(tx.error || new Error('저장 실패')); };
         tx.onabort = function () { reject(tx.error || new Error('저장 중단')); };
-        try { out = fn(tx.objectStore(IDB_STORE)); }
+        try { out = fn(sw, vd); }
         catch (e) { try { tx.abort(); } catch (e2) {} reject(e); }
       });
     });
   }
 
-  function blobToBuffer(blob) {
-    return new Promise(function (resolve, reject) {
-      if (!blob) { resolve(null); return; }
-      try {
-        if (window.FileReader) {
-          var fr = new FileReader();
-          fr.onload = function () { resolve(fr.result); };
-          fr.onerror = function () { reject(fr.error || new Error('읽기 실패')); };
-          fr.readAsArrayBuffer(blob);
-        } else if (blob.arrayBuffer) {
-          blob.arrayBuffer().then(resolve, reject);
-        } else { resolve(null); }
-      } catch (e) { reject(e); }
+  function idbRun(mode, fn) {
+    return idbTx([IDB_STORE], mode, function (os) { return fn(os); });
+  }
+  function idbRunBoth(mode, fn) {
+    return idbTx([IDB_STORE, IDB_VID], mode, fn);
+  }
+
+  function vidKey(id, side) { return String(id) + (side === 'b' ? ':b' : ':a'); }
+
+  /** 기록에서 영상 필드를 떼어 낸 사본(목록·저장에 쓰는 쪽) */
+  function stripVideo(rec) {
+    var o = {}, k;
+    for (k in rec) if (Object.prototype.hasOwnProperty.call(rec, k) && k !== 'video' && k !== 'videoB') o[k] = rec[k];
+    if (rec.video && typeof rec.video.byteLength === 'number') { o.hasVideo = true; o.videoBytes = rec.video.byteLength || 0; }
+    if (rec.videoB && typeof rec.videoB.byteLength === 'number') { o.hasVideoB = true; o.videoBytesB = rec.videoB.byteLength || 0; }
+    if ('noVideo' in o) delete o.noVideo;
+    if ('noVideoB' in o) delete o.noVideoB;
+    return o;
+  }
+
+  /** 예전 기록 안의 영상(ArrayBuffer)을 Blob 으로 */
+  function legacyVideoOf(rec) {
+    if (!rec) return null;
+    var v = null;
+    if (rec.video && typeof rec.video.byteLength === 'number') {
+      v = v || {};
+      v.video = new Blob([rec.video], { type: rec.mimeType || 'video/mp4' });
+    }
+    if (rec.videoB && typeof rec.videoB.byteLength === 'number') {
+      v = v || {};
+      v.videoB = new Blob([rec.videoB], { type: (rec.b && rec.b.mimeType) || 'video/mp4' });
+    }
+    return v;
+  }
+
+  /** 예전 기록의 영상을 영상 저장소로 옮기고 기록에서는 뺀다 */
+  function moveLegacyVideo(rec) {
+    if (!rec || !idbHasVid) return Promise.resolve(false);
+    var v = legacyVideoOf(rec);
+    if (!v) return Promise.resolve(false);
+    var meta = stripVideo(rec);
+    var id = rec.id;
+    return idbRunBoth('readwrite', function (os, vs) {
+      if (!vs) return null;
+      if (v.video) vs.put({ id: vidKey(id, 'a'), blob: v.video });
+      if (v.videoB) vs.put({ id: vidKey(id, 'b'), blob: v.videoB });
+      return os.put(meta);
+    }).then(function () { return true; }, function () { return false; });
+  }
+
+  /** 영상 한 건만 꺼낸다(목록에서는 절대 부르지 않는다) */
+  function idbVideoGet(id) {
+    if (!idbHasVid) return idbLegacyVideo(id);
+    function one(side) {
+      return idbTx([IDB_VID], 'readonly', function (sw, vd) { return vd ? vd.get(vidKey(id, side)) : null; })
+        .then(function (r) { return r || null; }, function () { return null; });
+    }
+    return one('a').then(function (a) {
+      return one('b').then(function (b) {
+        if (!a && !b) return idbLegacyVideo(id);
+        return { video: a ? a.blob : null, videoB: b ? b.blob : null };
+      });
     });
+  }
+
+  /** 예전 구조: 영상이 기록 안에 남아 있다 */
+  function idbLegacyVideo(id) {
+    return idbRun('readonly', function (os) { return os.get(id); }).then(function (rec) {
+      var v = legacyVideoOf(rec);
+      if (v) moveLegacyVideo(rec);          // 다음부터는 영상 저장소에서 바로 읽는다
+      return v;
+    }, function () { return null; });
+  }
+
+  function idbKeys() {
+    return idbRun('readonly', function (os) {
+      if (os.getAllKeys) return os.getAllKeys();
+      var out = [];
+      var req = os.openCursor();
+      req.onsuccess = function (e) {
+        var cur = e.target.result;
+        if (!cur) return;
+        out.push(cur.key);
+        cur.continue();
+      };
+      return out;
+    }).then(function (k) { return k || []; }, function () { return []; });
   }
 
   function pad2(n) { return (n < 10 ? '0' : '') + n; }
@@ -5932,17 +6125,6 @@ var GolfPros = (function () {
     if (n >= 1024 * 1024) return Math.round(n / (1024 * 1024)) + 'MB';
     return Math.max(1, Math.round(n / 1024)) + 'KB';
   }
-  function copyRec(rec, buf, bufB) {
-    var o = {};
-    for (var k in rec) if (Object.prototype.hasOwnProperty.call(rec, k)) o[k] = rec[k];
-    if (buf) o.video = buf;
-    o.noVideo = !buf;
-    if (rec.dual) {
-      if (bufB) o.videoB = bufB; else delete o.videoB;
-      o.noVideoB = !bufB;
-    }
-    return o;
-  }
 
   function histRecord() {
     if (!st.frames.length || !st.phases || !st.analysis) return null;
@@ -6005,46 +6187,76 @@ var GolfPros = (function () {
     if (!idbSupported() || st.mode !== 'video') return Promise.resolve(null);
     var rec = histRecord();
     if (!rec) return Promise.resolve(null);
-    var srcBlob = st.srcBlob, srcBuf = st.srcBuf;
+    var srcBlob = blobOf('a'), srcBlobB = blobOf('b');
     if (!histChain) histChain = Promise.resolve();
-    var run = histChain.then(function () { return histPersist(rec, srcBlob, srcBuf); });
+    var run = histChain.then(function () { return histPersist(rec, srcBlob, srcBlobB); });
     histChain = run.then(function () {}, function () {});
     return run;
   }
 
-  function histPersist(rec, srcBlob, srcBuf) {
-    var buf = srcBuf || null, bufB = null;
-    var warning = '', warningB = '';
-    function pick(blob, b) {
-      if (b && typeof b.byteLength === 'number') return Promise.resolve(b);
-      return blobToBuffer(blob).then(null, function () { return null; });
+  /** 지금 열어 둔 영상 파일(없으면 null). ArrayBuffer 로만 들고 있는 경우에도 Blob 으로 되살린다. */
+  function blobOf(track) {
+    if (track === 'b') {
+      if (!st.b.srcBlob && st.b.srcBuf) st.b.srcBlob = new Blob([st.b.srcBuf], { type: st.b.srcMime || 'video/mp4' });
+      return st.b.srcBlob || null;
     }
-    var dual = !!rec.dual;
-    return Promise.all([pick(srcBlob, srcBuf), dual ? pick(st.b.srcBlob, st.b.srcBuf) : Promise.resolve(null)])
-      .then(function (arr) {
-        buf = arr[0] && typeof arr[0].byteLength === 'number' ? arr[0] : null;
-        bufB = arr[1] && typeof arr[1].byteLength === 'number' ? arr[1] : null;
-        if (buf && buf.byteLength > HIST_MAX_BYTES) { buf = null; warning = 'size'; }
-        if (bufB && bufB.byteLength > HIST_MAX_BYTES) { bufB = null; warningB = 'size'; }
-        if (st.srcBlob === srcBlob && buf) st.srcBuf = buf;
-        if (dual && st.b.srcBlob && bufB) st.b.srcBuf = bufB;
-        function attempt(b1, b2) {
-          return idbRun('readwrite', function (os) { return os.put(copyRec(rec, b1, b2)); });
+    if (!st.srcBlob && st.srcBuf) st.srcBlob = new Blob([st.srcBuf], { type: st.srcMime || 'video/mp4' });
+    return st.srcBlob || null;
+  }
+
+  /**
+   * 좌표·점수는 'swings' 에, 영상은 'videos' 에 따로 쓴다.
+   * 영상은 이미 보관한 그 파일이면 다시 쓰지 않는다(분석할 때마다 수십 MB 를 다시
+   * 쓰면 iOS Safari 가 버티지 못한다).
+   */
+  function histPersist(rec, srcBlob, srcBlobB) {
+    var blobA = srcBlob || null, blobB = rec.dual ? (srcBlobB || null) : null;
+    var warn = '', warnB = '';
+    if (blobA && blobA.size > HIST_MAX_BYTES) { blobA = null; warn = 'size'; }
+    if (blobB && blobB.size > HIST_MAX_BYTES) { blobB = null; warnB = 'size'; }
+    var sameA = !!(blobA && st.savedId === rec.id && st.savedBlobRef === blobA);
+    var sameB = !!(blobB && st.savedId === rec.id && st.savedBlobRefB === blobB);
+    var newA = !!blobA && !sameA, newB = !!blobB && !sameB;
+    var haveA = newA || sameA || !!st.savedHasVideo;
+    var haveB = !!rec.dual && (newB || sameB || !!st.savedHasVideoB);
+    var meta = stripVideo(rec);
+    meta.hasVideo = haveA;
+    meta.hasVideoB = haveB;
+    meta.videoBytes = haveA ? ((newA || sameA) ? blobA.size : (st.savedBytes || 0)) : 0;
+    meta.videoBytesB = haveB ? ((newB || sameB) ? blobB.size : (st.savedBytesB || 0)) : 0;
+    function write(withVideo) {
+      return idbRunBoth('readwrite', function (os, vs) {
+        if (vs) {
+          if (withVideo && newA) vs.put({ id: vidKey(rec.id, 'a'), blob: blobA });
+          if (withVideo && newB) vs.put({ id: vidKey(rec.id, 'b'), blob: blobB });
+          if (!withVideo) {
+            try { vs['delete'](vidKey(rec.id, 'a')); } catch (e) {}
+            try { vs['delete'](vidKey(rec.id, 'b')); } catch (e) {}
+          }
         }
-        return attempt(buf, bufB).then(null, function (e) {
-          if (!buf && !bufB) throw e;                 // 용량 부족 → 영상 원본 없이 좌표·점수만
-          warning = warning || 'quota';
-          return attempt(null, null);
-        });
-      }).then(function () {
-      st.savedId = rec.id; st.savedAt = rec.createdAt;
-      if (st.histFilter && st.histFilter !== C.golferOf(rec)) st.histFilter = C.golferOf(rec);
-      return pruneHist(rec.id).then(function () { return histLoad(true); });
+        return os.put(meta);
+      });
+    }
+    return write(true).then(null, function (e) {
+      if (!newA && !newB && !haveA && !haveB) throw e;   // 용량 부족 → 영상 없이 좌표·점수만
+      warn = warn || 'quota';
+      meta.hasVideo = false; meta.hasVideoB = false; meta.videoBytes = 0; meta.videoBytesB = 0;
+      return write(false);
     }).then(function () {
-      var why = warning === 'quota'
+      st.savedId = rec.id; st.savedAt = rec.createdAt;
+      if (newA) st.savedBlobRef = blobA;
+      if (newB) st.savedBlobRefB = blobB;
+      st.savedHasVideo = meta.hasVideo; st.savedHasVideoB = meta.hasVideoB;
+      st.savedBytes = meta.videoBytes; st.savedBytesB = meta.videoBytesB;
+      if (st.histFilter && st.histFilter !== C.golferOf(rec)) st.histFilter = C.golferOf(rec);
+      return histLoad(true).then(function () { return pruneHist(rec.id); }).then(function (n) {
+        return n ? histLoad(true) : st.hist;
+      });
+    }).then(function () {
+      var why = warn === 'quota'
         ? '저장 공간이 부족해 영상 원본은 빼고 좌표·점수만 보관했습니다.'
-        : (warning === 'size' ? '영상이 ' + fmtBytes(HIST_MAX_BYTES) + '를 넘어 원본은 빼고 좌표·점수만 보관했습니다.' : '');
-      if (!why && warningB === 'size') why = '정면 영상이 ' + fmtBytes(HIST_MAX_BYTES) + '를 넘어 그 원본만 빼고 보관했습니다.';
+        : (warn === 'size' ? '영상이 ' + fmtBytes(HIST_MAX_BYTES) + '를 넘어 원본은 빼고 좌표·점수만 보관했습니다.' : '');
+      if (!why && warnB === 'size') why = '정면 영상이 ' + fmtBytes(HIST_MAX_BYTES) + '를 넘어 그 원본만 빼고 보관했습니다.';
       setHistSave('보관함에 저장됨 · ' + rec.name + (why ? ' (' + why + ')' : ''), why ? 'warn' : '');
       return rec.id;
     }, function () {
@@ -6053,37 +6265,106 @@ var GolfPros = (function () {
     });
   }
 
-  function pruneHist(keepId) {
-    return idbRun('readonly', function (os) { return os.getAll(); }).then(function (all) {
-      all = all || [];
-      if (all.length <= HIST_MAX) return;
-      all.sort(function (a, b) { return (b.createdAt || 0) - (a.createdAt || 0); });
-      var chain = Promise.resolve();
-      for (var i = HIST_MAX; i < all.length; i++) {
-        if (all[i].id === keepId) continue;
-        (function (id) {
-          chain = chain.then(function () {
-            return idbRun('readwrite', function (os) { return os['delete'](id); }).then(null, function () {});
-          });
-        })(all[i].id);
+  function idbDelete(id) {
+    return idbRunBoth('readwrite', function (os, vs) {
+      if (vs) {
+        try { vs['delete'](vidKey(id, 'a')); } catch (e) {}
+        try { vs['delete'](vidKey(id, 'b')); } catch (e) {}
       }
-      return chain;
-    }, function () {});
+      return os['delete'](id);
+    });
   }
 
+  /** 보관 개수 정리 — 이미 읽어 둔 목록(좌표·점수만)으로 판단해 오래된 것만 지운다 */
+  function pruneHist(keepId) {
+    var list = st.hist || [], over = [], i, n = 0;
+    for (i = HIST_MAX; i < list.length; i++) {
+      if (!list[i] || list[i].id === keepId) continue;
+      over.push(list[i].id);
+    }
+    if (!over.length) return Promise.resolve(0);
+    var chain = Promise.resolve();
+    for (i = 0; i < over.length; i++) {
+      (function (id) {
+        chain = chain.then(function () {
+          return idbDelete(id).then(function () { n++; }, function () {});
+        });
+      })(over[i]);
+    }
+    return chain.then(function () { return n; });
+  }
+
+  function histMovedFlag() {
+    try { return !!(window.localStorage && window.localStorage.getItem(VID_MOVED_KEY) === '1'); } catch (e) { return false; }
+  }
+  function setHistMovedFlag() {
+    try { if (window.localStorage) window.localStorage.setItem(VID_MOVED_KEY, '1'); } catch (e) {}
+  }
+
+  function histApply(list, paint) {
+    st.hist = (list || []).sort(function (a, b) { return (b.createdAt || 0) - (a.createdAt || 0); });
+    if (paint !== false) paintHist();
+    refreshProSelect();
+    return st.hist;
+  }
+
+  /**
+   * 보관함을 읽는다. 새 구조(영상 분리)면 좌표·점수만 한 번에 읽는다.
+   * 예전 구조(영상이 기록 안에 있던 것)면 키만 먼저 받고, 한 건씩 읽으며 영상을
+   * 영상 저장소로 옮긴다 — 40개 × 수십 MB 를 동시에 메모리에 올리지 않기 위해서다.
+   */
   function histLoad(paint) {
-    return idbRun('readonly', function (os) { return os.getAll(); }).then(function (all) {
-      all = all || [];
-      all.sort(function (a, b) { return (b.createdAt || 0) - (a.createdAt || 0); });
-      st.hist = all;
-      if (paint !== false) paintHist();
-      refreshProSelect();
-      return all;
+    // 이미 읽는 중이면 그게 끝난 뒤 다시 읽는다(끝나기 전 결과를 그대로 돌려주면 목록이 빈 채로 남는다)
+    if (histLoading) {
+      return histLoading.then(function () { return histLoad(paint); }, function () { return histLoad(paint); });
+    }
+    var run = idbOpen().then(function () {
+      if (histMovedFlag() || !idbHasVid) {
+        return idbRun('readonly', function (os) { return os.getAll(); }).then(function (all) {
+          var out = [], i;
+          for (i = 0; i < (all || []).length; i++) out.push(stripVideo(all[i] || {}));
+          return out;
+        });
+      }
+      return histLoadSlow();
+    });
+    histLoading = run.then(function (list) {
+      histLoading = null;
+      return histApply(list, paint);
     }, function () {
-      st.hist = [];
-      if (paint !== false) paintHist();
-      refreshProSelect();
-      return [];
+      histLoading = null;
+      return histApply([], paint);
+    });
+    return histLoading;
+  }
+
+  function histLoadSlow() {
+    return idbKeys().then(function (keys) {
+      var out = [], i = 0, broken = false;
+      return new Promise(function (resolve) {
+        function step() {
+          if (i >= keys.length) {
+            if (!broken && idbHasVid) setHistMovedFlag();
+            resolve(out);
+            return;
+          }
+          var k = keys[i++];
+          idbRun('readonly', function (os) { return os.get(k); }).then(function (rec) {
+            if (!rec || rec.id === undefined) return;
+            if ((rec.video || rec.videoB) && idbHasVid) {
+              return moveLegacyVideo(rec).then(function (yes) {
+                if (!yes) broken = true;
+                out.push(stripVideo(rec));
+              });
+            }
+            out.push(stripVideo(rec));
+          }, function () { broken = true; }).then(function () {
+            // 한 건 읽고 다음 건으로 — 남은 영상들이 메모리에 함께 쌓이지 않게 한다
+            window.setTimeout(step, 0);
+          });
+        }
+        step();
+      });
     });
   }
 
@@ -6115,7 +6396,8 @@ var GolfPros = (function () {
     var html = '', bytes = 0, i, j, r, meta, opts, names = goAll(), list = [];
     for (i = 0; i < st.hist.length; i++) {
       r = st.hist[i];
-      if (r.video && r.video.byteLength) bytes += r.video.byteLength;
+      if (r.videoBytes) bytes += r.videoBytes;
+      if (r.videoBytesB) bytes += r.videoBytesB;
       if (st.histFilter && C.golferOf(r) !== st.histFilter) continue;
       list.push(r);
     }
@@ -6126,7 +6408,7 @@ var GolfPros = (function () {
       var tm = histTempo(r);
       if (tm && tm.ratio) meta.push('템포 ' + C.fmtRatio(tm.ratio) + ':1');
       if (r.dur) meta.push(r.dur.toFixed(1) + '초');
-      if (!r.video) meta.push('영상 원본 없음');
+      if (!r.hasVideo) meta.push('영상 원본 없음');
       var armed = (r.id === st.histConfirm);
       var gNow = C.golferOf(r);
       opts = '';
@@ -6223,7 +6505,7 @@ var GolfPros = (function () {
       return;
     }
     st.histConfirm = null;
-    idbRun('readwrite', function (os) { return os['delete'](id); }).then(function () {
+    idbDelete(id).then(function () {
       if (st.savedId === id) { st.savedId = null; st.savedAt = 0; setHistSave(''); }
       if (st.cmp.ref && st.cmp.ref.past && st.cmp.ref.id === id) {
         st.cmp.ref = null;
@@ -6236,6 +6518,28 @@ var GolfPros = (function () {
       note('삭제하지 못했습니다. 잠시 후 다시 시도해 주세요.');
       paintHist();
     });
+  }
+
+  function attachStoredVideo(track, id) {
+    var wantId = id;
+    var videoEl = videoOf(track);
+    if (!videoEl) return;
+    idbVideoGet(id).then(function (v) {
+      if (st.savedId !== wantId) return;          // 그사이 다른 스윙을 열었다
+      var blob = track === 'b' ? (v && v.videoB) : (v && v.video);
+      try {
+        if (videoEl.src && videoEl.src.indexOf('blob:') === 0) URL.revokeObjectURL(videoEl.src);
+        if (!blob) { videoEl.removeAttribute('src'); videoEl.load(); return; }
+        videoEl.src = URL.createObjectURL(blob);
+        videoEl.load();
+        if (track === 'b') st.b.srcBlob = blob;
+        else { st.srcBlob = blob; st.savedBlobRef = blob; }
+        videoEl.addEventListener('loadeddata', function onceReady() {
+          videoEl.removeEventListener('loadeddata', onceReady);
+          if (st.savedId === wantId) { drawScene(); if (st.dual) drawDual(); }
+        });
+      } catch (e) {}
+    }, function () {});
   }
 
   function openHist(id) {
@@ -6266,28 +6570,13 @@ var GolfPros = (function () {
       st.savedId = rec.id; st.savedAt = rec.createdAt;
       st.srcMime = rec.mimeType || 'video/mp4';
       st.srcName = rec.fileName || '';
-      st.srcBuf = (rec.video && typeof rec.video.byteLength === 'number') ? rec.video : null;
+      st.srcBuf = null;
       st.srcBlob = null;
-      if (st.srcBuf) {
-        try {
-          var blob = new Blob([st.srcBuf], { type: st.srcMime });
-          st.srcBlob = blob;
-          if (vid && vid.src && vid.src.indexOf('blob:') === 0) URL.revokeObjectURL(vid.src);
-          if (vid) {
-            vid.src = URL.createObjectURL(blob); vid.load();
-            var wantId = rec.id;
-            vid.addEventListener('loadeddata', function onceReady() {
-              vid.removeEventListener('loadeddata', onceReady);
-              if (st.savedId === wantId) drawScene();
-            });
-          }
-        } catch (e) { st.srcBlob = null; }
-      } else if (vid) {
-        try {
-          if (vid.src && vid.src.indexOf('blob:') === 0) URL.revokeObjectURL(vid.src);
-          vid.removeAttribute('src'); vid.load();
-        } catch (e) {}
-      }
+      st.savedBlobRef = null; st.savedBlobRefB = null;
+      st.savedHasVideo = !!rec.hasVideo; st.savedHasVideoB = !!rec.hasVideoB;
+      st.savedBytes = rec.videoBytes || 0; st.savedBytesB = rec.videoBytesB || 0;
+      // 영상은 지금 한 건만 꺼내 video 요소에 물린다(목록 단계에서는 메모리에 올리지 않는다)
+      attachStoredVideo('a', rec.id);
       setStageSize(rec.W || 640, rec.H || 853);
       st.frames = unpackFrames(rec.frames || [], rec.aspect || (st.W / st.H));
       st.phases = rec.phases || null;
@@ -6302,16 +6591,9 @@ var GolfPros = (function () {
         st.b.phases = rec.b.phases || null;
         st.b.cur = st.b.phases ? st.b.phases.address : 0;
         st.b.demoScene = null;
-        st.b.srcBuf = (rec.videoB && typeof rec.videoB.byteLength === 'number') ? rec.videoB : null;
+        st.b.srcBuf = null;
         st.b.srcBlob = null; st.b.srcName = rec.b.fileName || ''; st.b.srcMime = rec.b.mimeType || 'video/mp4';
-        if (st.b.srcBuf && vidB) {
-          try {
-            var blobB = new Blob([st.b.srcBuf], { type: st.b.srcMime });
-            st.b.srcBlob = blobB;
-            if (vidB.src && vidB.src.indexOf('blob:') === 0) URL.revokeObjectURL(vidB.src);
-            vidB.src = URL.createObjectURL(blobB); vidB.load();
-          } catch (e) { st.b.srcBlob = null; }
-        }
+        attachStoredVideo('b', rec.id);
         st.sync.k = 0; st.sync.p = 0; st.showEdit = false;
         markSlot('a', rec.fileName || '보관함 · 측면', true);
         markSlot('b', rec.b.fileName || '보관함 · 정면', true);
