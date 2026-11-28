@@ -3968,6 +3968,7 @@ var GolfPros = (function () {
     st.srcBlob = null; st.srcBuf = null; st.srcName = ''; st.savedId = null; st.savedAt = 0;
     st.b.srcBlob = null; st.b.srcBuf = null; st.b.srcName = '';
     clearSavedVideoState();
+    dropVideoEl('a'); dropVideoEl('b');      // 이전 영상의 URL·디코더를 놓아 준다
     setHistSave('');
     if (EMPTY_HTML) el.stageEmpty.innerHTML = EMPTY_HTML;
     show(el.stageEmpty, false);
@@ -3993,6 +3994,7 @@ var GolfPros = (function () {
     st.srcBlob = null; st.srcBuf = null; st.srcName = ''; st.savedId = null; st.savedAt = 0;
     st.b.srcBlob = null; st.b.srcBuf = null; st.b.srcName = '';
     clearSavedVideoState();
+    dropVideoEl('a'); dropVideoEl('b');
     setHistSave('');
     if (EMPTY_HTML) el.stageEmpty.innerHTML = EMPTY_HTML;
     show(el.stageEmpty, false);
